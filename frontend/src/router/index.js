@@ -33,6 +33,24 @@ const routes = [
         meta: { requiresAuth: true, title: '书目大厅与编目' }
       },
       {
+        path: 'books/:id',
+        name: 'BookDetail',
+        component: () => import('@/views/BookDetail.vue'),
+        meta: { requiresAuth: true, title: '图书详情' }
+      },
+      {
+        path: 'shelf',
+        name: 'MyShelf',
+        component: () => import('@/views/MyShelf.vue'),
+        meta: { requiresAuth: true, title: '我的书架' }
+      },
+      {
+        path: 'notifications',
+        name: 'Notifications',
+        component: () => import('@/views/Notifications.vue'),
+        meta: { requiresAuth: true, title: '消息通知中心' }
+      },
+      {
         path: 'circulation',
         name: 'Circulation',
         component: () => import('@/views/Circulation.vue'),
@@ -89,12 +107,22 @@ const router = createRouter({
   routes
 })
 
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
   const userStore = useUserStore()
   const requiresAuth = to.meta.requiresAuth !== false
 
   if (to.meta.title) {
     document.title = to.meta.title
+  }
+
+  if (requiresAuth && !userStore.isAuthenticated) {
+    next('/login')
+    return
+  }
+
+  // 刷新页面时令牌已存在但用户信息尚未拉取，先补齐再判定角色，避免误重定向
+  if (userStore.isAuthenticated && !userStore.user) {
+    await userStore.fetchUserInfo()
   }
 
   if (requiresAuth && !userStore.isAuthenticated) {

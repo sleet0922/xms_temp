@@ -21,7 +21,7 @@
           </div>
           <button
             @click="remove(toast.id)"
-            class="text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0"
+            class="p-1 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-all duration-150 ease-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 active:scale-[0.98] flex-shrink-0"
           >
             <XMarkIcon class="w-5 h-5" />
           </button>
@@ -44,7 +44,7 @@ import {
 const toasts = ref([])
 
 const toastClasses = (type) => {
-  const base = 'bg-white border rounded-lg shadow-lg p-4 transition-all duration-200'
+  const base = 'bg-white border rounded-xl shadow-md p-4 transition-all duration-200'
 
   const types = {
     success: 'border-green-200 text-green-800',

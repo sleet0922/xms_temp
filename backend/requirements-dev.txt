@@ -1,0 +1,5 @@
+-r requirements.txt
+
+# 开发/测试依赖（安装：.venv\Scripts\python.exe -m pip install -r backend\requirements-dev.txt）
+pytest
+httpx

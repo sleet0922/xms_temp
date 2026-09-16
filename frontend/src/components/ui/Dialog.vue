@@ -26,13 +26,13 @@
           >
             <DialogPanel :class="dialogClasses">
               <div v-if="title" class="flex items-center justify-between mb-4">
-                <DialogTitle class="text-xl font-bold text-gray-900">
+                <DialogTitle class="text-xl font-semibold tracking-tight text-gray-900">
                   {{ title }}
                 </DialogTitle>
                 <button
                   v-if="showClose"
                   @click="handleClose"
-                  class="text-gray-400 hover:text-gray-600 transition-colors duration-200"
+                  class="p-1 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-150 ease-out active:scale-[0.98]"
                 >
                   <XMarkIcon class="w-6 h-6" />
                 </button>
@@ -93,7 +93,7 @@ const dialogClasses = computed(() => {
   }
 
   return [
-    'relative bg-white rounded-xl shadow-xl p-6 w-full',
+    'relative bg-white rounded-xl shadow-md border border-gray-200 p-6 w-full',
     maxWidths[props.maxWidth]
   ].join(' ')
 })

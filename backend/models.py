@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text, Numeric, Boolean
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text, Numeric, Boolean, UniqueConstraint
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from database import Base
@@ -62,7 +62,7 @@ class Book(Base):
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String(200), nullable=False, index=True)
     author = Column(String(100), nullable=False, index=True)
-    isbn = Column(String(20), unique=True, index=True, nullable=False)
+    isbn = Column(String(20), unique=True, index=True, nullable=True)  # 电子资源可能缺 ISBN
     publisher = Column(String(100))
     publish_date = Column(String(20))
     category_id = Column(Integer, ForeignKey("categories.id", ondelete="SET NULL"), nullable=True, index=True)
@@ -70,7 +70,24 @@ class Book(Base):
     price = Column(Numeric(8, 2), default=0.00)
     description = Column(Text)
     cover_url = Column(String(500))
+    cover_file = Column(String(200))  # 本地封面文件名（resources/covers 或静态目录）
     tags = Column(String(255))
+
+    # --- 电子资源属性（来自外部数据源，用于详情页增强）---
+    language = Column(String(20), index=True)
+    format = Column(String(20), index=True)  # pdf / epub / mobi / azw3 / txt ...
+    pages = Column(Integer)
+    file_size = Column(String(30))
+    toc = Column(Text)  # 目录
+    author_bio = Column(Text)  # 作者简介
+    source_url = Column(String(500))  # 来源页面链接
+    source_views = Column(Integer, default=0)
+    source_likes = Column(Integer, default=0)
+    source_comments = Column(Integer, default=0)
+
+    # --- 馆内聚合指标 ---
+    rating = Column(Numeric(3, 2), default=0)  # 书评平均分 0.00 ~ 5.00
+    rating_count = Column(Integer, default=0)
     total_copies = Column(Integer, default=1, nullable=False)
     available_copies = Column(Integer, default=1, nullable=False)
     borrow_count = Column(Integer, default=0, nullable=False)
@@ -82,6 +99,7 @@ class Book(Base):
     copies = relationship("BookCopy", back_populates="book", cascade="all, delete-orphan")
     borrow_records = relationship("BorrowRecord", back_populates="book")
     reservations = relationship("Reservation", back_populates="book")
+    reviews = relationship("Review", back_populates="book", cascade="all, delete-orphan")
 
 class BookCopy(Base):
     __tablename__ = "book_copies"
@@ -173,4 +191,36 @@ class AuditLog(Base):
     target_id = Column(String(50))
     detail = Column(Text)
     ip_address = Column(String(50))
+    created_at = Column(DateTime, default=datetime.now)
+
+
+class Review(Base):
+    """读者书评与评分（每位读者对同一本书只保留一条，可修改）"""
+    __tablename__ = "reviews"
+    __table_args__ = (UniqueConstraint("user_id", "book_id", name="uq_review_user_book"),)
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    book_id = Column(Integer, ForeignKey("books.id", ondelete="CASCADE"), nullable=False, index=True)
+    rating = Column(Integer, nullable=False)  # 1 ~ 5 星
+    content = Column(Text)
+    is_hidden = Column(Boolean, default=False, nullable=False)  # 馆员可隐藏违规书评
+    created_at = Column(DateTime, default=datetime.now)
+    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+
+    user = relationship("User")
+    book = relationship("Book", back_populates="reviews")
+
+
+class Notification(Base):
+    """站内通知：预约到书、到期提醒、罚金产生等"""
+    __tablename__ = "notifications"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    category = Column(String(30), default="system", nullable=False, index=True)  # reservation_ready / due_reminder / overdue / fine / system
+    title = Column(String(150), nullable=False)
+    content = Column(Text)
+    link = Column(String(200))  # 前端跳转路径
+    is_read = Column(Boolean, default=False, nullable=False, index=True)
     created_at = Column(DateTime, default=datetime.now)

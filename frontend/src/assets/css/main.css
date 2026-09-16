@@ -1,3 +1,52 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/*
+ * Corporate Clean 基础层
+ * 页面统一浅色底 + 灰阶文字层级，交互反馈交由组件类控制
+ */
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply bg-slate-50 text-gray-900 antialiased;
+  }
+
+  /* 数字输入框去掉浏览器默认步进箭头，保持输入框视觉一致 */
+  input[type='number']::-webkit-outer-spin-button,
+  input[type='number']::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  input[type='number'] {
+    -moz-appearance: textfield;
+  }
+
+  ::selection {
+    @apply bg-blue-100 text-blue-900;
+  }
+}
+
+@layer utilities {
+  /* 细滚动条：低对比、不抢视觉焦点 */
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    @apply rounded-full bg-gray-300;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-400;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}

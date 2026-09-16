@@ -102,7 +102,7 @@ const buttonClasses = computed(() => {
   return [base, borderColor].join(' ')
 })
 
-const optionsClasses = 'absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-lg bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none'
+const optionsClasses = 'absolute z-10 mt-1 max-h-60 w-full overflow-auto scrollbar-thin rounded-lg bg-white py-1 shadow-md border border-gray-200 focus:outline-none'
 
 const getDisplayValue = (option) => {
   if (!option) return ''

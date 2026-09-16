@@ -1,160 +1,284 @@
 <template>
-  <div class="min-h-screen bg-gray-50 py-8 px-4">
-    <div class="max-w-4xl mx-auto">
-      <div class="mb-6">
-        <h1 class="text-3xl font-bold text-gray-900">借阅流转中心</h1>
-        <p class="text-gray-600 mt-1">在借图书与借阅记录查询</p>
-      </div>
+  <div class="p-6 lg:p-8 max-w-7xl mx-auto">
+    <PageHeader title="借阅流转中心" subtitle="在借、逾期与历史借阅记录的统一查询">
+      <template #actions>
+        <Button variant="outline" :prepend-icon="ArrowPathIcon" :loading="loading" @click="loadBorrows">刷新</Button>
+      </template>
+    </PageHeader>
 
-      <!-- Status Tabs -->
-      <Card padding="none" class="mb-6">
-        <div class="border-b border-gray-200">
-          <div class="flex gap-4 px-6">
-            <button
-              v-for="status in statusFilters"
-              :key="status.value"
-              @click="activeStatus = status.value"
-              :class="[
-                'py-4 px-2 border-b-2 transition-colors text-sm font-medium',
-                activeStatus === status.value
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-gray-600 hover:text-gray-900'
-              ]"
-            >
-              {{ status.label }}
-              <Badge v-if="status.count !== undefined" :variant="status.variant" size="small" class="ml-2">
-                {{ status.count }}
-              </Badge>
-            </button>
-          </div>
-        </div>
-
-        <div class="p-6">
-          <Input v-model="search" placeholder="搜索书名、读者" :prepend-icon="MagnifyingGlassIcon" />
-        </div>
-      </Card>
-
-      <!-- Borrows Table -->
-      <Card padding="none">
-        <div class="overflow-x-auto">
-          <table class="w-full">
-            <thead class="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600">书名</th>
-                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600">读者</th>
-                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600">借出日期</th>
-                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600">应还日期</th>
-                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600">状态</th>
-                <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600">操作</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-200">
-              <tr v-for="borrow in borrows" :key="borrow.id" class="hover:bg-gray-50 transition-colors">
-                <td class="px-4 py-3 text-sm font-medium text-gray-900">{{ borrow.book?.title }}</td>
-                <td class="px-4 py-3 text-sm text-gray-600">{{ borrow.user?.full_name }}</td>
-                <td class="px-4 py-3 text-sm text-gray-600">{{ formatDate(borrow.borrow_date) }}</td>
-                <td class="px-4 py-3 text-sm" :class="isOverdue(borrow) ? 'text-red-600 font-medium' : 'text-gray-600'">
-                  {{ formatDate(borrow.due_date) }}
-                  <span v-if="isOverdue(borrow)" class="ml-1">(逾期{{ getOverdueDays(borrow) }}天)</span>
-                </td>
-                <td class="px-4 py-3">
-                  <Badge :variant="getStatusVariant(borrow.status)" size="small">
-                    {{ getStatusLabel(borrow.status) }}
-                  </Badge>
-                </td>
-                <td class="px-4 py-3 text-right">
-                  <Button
-                    v-if="borrow.status === 'borrowed' || borrow.status === 'overdue'"
-                    size="small"
-                    variant="ghost"
-                    @click="renewBorrow(borrow.id)"
-                    :disabled="borrow.renew_count >= 2"
-                  >
-                    续借({{ borrow.renew_count }}/2)
-                  </Button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </Card>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+      <StatCard
+        v-for="card in statCards"
+        :key="card.label"
+        :label="card.label"
+        :value="card.value"
+        :hint="card.hint"
+        :icon="card.icon"
+        :tone="card.tone"
+      />
     </div>
+
+    <!-- 筛选区 -->
+    <Card class="mb-6">
+      <Tabs v-model="activeStatus" :tabs="statusTabs" />
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Input
+          v-model="searchInput"
+          label="关键词"
+          placeholder="书名、ISBN"
+          :prepend-icon="MagnifyingGlassIcon"
+        />
+        <Select
+          v-if="userStore.isLibrarian"
+          v-model="readerId"
+          :options="readerOptions"
+          label="读者"
+          placeholder="全部读者"
+          item-title="label"
+          item-value="value"
+        />
+      </div>
+    </Card>
+
+    <!-- 借阅流水 -->
+    <Card padding="none">
+      <div class="overflow-x-auto scrollbar-thin">
+        <table class="w-full">
+          <thead class="bg-gray-50 border-b border-gray-200">
+            <tr>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600">图书</th>
+              <th v-if="userStore.isLibrarian" class="px-4 py-3 text-left text-xs font-semibold text-gray-600">读者</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600">借出日期</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600">应还日期</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600">归还日期</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600">状态</th>
+              <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600">操作</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200">
+            <tr v-if="loading">
+              <td :colspan="columnCount" class="px-4 py-3 text-sm text-gray-500">借阅记录加载中…</td>
+            </tr>
+            <tr v-for="record in records" :key="record.id" class="hover:bg-gray-50 transition-colors">
+              <td class="px-4 py-3 text-sm">
+                <button
+                  class="text-left font-medium text-gray-900 hover:text-blue-700 rounded-lg transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                  @click="goBook(record.book?.id)"
+                >
+                  {{ record.book?.title || '-' }}
+                </button>
+                <div class="text-xs text-gray-500">{{ record.book?.author || '-' }}</div>
+              </td>
+              <td v-if="userStore.isLibrarian" class="px-4 py-3 text-sm text-gray-600">
+                {{ record.user?.full_name || '-' }}
+                <div class="text-xs text-gray-500">{{ record.user?.card_number || '-' }}</div>
+              </td>
+              <td class="px-4 py-3 text-sm text-gray-600">{{ formatDate(record.borrow_date) }}</td>
+              <td class="px-4 py-3 text-sm" :class="isOverdue(record) ? 'text-red-600 font-medium' : 'text-gray-600'">
+                {{ formatDate(record.due_date) }}
+              </td>
+              <td class="px-4 py-3 text-sm text-gray-600">{{ record.return_date ? formatDate(record.return_date) : '-' }}</td>
+              <td class="px-4 py-3">
+                <Badge :variant="statusVariant(record)" size="small">{{ statusLabel(record) }}</Badge>
+                <div v-if="overdueDays(record) > 0" class="text-xs text-red-600 mt-1">
+                  逾期 {{ overdueDays(record) }} 天
+                  <span v-if="Number(record.calculated_fine) > 0">· 罚金 ¥{{ money(record.calculated_fine) }}</span>
+                </div>
+              </td>
+              <td class="px-4 py-3 text-right">
+                <Button
+                  v-if="!record.return_date"
+                  size="small"
+                  variant="outline"
+                  :loading="renewingId === record.id"
+                  :disabled="record.renew_count >= 2"
+                  @click="renew(record)"
+                >
+                  续借
+                </Button>
+                <span v-if="!record.return_date && record.renew_count > 0" class="text-xs text-gray-500 ml-2">已续借 {{ record.renew_count }} 次</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <EmptyState
+        v-if="!loading && !records.length"
+        title="暂无借阅记录"
+        description="换个状态筛选或关键词再试试"
+        :icon="BookOpenIcon"
+      />
+    </Card>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
-import { MagnifyingGlassIcon } from '@heroicons/vue/24/outline'
+import { computed, onMounted, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
+import {
+  ArrowDownTrayIcon,
+  ArrowPathIcon,
+  ArrowUpTrayIcon,
+  BookOpenIcon,
+  ExclamationCircleIcon,
+  MagnifyingGlassIcon
+} from '@heroicons/vue/24/outline'
+import { useUserStore } from '@/stores/user'
+import { borrowsApi, readersApi, statsApi } from '@/api'
+import PageHeader from '@/components/ui/PageHeader.vue'
+import StatCard from '@/components/ui/StatCard.vue'
 import Card from '@/components/ui/Card.vue'
+import Tabs from '@/components/ui/Tabs.vue'
 import Button from '@/components/ui/Button.vue'
 import Input from '@/components/ui/Input.vue'
+import Select from '@/components/ui/Select.vue'
 import Badge from '@/components/ui/Badge.vue'
-import { borrowsApi } from '@/api'
+import EmptyState from '@/components/ui/EmptyState.vue'
 
-const borrows = ref([])
+const router = useRouter()
+const userStore = useUserStore()
+
+const statusTabs = ['全部', '在借', '逾期', '已还']
+// Tabs 索引与后端 status_filter 的映射
+const STATUS_VALUES = [undefined, 'borrowed', 'overdue', 'returned']
+
+const records = ref([])
+const stats = ref({})
+const readers = ref([])
+const activeStatus = ref(0)
+const searchInput = ref('')
 const search = ref('')
-const activeStatus = ref('all')
+const readerId = ref(null)
+const loading = ref(false)
+const renewingId = ref(null)
 
-const statusFilters = computed(() => [
-  { label: '全部', value: 'all', count: borrows.value.length },
-  { label: '在借', value: 'borrowed', count: borrows.value.filter(b => b.status === 'borrowed').length, variant: 'primary' },
-  { label: '逾期', value: 'overdue', count: borrows.value.filter(b => b.status === 'overdue').length, variant: 'danger' },
-  { label: '已还', value: 'returned', count: borrows.value.filter(b => b.status === 'returned').length, variant: 'success' }
+const columnCount = computed(() => (userStore.isLibrarian ? 7 : 6))
+
+// 0 表示不限定读者（user_id 为 0 时按未筛选处理）
+const readerOptions = computed(() => [
+  { label: '全部读者', value: 0 },
+  ...readers.value.map(r => ({ label: `${r.full_name}（${r.card_number || r.username}）`, value: r.id }))
 ])
 
-const formatDate = (dateStr) => {
-  if (!dateStr) return '-'
-  return new Date(dateStr).toLocaleDateString('zh-CN')
+const statCards = computed(() => {
+  const s = stats.value
+  if (userStore.isReader) {
+    return [
+      { label: '我的在借', value: s.user_borrowed || 0, hint: '尚未归还的图书', icon: BookOpenIcon, tone: 'primary' },
+      { label: '我的逾期', value: s.user_overdue || 0, hint: '请尽快归还以免产生罚金', icon: ExclamationCircleIcon, tone: 'danger' },
+      { label: '今日借出', value: s.today_borrows || 0, hint: '全馆今日借出量', icon: ArrowUpTrayIcon, tone: 'neutral' },
+      { label: '今日归还', value: s.today_returns || 0, hint: '全馆今日归还量', icon: ArrowDownTrayIcon, tone: 'neutral' }
+    ]
+  }
+  return [
+    { label: '在借总数', value: s.active_borrows || 0, hint: '全馆未归还记录', icon: BookOpenIcon, tone: 'primary' },
+    { label: '逾期数', value: s.overdue_borrows || 0, hint: '需要催还的记录', icon: ExclamationCircleIcon, tone: 'danger' },
+    { label: '今日借出', value: s.today_borrows || 0, hint: '今日新借出', icon: ArrowUpTrayIcon, tone: 'success' },
+    { label: '今日归还', value: s.today_returns || 0, hint: '今日已归还', icon: ArrowDownTrayIcon, tone: 'neutral' }
+  ]
+})
+
+const formatDate = (value) => {
+  if (!value) return '-'
+  return new Date(value).toLocaleDateString('zh-CN')
 }
 
-const isOverdue = (borrow) => {
-  return borrow.status === 'overdue' || (borrow.due_date && new Date(borrow.due_date) < new Date() && !borrow.return_date)
+const money = (value) => Number(value || 0).toFixed(2)
+
+// 后端已回填 overdue_days；字段缺失时按应还日期兜底计算
+const isOverdue = (record) => {
+  if (record.return_date) return false
+  if (record.status === 'overdue') return true
+  return !!record.due_date && new Date(record.due_date) < new Date()
 }
 
-const getOverdueDays = (borrow) => {
-  if (!borrow.due_date) return 0
-  const days = Math.floor((new Date() - new Date(borrow.due_date)) / (1000 * 60 * 60 * 24))
-  return Math.max(0, days)
+const overdueDays = (record) => {
+  if (!isOverdue(record) || !record.due_date) return 0
+  if (record.overdue_days > 0) return record.overdue_days
+  return Math.max(1, Math.floor((Date.now() - new Date(record.due_date)) / 86400000))
 }
 
-const getStatusLabel = (status) => {
-  const labels = { borrowed: '在借', returned: '已还', overdue: '逾期', lost: '遗失' }
-  return labels[status] || status
+const statusLabel = (record) => {
+  if (record.status === 'returned') return '已还'
+  if (isOverdue(record)) return '逾期'
+  const labels = { borrowed: '在借', lost: '遗失' }
+  return labels[record.status] || record.status
 }
 
-const getStatusVariant = (status) => {
-  const variants = { borrowed: 'primary', returned: 'success', overdue: 'danger', lost: 'warning' }
-  return variants[status] || 'default'
+const statusVariant = (record) => {
+  if (record.status === 'returned') return 'success'
+  if (isOverdue(record)) return 'danger'
+  if (record.status === 'lost') return 'warning'
+  return 'primary'
 }
 
-const loadBorrows = async () => {
+const goBook = (bookId) => {
+  if (bookId) router.push(`/books/${bookId}`)
+}
+
+async function loadBorrows() {
+  loading.value = true
   try {
-    const params = {
-      status_filter: activeStatus.value === 'all' ? null : activeStatus.value,
-      search: search.value
-    }
-    const response = await borrowsApi.getList(params)
-    borrows.value = response.data
+    const { data } = await borrowsApi.getList({
+      status_filter: STATUS_VALUES[activeStatus.value],
+      search: search.value || undefined,
+      user_id: readerId.value || undefined,
+      limit: 100
+    })
+    records.value = data
   } catch (err) {
     window.$toast?.error('加载借阅记录失败')
+  } finally {
+    loading.value = false
   }
 }
 
-const renewBorrow = async (id) => {
+async function loadOverview() {
   try {
-    await borrowsApi.renewBorrow(id)
+    const { data } = await statsApi.getOverview()
+    stats.value = data
+  } catch (err) {
+    console.error('加载概览指标失败', err)
+  }
+}
+
+async function loadReaders() {
+  if (!userStore.isLibrarian) return
+  try {
+    const { data } = await readersApi.getList({ role_filter: 'reader', limit: 100 })
+    readers.value = data
+  } catch (err) {
+    console.error('加载读者列表失败', err)
+  }
+}
+
+async function renew(record) {
+  renewingId.value = record.id
+  try {
+    await borrowsApi.renewBorrow(record.id)
     window.$toast?.success('续借成功')
-    loadBorrows()
+    await Promise.all([loadBorrows(), loadOverview()])
   } catch (err) {
     window.$toast?.error(err.response?.data?.detail || '续借失败')
+  } finally {
+    renewingId.value = null
   }
 }
 
-watch([activeStatus, search], () => {
-  loadBorrows()
+// 关键词输入防抖 300ms
+let searchTimer = null
+watch(searchInput, (value) => {
+  clearTimeout(searchTimer)
+  searchTimer = setTimeout(() => {
+    search.value = value.trim()
+  }, 300)
 })
+
+watch([activeStatus, search, readerId], loadBorrows)
 
 onMounted(() => {
   loadBorrows()
+  loadOverview()
+  loadReaders()
 })
 </script>

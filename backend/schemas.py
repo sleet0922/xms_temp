@@ -118,7 +118,7 @@ class BookCopyResponse(BookCopyBase):
 class BookBase(BaseModel):
     title: str
     author: str
-    isbn: str
+    isbn: Optional[str] = None
     publisher: Optional[str] = None
     publish_date: Optional[str] = None
     category_id: Optional[int] = None
@@ -126,8 +126,17 @@ class BookBase(BaseModel):
     price: Optional[Decimal] = Decimal("0.00")
     description: Optional[str] = None
     cover_url: Optional[str] = None
+    cover_file: Optional[str] = None
     tags: Optional[str] = None
     total_copies: Optional[int] = 1
+    # 电子资源属性（外部数据源）
+    language: Optional[str] = None
+    format: Optional[str] = None
+    pages: Optional[int] = None
+    file_size: Optional[str] = None
+    toc: Optional[str] = None
+    author_bio: Optional[str] = None
+    source_url: Optional[str] = None
 
 class BookCreate(BookBase):
     pass
@@ -143,17 +152,46 @@ class BookUpdate(BaseModel):
     price: Optional[Decimal] = None
     description: Optional[str] = None
     cover_url: Optional[str] = None
+    cover_file: Optional[str] = None
     tags: Optional[str] = None
+    language: Optional[str] = None
+    format: Optional[str] = None
+    pages: Optional[int] = None
+    file_size: Optional[str] = None
+    toc: Optional[str] = None
+    author_bio: Optional[str] = None
+    source_url: Optional[str] = None
 
 class BookResponse(BookBase):
     id: int
     available_copies: int
     borrow_count: int
+    source_views: Optional[int] = 0
+    source_likes: Optional[int] = 0
+    source_comments: Optional[int] = 0
+    rating: Optional[Decimal] = Decimal("0.00")
+    rating_count: Optional[int] = 0
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
     category: Optional[CategoryResponse] = None
     location: Optional[ShelfLocationResponse] = None
     copies: Optional[List[BookCopyResponse]] = []
+
+    class Config:
+        from_attributes = True
+
+class BookBrief(BaseModel):
+    """轻量书目摘要：用于书评、推荐、通知等嵌套场景"""
+    id: int
+    title: str
+    author: str
+    cover_url: Optional[str] = None
+    cover_file: Optional[str] = None
+    category_id: Optional[int] = None
+    format: Optional[str] = None
+    language: Optional[str] = None
+    rating: Optional[Decimal] = Decimal("0.00")
+    rating_count: Optional[int] = 0
 
     class Config:
         from_attributes = True
@@ -277,3 +315,55 @@ class StatsOverview(BaseModel):
     user_borrowed: Optional[int] = 0
     user_overdue: Optional[int] = 0
     user_fines: Optional[Decimal] = Decimal("0.00")
+    # 扩展指标（电子资源与互动）
+    total_reviews: Optional[int] = 0
+    avg_rating: Optional[Decimal] = Decimal("0.00")
+    total_reservations: Optional[int] = 0
+    unread_notifications: Optional[int] = 0
+
+# --- 书评评分 ---
+class ReviewCreate(BaseModel):
+    rating: int
+    content: Optional[str] = None
+
+class ReviewUpdate(BaseModel):
+    rating: Optional[int] = None
+    content: Optional[str] = None
+
+class ReviewModerate(BaseModel):
+    is_hidden: bool = True
+
+class ReviewResponse(BaseModel):
+    id: int
+    user_id: int
+    book_id: int
+    rating: int
+    content: Optional[str] = None
+    is_hidden: bool = False
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+    user: Optional[UserResponse] = None
+    book: Optional[BookBrief] = None
+
+    class Config:
+        from_attributes = True
+
+# --- 站内通知 ---
+class NotificationResponse(BaseModel):
+    id: int
+    user_id: int
+    category: str
+    title: str
+    content: Optional[str] = None
+    link: Optional[str] = None
+    is_read: bool = False
+    created_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+# --- 智能推荐 ---
+class RecommendationItem(BaseModel):
+    book: BookBrief
+    reason: str
+    score: float = 0.0

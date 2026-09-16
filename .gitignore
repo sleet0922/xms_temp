@@ -52,6 +52,8 @@ yarn-error.log*
 
 # 爬虫产物：封面图不入库，需要时运行 pc/crawler.py 重新下载
 resources/covers/
+# 后端静态资源（由 pc/import_books.py 从 resources/covers 复制托管）
+backend/static/
 
 # 临时/探索性目录
 resources/_probe/

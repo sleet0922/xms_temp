@@ -39,9 +39,7 @@ export const useUserStore = defineStore('user', () => {
     localStorage.removeItem('token')
   }
 
-  if (token.value) {
-    fetchUserInfo()
-  }
+  // 用户信息由路由守卫在首次导航时按需拉取（保证角色判定发生在数据就绪之后），此处不再重复请求
 
   return {
     token,

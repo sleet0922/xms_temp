@@ -22,7 +22,16 @@ export default {
         },
       },
       fontFamily: {
-        sans: ['Inter var', 'system-ui', 'sans-serif'],
+        sans: [
+          'Inter var',
+          'system-ui',
+          '-apple-system',
+          'Segoe UI',
+          'PingFang SC',
+          'Hiragino Sans GB',
+          'Microsoft YaHei',
+          'sans-serif',
+        ],
       },
       boxShadow: {
         'sm': '0 1px 2px 0 rgb(0 0 0 / 0.05)',
@@ -35,7 +44,11 @@ export default {
         '2xl': '1rem',
       },
       transitionDuration: {
+        '150': '150ms',
         '200': '200ms',
+      },
+      maxWidth: {
+        '8xl': '88rem',
       }
     },
   },

@@ -1,92 +1,61 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+  <div class="min-h-screen bg-slate-50 flex items-center justify-center p-4">
     <div class="w-full max-w-md">
       <Card padding="large">
-        <!-- Header -->
         <div class="text-center mb-6">
-          <div class="inline-flex items-center justify-center w-16 h-16 rounded-xl bg-blue-50 mb-3">
-            <BuildingLibraryIcon class="w-9 h-9 text-blue-600" aria-hidden="true" />
+          <div class="inline-flex items-center justify-center w-16 h-16 rounded-xl bg-blue-50 mb-3 group transition-all duration-200 ease-out hover:bg-blue-500 hover:scale-110">
+            <BuildingLibraryIcon class="w-8 h-8 text-blue-600 transition-colors duration-200 group-hover:text-white" aria-hidden="true" />
           </div>
-          <h2 class="text-2xl font-bold text-gray-900">未来智慧云图书馆</h2>
-          <p class="text-sm text-gray-500 mt-1">Enterprise Library Management System</p>
+          <h1 class="text-2xl font-semibold tracking-tight text-gray-900">智慧云图书馆</h1>
+          <p class="text-sm text-gray-500 mt-1">登录以使用馆藏检索与借阅服务</p>
         </div>
 
-        <!-- Quick Fill Chips -->
-        <div class="bg-gray-50 rounded-xl p-3 mb-5">
-          <p class="text-xs font-semibold text-gray-600 mb-2 flex items-center">
-            <UserIcon class="w-3.5 h-3.5 mr-1" />
-            一键快速填入体验身份
-          </p>
-          <div class="flex flex-wrap gap-2">
-            <Badge
-              variant="danger"
-              @click="fillCredentials('admin', 'admin123')"
-              class="cursor-pointer hover:opacity-80 transition-opacity"
-            >
-              管理员 (admin)
-            </Badge>
-            <Badge
-              variant="primary"
-              @click="fillCredentials('librarian', 'admin123')"
-              class="cursor-pointer hover:opacity-80 transition-opacity"
-            >
-              服务台馆员 (librarian)
-            </Badge>
-            <Badge
-              variant="secondary"
-              @click="fillCredentials('student', 'admin123')"
-              class="cursor-pointer hover:opacity-80 transition-opacity"
-            >
-              在籍读者 (student)
-            </Badge>
-          </div>
-        </div>
-
-        <!-- Form -->
         <form @submit.prevent="handleLogin">
-          <Input
-            v-model="username"
-            label="登录用户名"
-            placeholder="请输入用户名"
-            :prepend-icon="UserIcon"
-            required
-            class="mb-3"
-          />
+          <div class="space-y-4">
+            <Input
+              v-model="username"
+              label="用户名"
+              placeholder="请输入用户名"
+              :prepend-icon="UserIcon"
+              required
+            />
 
-          <Input
-            v-model="password"
-            label="账户密码"
-            :type="showPassword ? 'text' : 'password'"
-            placeholder="请输入密码"
-            :prepend-icon="LockClosedIcon"
-            :append-icon="showPassword ? EyeIcon : EyeSlashIcon"
-            @append-click="showPassword = !showPassword"
-            required
-            class="mb-4"
-          />
+            <Input
+              v-model="password"
+              label="密码"
+              :type="showPassword ? 'text' : 'password'"
+              placeholder="请输入密码"
+              :prepend-icon="LockClosedIcon"
+              :append-icon="showPassword ? EyeIcon : EyeSlashIcon"
+              @append-click="showPassword = !showPassword"
+              required
+            />
+          </div>
 
-          <Alert v-if="error" variant="error" class="mb-4" :message="error" />
+          <div class="mt-4">
+            <Alert v-if="error" variant="error" :message="error" />
+          </div>
 
-          <Button
-            type="submit"
-            variant="primary"
-            size="large"
-            block
-            :loading="loading"
-          >
-            登 录 系 统
-          </Button>
-
-          <div class="text-center mt-4">
-            <Button
-              variant="ghost"
-              size="small"
-              @click="$router.push('/register')"
-            >
-              没有借阅证账号？免费注册读者卡
+          <div class="mt-4">
+            <Button type="submit" variant="primary" size="large" block :loading="loading">
+              登 录
             </Button>
           </div>
         </form>
+
+        <div class="mt-6 text-center text-sm text-gray-600">
+          还没有账号？
+          <RouterLink
+            to="/register"
+            class="text-blue-600 hover:text-blue-700 font-medium rounded transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          >
+            立即注册
+          </RouterLink>
+        </div>
+
+        <p class="mt-4 text-xs text-gray-500 text-center">
+          演示账号：admin / librarian / student，密码 admin123
+        </p>
       </Card>
     </div>
   </div>
@@ -98,38 +67,31 @@ import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import {
   BuildingLibraryIcon,
-  UserIcon,
-  LockClosedIcon,
   EyeIcon,
-  EyeSlashIcon
+  EyeSlashIcon,
+  LockClosedIcon,
+  UserIcon
 } from '@heroicons/vue/24/outline'
 import Card from '@/components/ui/Card.vue'
 import Input from '@/components/ui/Input.vue'
 import Button from '@/components/ui/Button.vue'
-import Badge from '@/components/ui/Badge.vue'
 import Alert from '@/components/ui/Alert.vue'
 
 const router = useRouter()
 const userStore = useUserStore()
 
-const username = ref('admin')
-const password = ref('admin123')
+const username = ref('')
+const password = ref('')
 const showPassword = ref(false)
 const loading = ref(false)
 const error = ref('')
-
-function fillCredentials(u, p) {
-  username.value = u
-  password.value = p
-  error.value = ''
-}
 
 const handleLogin = async () => {
   error.value = ''
   loading.value = true
   try {
     await userStore.login(username.value, password.value)
-    // Toast notification will be added later when App.vue is refactored
+    window.$toast?.success('登录成功，欢迎回来')
     router.push('/')
   } catch (err) {
     error.value = err.response?.data?.detail || '登录失败，请检查用户名和密码'

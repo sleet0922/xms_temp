@@ -1,0 +1,401 @@
+<template>
+  <div class="p-6 lg:p-8 max-w-7xl mx-auto">
+    <div class="mb-6 flex items-center gap-3">
+      <Button variant="ghost" size="small" :prepend-icon="ArrowLeftIcon" @click="router.back()">返回</Button>
+      <nav class="text-sm text-gray-500">
+        <RouterLink to="/books" class="hover:text-blue-600 transition-colors duration-150">书目大厅</RouterLink>
+        <span class="mx-1.5">/</span>
+        <span class="text-gray-900 font-medium truncate">{{ book?.title || '图书详情' }}</span>
+      </nav>
+    </div>
+
+    <div v-if="loading" class="py-16 text-center text-sm text-gray-500">加载中…</div>
+
+    <EmptyState
+      v-else-if="!book"
+      title="未找到该图书"
+      description="图书可能已下架，返回书目大厅重新检索"
+      :icon="BookOpenIcon"
+    >
+      <template #action>
+        <Button variant="primary" @click="router.push('/books')">返回书目大厅</Button>
+      </template>
+    </EmptyState>
+
+    <div v-else class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- 左栏：封面与馆藏信息 -->
+      <div class="space-y-6">
+        <Card padding="none" class="overflow-hidden">
+          <BookCover :book="book" ratio="3/4" />
+          <div class="p-6">
+            <div class="flex items-center justify-between mb-4">
+              <Badge :variant="book.available_copies > 0 ? 'success' : 'warning'">
+                {{ book.available_copies > 0 ? `在架 ${book.available_copies}/${book.total_copies}` : '暂无在架复本' }}
+              </Badge>
+              <span class="text-xs text-gray-500">借阅 {{ book.borrow_count }} 次</span>
+            </div>
+
+            <div class="flex flex-col gap-3">
+              <Button
+                v-if="book.available_copies > 0"
+                variant="primary"
+                block
+                :prepend-icon="BookOpenIcon"
+                @click="handleBorrowHint"
+              >
+                {{ userStore.isLibrarian ? '前往服务台办理借出' : '在架可借 · 查看服务台' }}
+              </Button>
+              <Button
+                v-else
+                variant="primary"
+                block
+                :loading="reserving"
+                :prepend-icon="CalendarDaysIcon"
+                @click="handleReserve"
+              >
+                预约排队
+              </Button>
+              <a
+                v-if="book.source_url"
+                :href="book.source_url"
+                target="_blank"
+                rel="noopener"
+                class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium text-sm bg-white border border-gray-300 text-gray-700 shadow-sm transition-all duration-200 hover:bg-gray-50 hover:-translate-y-0.5 hover:shadow focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 active:scale-[0.98] active:translate-y-0"
+              >
+                <component :is="LinkIcon" class="w-4 h-4" />
+                查看数据来源
+              </a>
+            </div>
+          </div>
+        </Card>
+
+        <Card>
+          <h2 class="text-lg font-semibold tracking-tight text-gray-900 mb-4">资源属性</h2>
+          <dl class="space-y-3 text-sm">
+            <div v-for="meta in metaList" :key="meta.label" class="flex items-start justify-between gap-3">
+              <dt class="text-gray-500 flex-shrink-0">{{ meta.label }}</dt>
+              <dd class="text-gray-900 text-right break-all" :class="meta.mono ? 'font-mono text-xs' : ''">{{ meta.value }}</dd>
+            </div>
+          </dl>
+        </Card>
+      </div>
+
+      <!-- 右栏：详情、目录、书评、推荐 -->
+      <div class="lg:col-span-2 space-y-6">
+        <Card>
+          <h1 class="text-2xl font-semibold tracking-tight text-gray-900">{{ book.title }}</h1>
+          <p class="text-sm text-gray-600 mt-1">{{ book.author }}</p>
+
+          <div class="flex flex-wrap items-center gap-4 mt-4">
+            <RatingStars :model-value="Number(book.rating || 0)" :count="book.rating_count || 0" show-value />
+            <div class="flex flex-wrap items-center gap-2">
+              <Badge v-if="book.category" variant="primary">{{ book.category.name }}</Badge>
+              <Badge v-if="book.format" variant="secondary">{{ book.format }}</Badge>
+              <Badge v-if="book.language" variant="secondary">{{ book.language }}</Badge>
+              <Badge v-if="book.pages" variant="default">{{ book.pages }} 页</Badge>
+            </div>
+          </div>
+
+          <div v-if="book.tags" class="flex flex-wrap gap-2 mt-4">
+            <span v-for="tag in tagList" :key="tag" class="px-2.5 py-1 rounded-lg bg-gray-100 text-gray-600 text-xs font-medium">{{ tag }}</span>
+          </div>
+        </Card>
+
+        <Card v-if="book.description">
+          <h2 class="text-lg font-semibold tracking-tight text-gray-900 mb-3">内容简介</h2>
+          <p class="text-sm text-gray-600 leading-relaxed whitespace-pre-line">{{ book.description }}</p>
+        </Card>
+
+        <Card v-if="book.toc">
+          <h2 class="text-lg font-semibold tracking-tight text-gray-900 mb-3">目录</h2>
+          <div class="max-h-80 overflow-y-auto scrollbar-thin rounded-lg bg-gray-50 border border-gray-200 p-4">
+            <p class="text-sm text-gray-600 leading-relaxed whitespace-pre-line font-mono">{{ book.toc }}</p>
+          </div>
+        </Card>
+
+        <Card v-if="book.author_bio">
+          <h2 class="text-lg font-semibold tracking-tight text-gray-900 mb-3">作者简介</h2>
+          <p class="text-sm text-gray-600 leading-relaxed whitespace-pre-line">{{ book.author_bio }}</p>
+        </Card>
+
+        <!-- 单册清册 -->
+        <Card padding="none">
+          <div class="p-6 pb-4">
+            <h2 class="text-lg font-semibold tracking-tight text-gray-900">馆藏单册（{{ book.copies?.length || 0 }}）</h2>
+          </div>
+          <div class="overflow-x-auto scrollbar-thin">
+            <table class="w-full">
+              <thead class="bg-gray-50 border-y border-gray-200">
+                <tr>
+                  <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600">条形码</th>
+                  <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600">状态</th>
+                  <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600">位置</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-200">
+                <tr v-for="copy in book.copies" :key="copy.id" class="hover:bg-gray-50 transition-colors">
+                  <td class="px-4 py-3 text-xs font-mono text-gray-700">{{ copy.barcode }}</td>
+                  <td class="px-4 py-3">
+                    <Badge :variant="copyStatusVariant[copy.status] || 'default'" size="small">
+                      {{ copyStatusLabel[copy.status] || copy.status }}
+                    </Badge>
+                  </td>
+                  <td class="px-4 py-3 text-sm text-gray-600">{{ copy.location_note || '-' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <EmptyState v-if="!book.copies?.length" title="暂无单册记录" description="馆员可在编目页为该书目补充复本" />
+        </Card>
+
+        <!-- 书评 -->
+        <Card>
+          <h2 class="text-lg font-semibold tracking-tight text-gray-900 mb-4">读者书评（{{ reviews.length }}）</h2>
+
+          <div class="rounded-lg bg-gray-50 border border-gray-200 p-4 mb-6">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <span class="text-sm font-medium text-gray-700">{{ myReview ? '更新我的评分书评' : '写下我的评分书评' }}</span>
+              <RatingStars v-model="reviewForm.rating" editable />
+            </div>
+            <Textarea v-model="reviewForm.content" class="mt-3" :rows="3" placeholder="这本书值得推荐吗？说说你的阅读感受（可选）" />
+            <div class="flex justify-end gap-3 mt-3">
+              <Button
+                v-if="myReview"
+                variant="outline"
+                :prepend-icon="TrashIcon"
+                @click="handleDeleteMyReview"
+              >
+                删除
+              </Button>
+              <Button variant="primary" :loading="submittingReview" @click="submitReview">
+                {{ myReview ? '更新书评' : '发表书评' }}
+              </Button>
+            </div>
+          </div>
+
+          <div v-if="reviews.length" class="space-y-4">
+            <div v-for="review in reviews" :key="review.id" class="rounded-lg border border-gray-200 p-4 hover:border-blue-300 transition-colors duration-200">
+              <div class="flex items-start justify-between gap-3">
+                <div class="flex items-center gap-3">
+                  <div class="w-9 h-9 rounded-full bg-blue-50 flex items-center justify-center text-blue-700 font-semibold flex-shrink-0">
+                    {{ (review.user?.full_name || review.user?.username || '?').charAt(0).toUpperCase() }}
+                  </div>
+                  <div>
+                    <div class="text-sm font-medium text-gray-900">
+                      {{ review.user?.full_name || review.user?.username || '匿名读者' }}
+                      <span v-if="review.user_id === userStore.user?.id" class="ml-1 text-xs text-blue-600">我</span>
+                    </div>
+                    <div class="text-xs text-gray-500">{{ formatDateTime(review.updated_at || review.created_at) }}</div>
+                  </div>
+                </div>
+                <RatingStars :model-value="review.rating" size="small" />
+              </div>
+              <p v-if="review.content" class="text-sm text-gray-600 mt-3 whitespace-pre-line">{{ review.content }}</p>
+            </div>
+          </div>
+          <EmptyState v-else title="还没有书评" description="成为第一个分享阅读感受的读者" :icon="ChatBubbleLeftRightIcon" />
+        </Card>
+
+        <!-- 相似推荐 -->
+        <Card v-if="similar.length">
+          <h2 class="text-lg font-semibold tracking-tight text-gray-900 mb-4">同类高分推荐</h2>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <Card
+              v-for="item in similar"
+              :key="item.book.id"
+              padding="none"
+              hover
+              clickable
+              class="overflow-hidden"
+              @click="router.push(`/books/${item.book.id}`)"
+            >
+              <BookCover :book="item.book" ratio="3/4" />
+              <div class="p-4">
+                <div class="text-sm font-semibold tracking-tight text-gray-900 truncate">{{ item.book.title }}</div>
+                <div class="text-xs text-gray-500 truncate mt-0.5">{{ item.book.author }}</div>
+                <div class="mt-2">
+                  <RatingStars :model-value="Number(item.book.rating || 0)" size="small" />
+                </div>
+                <div class="text-xs text-blue-600 mt-2 truncate">{{ item.reason }}</div>
+              </div>
+            </Card>
+          </div>
+        </Card>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import {
+  ArrowLeftIcon,
+  BookOpenIcon,
+  CalendarDaysIcon,
+  ChatBubbleLeftRightIcon,
+  LinkIcon,
+  TrashIcon
+} from '@heroicons/vue/24/outline'
+import { useUserStore } from '@/stores/user'
+import { booksApi, reservationsApi, reviewsApi } from '@/api'
+import Card from '@/components/ui/Card.vue'
+import Button from '@/components/ui/Button.vue'
+import Badge from '@/components/ui/Badge.vue'
+import Textarea from '@/components/ui/Textarea.vue'
+import EmptyState from '@/components/ui/EmptyState.vue'
+import RatingStars from '@/components/ui/RatingStars.vue'
+import BookCover from '@/components/ui/BookCover.vue'
+
+const route = useRoute()
+const router = useRouter()
+const userStore = useUserStore()
+
+const book = ref(null)
+const reviews = ref([])
+const similar = ref([])
+const loading = ref(true)
+const submittingReview = ref(false)
+const reserving = ref(false)
+
+const reviewForm = reactive({ rating: 5, content: '' })
+
+const copyStatusLabel = {
+  available: '在架',
+  borrowed: '借出',
+  reserved: '预约保留',
+  maintenance: '维护中',
+  lost: '遗失'
+}
+
+const copyStatusVariant = {
+  available: 'success',
+  borrowed: 'warning',
+  reserved: 'primary',
+  maintenance: 'default',
+  lost: 'danger'
+}
+
+const metaList = computed(() => {
+  const b = book.value || {}
+  return [
+    { label: 'ISBN', value: b.isbn || '—', mono: true },
+    { label: '出版社', value: b.publisher || '—' },
+    { label: '出版日期', value: b.publish_date || '—' },
+    { label: '语种', value: b.language || '—' },
+    { label: '资源格式', value: b.format || '—' },
+    { label: '页数', value: b.pages ? `${b.pages} 页` : '—' },
+    { label: '文件大小', value: b.file_size || '—', mono: true },
+    { label: '所属分类', value: b.category?.name || '—' },
+    { label: '书架位置', value: b.location?.name || b.location?.code || '—' },
+    { label: '浏览量', value: b.source_views ?? '—' },
+    { label: '点赞数', value: b.source_likes ?? '—' },
+    { label: '评论数', value: b.source_comments ?? '—' }
+  ]
+})
+
+const tagList = computed(() => (book.value?.tags || '').split(/[,，\s]+/).filter(Boolean))
+
+const myReview = computed(() => reviews.value.find(r => r.user_id === userStore.user?.id))
+
+function formatDateTime(value) {
+  if (!value) return '-'
+  return new Date(value).toLocaleDateString('zh-CN')
+}
+
+async function loadBook() {
+  loading.value = true
+  try {
+    const { data } = await booksApi.getById(route.params.id)
+    book.value = data
+  } catch (err) {
+    book.value = null
+    window.$toast?.error('加载图书详情失败')
+  } finally {
+    loading.value = false
+  }
+}
+
+async function loadReviews() {
+  try {
+    const { data } = await reviewsApi.getByBook(route.params.id)
+    reviews.value = data
+    const mine = data.find(r => r.user_id === userStore.user?.id)
+    if (mine) {
+      reviewForm.rating = mine.rating
+      reviewForm.content = mine.content || ''
+    }
+  } catch (err) {
+    console.error('加载书评失败', err)
+  }
+}
+
+async function loadSimilar() {
+  try {
+    const { data } = await booksApi.getSimilar(route.params.id, 6)
+    similar.value = data
+  } catch (err) {
+    console.error('加载相似推荐失败', err)
+  }
+}
+
+async function submitReview() {
+  submittingReview.value = true
+  try {
+    await reviewsApi.upsert(route.params.id, { rating: reviewForm.rating, content: reviewForm.content })
+    window.$toast?.success('书评已保存')
+    await Promise.all([loadReviews(), loadBook()])
+  } catch (err) {
+    window.$toast?.error(err.response?.data?.detail || '保存书评失败')
+  } finally {
+    submittingReview.value = false
+  }
+}
+
+async function handleDeleteMyReview() {
+  if (!myReview.value) return
+  try {
+    await reviewsApi.remove(myReview.value.id)
+    window.$toast?.success('书评已删除')
+    reviewForm.rating = 5
+    reviewForm.content = ''
+    await Promise.all([loadReviews(), loadBook()])
+  } catch (err) {
+    window.$toast?.error(err.response?.data?.detail || '删除失败')
+  }
+}
+
+function handleBorrowHint() {
+  if (userStore.isLibrarian) {
+    router.push('/circulation')
+  } else {
+    window.$toast?.info('该图书在架可借，请携借书卡到馆内服务台或自助机办理借出')
+  }
+}
+
+async function handleReserve() {
+  reserving.value = true
+  try {
+    await reservationsApi.create(book.value.id)
+    window.$toast?.success('预约成功，到书后将通过站内通知提醒')
+  } catch (err) {
+    window.$toast?.error(err.response?.data?.detail || '预约失败')
+  } finally {
+    reserving.value = false
+  }
+}
+
+onMounted(() => {
+  loadBook()
+  loadReviews()
+  loadSimilar()
+})
+
+watch(() => route.params.id, (id) => {
+  if (id) {
+    loadBook()
+    loadReviews()
+    loadSimilar()
+  }
+})
+</script>
