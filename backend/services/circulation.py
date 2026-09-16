@@ -46,22 +46,38 @@ def ensure_reader_eligible(db: Session, reader: User) -> None:
 def borrow_by_card(
     db: Session,
     card_number: str,
-    barcode: str,
+    barcode: Optional[str],
     operator: User,
     request: Optional[Request] = None,
+    book_id: Optional[int] = None,
 ) -> BorrowRecord:
-    """服务台快速扫码借书：借书卡号 + 单册条形码"""
+    """服务台办理借书：借书卡号 + （实体册条码 或 书目自动分配在架复本）"""
     reader = db.query(User).filter(User.card_number == card_number).first()
     if not reader:
         raise HTTPException(status_code=404, detail=f"未找到借书卡号为 {card_number} 的读者")
 
     ensure_reader_eligible(db, reader)
 
-    copy = db.query(BookCopy).filter(BookCopy.barcode == barcode).first()
-    if not copy:
-        raise HTTPException(status_code=404, detail=f"未找到条码为 {barcode} 的图书实体册")
-    if copy.status != "available":
-        raise HTTPException(status_code=400, detail=f"该单册当前状态为 [{copy.status}]，不可借出")
+    if barcode:
+        copy = db.query(BookCopy).filter(BookCopy.barcode == barcode).first()
+        if not copy:
+            raise HTTPException(status_code=404, detail=f"未找到条码为 {barcode} 的图书实体册")
+        if copy.status != "available":
+            raise HTTPException(status_code=400, detail=f"该单册当前状态为 [{copy.status}]，不可借出")
+    elif book_id:
+        # 未扫实体册：按书目自动挑一册在架复本
+        copy = (
+            db.query(BookCopy)
+            .filter(BookCopy.book_id == book_id, BookCopy.status == "available")
+            .first()
+        )
+        if not copy:
+            book = db.query(Book).filter(Book.id == book_id).first()
+            if not book:
+                raise HTTPException(status_code=404, detail="图书不存在或已下架")
+            raise HTTPException(status_code=400, detail="该图书暂无可借的在架复本，可引导读者预约排队")
+    else:
+        raise HTTPException(status_code=400, detail="请提供图书条码或选择书目")
 
     book = db.query(Book).filter(Book.id == copy.book_id).first()
     if not book:

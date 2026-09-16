@@ -44,32 +44,91 @@
           </div>
           <div class="min-w-0">
             <h2 class="text-lg font-semibold tracking-tight text-gray-900">借书办理</h2>
-            <p class="text-sm text-gray-600 mt-1">先扫读者卡号，再扫图书条码即可完成借出</p>
+            <p class="text-sm text-gray-600 mt-1">选择读者与图书即可办理，也可直接扫码</p>
           </div>
         </div>
 
         <div class="space-y-4">
-          <Input
-            v-model="borrowForm.cardNumber"
-            label="读者卡号"
-            placeholder="扫描或输入借书卡号"
-            :prepend-icon="IdentificationIcon"
-            required
-            @blur="lookupReader"
-            @keyup.enter="handleBorrow"
-          />
-          <div
-            v-if="readerInfo"
-            class="flex flex-wrap items-center gap-3 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2"
-          >
-            <span class="text-sm font-medium text-gray-900">{{ readerInfo.full_name }}</span>
-            <span class="text-sm text-gray-600">可借额度 {{ readerInfo.max_borrow_limit }} 册</span>
-            <Badge :variant="readerInfo.status === 'active' ? 'success' : 'danger'" size="small">
-              {{ readerInfo.status === 'active' ? '状态正常' : '卡已冻结' }}
-            </Badge>
+          <!-- 读者：下拉搜索选择，馆员无需手打卡号 -->
+          <div ref="readerPickerRef" class="relative">
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              读者 <span class="text-red-500">*</span>
+            </label>
+
+            <div
+              v-if="selectedReader"
+              class="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2"
+            >
+              <span class="text-sm font-medium text-gray-900">{{ selectedReader.full_name }}</span>
+              <span class="text-xs font-mono text-gray-600">{{ selectedReader.card_number }}</span>
+              <Badge :variant="selectedReader.status === 'active' ? 'success' : 'danger'" size="small">
+                {{ selectedReader.status === 'active' ? '状态正常' : '卡已冻结' }}
+              </Badge>
+              <span class="text-xs text-gray-600">可借 {{ selectedReader.max_borrow_limit }} 册</span>
+              <button
+                type="button"
+                class="ml-auto text-xs font-medium text-blue-700 hover:text-blue-900 transition-colors duration-150"
+                @click="clearReader"
+              >
+                更换读者
+              </button>
+            </div>
+
+            <template v-else>
+              <Input
+                v-model="readerQuery"
+                placeholder="点击选择读者，或输入姓名/卡号搜索"
+                :prepend-icon="MagnifyingGlassIcon"
+                @focus="openReaderOptions"
+                @input="onReaderSearch"
+                @keyup.enter="pickExactReader"
+              />
+              <div
+                v-if="readerOptionsOpen"
+                class="absolute z-10 mt-1 w-full max-h-60 overflow-auto scrollbar-thin rounded-lg bg-white py-1 shadow-md border border-gray-200"
+              >
+                <div v-if="readersLoading" class="px-4 py-2 text-sm text-gray-500">正在加载读者…</div>
+                <template v-else-if="readerOptions.length">
+                  <button
+                    v-for="item in readerOptions"
+                    :key="item.id"
+                    type="button"
+                    class="w-full flex items-center gap-3 px-4 py-2 text-left transition-colors duration-150 hover:bg-blue-50"
+                    @click="selectReader(item)"
+                  >
+                    <span class="text-sm text-gray-900">{{ item.full_name }}</span>
+                    <span class="text-xs font-mono text-gray-500">{{ item.card_number }}</span>
+                    <Badge v-if="item.status !== 'active'" variant="danger" size="small" class="ml-auto">
+                      卡已冻结
+                    </Badge>
+                  </button>
+                </template>
+                <div v-else class="px-4 py-2 text-sm text-gray-500">没有匹配的读者</div>
+              </div>
+            </template>
           </div>
 
+          <!-- 图书：从图书详情跳转则自动带入，否则扫码 -->
+          <div v-if="selectedBook" class="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2">
+            <div class="flex items-start justify-between gap-3">
+              <div class="min-w-0">
+                <p class="text-xs text-gray-500">本次办理</p>
+                <p class="text-sm font-medium text-gray-900 truncate">《{{ selectedBook.title }}》</p>
+                <p class="text-xs text-gray-600 mt-0.5">
+                  在架 {{ selectedBook.available_copies }}/{{ selectedBook.total_copies }} 册 · 系统自动分配在架复本
+                </p>
+              </div>
+              <button
+                type="button"
+                class="flex-shrink-0 text-xs font-medium text-blue-700 hover:text-blue-900 transition-colors duration-150"
+                @click="clearSelectedBook"
+              >
+                改为扫码
+              </button>
+            </div>
+          </div>
           <Input
+            v-else
             v-model="borrowForm.barcode"
             label="图书条码"
             placeholder="扫描图书条形码"
@@ -84,7 +143,7 @@
             size="large"
             block
             :loading="borrowLoading"
-            :disabled="!borrowForm.cardNumber || !borrowForm.barcode"
+            :disabled="!selectedReader || !(selectedBook || borrowForm.barcode)"
             @click="handleBorrow"
           >
             确认借出
@@ -101,27 +160,115 @@
           </div>
           <div class="min-w-0">
             <h2 class="text-lg font-semibold tracking-tight text-gray-900">还书办理</h2>
-            <p class="text-sm text-gray-600 mt-1">扫描图书条码，逾期将自动生成罚金单</p>
+            <p class="text-sm text-gray-600 mt-1">选择在借图书即可归还，逾期将自动生成罚金单</p>
           </div>
         </div>
 
         <div class="space-y-4">
-          <Input
-            v-model="returnForm.barcode"
-            label="图书条码"
-            placeholder="扫描图书条形码"
-            :prepend-icon="QrCodeIcon"
-            required
-            hint="扫码枪回车即提交"
-            @keyup.enter="handleReturn"
-          />
+          <!-- 在借图书：下拉选择，无需编条码 -->
+          <div ref="returnPickerRef" class="relative">
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              在借图书 <span class="text-red-500">*</span>
+            </label>
+
+            <div v-if="selectedReturn" class="rounded-lg border border-green-200 bg-green-50 px-3 py-2">
+              <div class="flex items-start justify-between gap-3">
+                <div class="min-w-0">
+                  <p class="text-sm font-medium text-gray-900 truncate">
+                    《{{ selectedReturn.book?.title || '-' }}》
+                  </p>
+                  <p class="text-xs text-gray-600 mt-0.5">
+                    {{ selectedReturn.user?.full_name }}
+                    · <span class="font-mono">{{ selectedReturn.user?.card_number }}</span>
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  class="flex-shrink-0 text-xs font-medium text-green-700 hover:text-green-900 transition-colors duration-150"
+                  @click="clearReturnRecord"
+                >
+                  更换图书
+                </button>
+              </div>
+              <div class="mt-2 flex flex-wrap items-center gap-2">
+                <Badge :variant="isOverdue(selectedReturn) ? 'danger' : 'primary'" size="small">
+                  {{ isOverdue(selectedReturn) ? `逾期 ${selectedReturn.overdue_days} 天` : '按期归还' }}
+                </Badge>
+                <span class="text-xs text-gray-600">应还 {{ formatDate(selectedReturn.due_date) }}</span>
+                <span class="text-xs text-gray-500 font-mono">{{ selectedReturn.copy?.barcode }}</span>
+              </div>
+            </div>
+
+            <template v-else-if="returnScanMode">
+              <Input
+                v-model="returnForm.barcode"
+                placeholder="扫描图书条形码"
+                :prepend-icon="QrCodeIcon"
+                hint="扫码枪回车即提交"
+                @keyup.enter="handleReturn"
+              />
+              <button
+                type="button"
+                class="mt-2 text-xs font-medium text-blue-700 hover:text-blue-900 transition-colors duration-150"
+                @click="returnScanMode = false"
+              >
+                改为选择在借图书
+              </button>
+            </template>
+
+            <template v-else>
+              <Input
+                v-model="returnQuery"
+                placeholder="点击选择在借图书，或输入书名/读者搜索"
+                :prepend-icon="MagnifyingGlassIcon"
+                @focus="openReturnOptions"
+                @input="onReturnSearch"
+                @keyup.enter="pickExactReturn"
+              />
+              <div
+                v-if="returnOptionsOpen"
+                class="absolute z-10 mt-1 w-full max-h-60 overflow-auto scrollbar-thin rounded-lg bg-white py-1 shadow-md border border-gray-200"
+              >
+                <div v-if="returnsLoading" class="px-4 py-2 text-sm text-gray-500">正在加载在借图书…</div>
+                <template v-else-if="returnOptions.length">
+                  <button
+                    v-for="record in returnOptions"
+                    :key="record.id"
+                    type="button"
+                    class="w-full px-4 py-2 text-left transition-colors duration-150 hover:bg-green-50"
+                    @click="selectReturn(record)"
+                  >
+                    <div class="flex items-center gap-2">
+                      <span class="text-sm text-gray-900 truncate">{{ record.book?.title || '-' }}</span>
+                      <Badge v-if="isOverdue(record)" variant="danger" size="small" class="ml-auto flex-shrink-0">
+                        逾期 {{ record.overdue_days }} 天
+                      </Badge>
+                    </div>
+                    <div class="text-xs text-gray-500 mt-0.5">
+                      {{ record.user?.full_name }}
+                      · <span class="font-mono">{{ record.user?.card_number }}</span>
+                      · 应还 {{ formatDate(record.due_date) }}
+                    </div>
+                  </button>
+                </template>
+                <div v-else class="px-4 py-2 text-sm text-gray-500">没有匹配的在借图书</div>
+              </div>
+              <button
+                type="button"
+                class="mt-2 text-xs font-medium text-blue-700 hover:text-blue-900 transition-colors duration-150"
+                @click="returnScanMode = true"
+              >
+                改为扫码
+              </button>
+            </template>
+          </div>
 
           <Button
             variant="primary"
             size="large"
             block
             :loading="returnLoading"
-            :disabled="!returnForm.barcode"
+            :disabled="!selectedReturn && !returnForm.barcode"
             @click="handleReturn"
           >
             确认归还
@@ -244,17 +391,18 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import {
   ArrowDownTrayIcon,
   ArrowPathIcon,
   ArrowUpTrayIcon,
   ClockIcon,
   ExclamationTriangleIcon,
-  IdentificationIcon,
+  MagnifyingGlassIcon,
   QrCodeIcon
 } from '@heroicons/vue/24/outline'
-import { borrowsApi, circulationApi, finesApi, readersApi, statsApi } from '@/api'
+import { booksApi, borrowsApi, circulationApi, finesApi, readersApi, statsApi } from '@/api'
 import PageHeader from '@/components/ui/PageHeader.vue'
 import StatCard from '@/components/ui/StatCard.vue'
 import Card from '@/components/ui/Card.vue'
@@ -264,19 +412,43 @@ import Badge from '@/components/ui/Badge.vue'
 import Alert from '@/components/ui/Alert.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
 
+const route = useRoute()
+const router = useRouter()
+
 const overview = ref({})
 const records = ref([])
 const recordsLoading = ref(false)
 const refreshing = ref(false)
 
-const borrowForm = reactive({ cardNumber: '', barcode: '' })
+const borrowForm = reactive({ barcode: '' })
 const returnForm = reactive({ barcode: '' })
 
 const borrowLoading = ref(false)
 const returnLoading = ref(false)
 const renewingId = ref(null)
 
-const readerInfo = ref(null)
+// 读者选择：下拉列表 + 关键字搜索，馆员无需手打卡号
+const selectedReader = ref(null)
+const readerQuery = ref('')
+const readerOptions = ref([])
+const readerOptionsOpen = ref(false)
+const readersLoading = ref(false)
+const readerPickerRef = ref(null)
+let readerSearchTimer = null
+
+// 图书来源：从图书详情页跳转时自动带入，否则走扫码
+const selectedBook = ref(null)
+
+// 还书：下拉选择在借图书（含逾期），也可切换为扫码
+const selectedReturn = ref(null)
+const returnQuery = ref('')
+const returnOptions = ref([])
+const returnOptionsOpen = ref(false)
+const returnsLoading = ref(false)
+const returnScanMode = ref(false)
+const returnPickerRef = ref(null)
+const returnableAll = ref([])
+
 const lastResult = ref(null)
 const errorMessage = ref('')
 
@@ -356,40 +528,173 @@ async function refreshAll() {
   refreshing.value = false
 }
 
-// 卡号失焦时预检读者，便于馆员确认借阅资格
-async function lookupReader() {
-  const card = borrowForm.cardNumber.trim()
-  readerInfo.value = null
-  if (!card) return
+// 读者下拉：聚焦即列出读者，输入则按姓名/卡号实时搜索
+async function loadReaders(search = '') {
+  readersLoading.value = true
   try {
-    const { data } = await readersApi.getList({ search: card, limit: 5 })
-    readerInfo.value = data.find((item) => item.card_number === card) || null
+    const { data } = await readersApi.getList({ search: search || undefined, limit: 20 })
+    readerOptions.value = data
   } catch (err) {
-    readerInfo.value = null
+    readerOptions.value = []
+  } finally {
+    readersLoading.value = false
   }
 }
 
+function openReaderOptions() {
+  readerOptionsOpen.value = true
+  if (!readerOptions.value.length) loadReaders()
+}
+
+function onReaderSearch() {
+  readerOptionsOpen.value = true
+  clearTimeout(readerSearchTimer)
+  readerSearchTimer = setTimeout(() => loadReaders(readerQuery.value.trim()), 250)
+}
+
+function selectReader(reader) {
+  selectedReader.value = reader
+  readerOptionsOpen.value = false
+  readerQuery.value = ''
+}
+
+function clearReader() {
+  selectedReader.value = null
+  readerQuery.value = ''
+  readerOptions.value = []
+}
+
+// 兼容扫码枪：回车时若输入恰好是某个卡号则直接选中
+function pickExactReader() {
+  const value = readerQuery.value.trim()
+  if (!value) return
+  const matched = readerOptions.value.find((item) => item.card_number === value)
+  if (matched) {
+    selectReader(matched)
+    return
+  }
+  window.$toast?.warning('未匹配到该卡号的读者，请从下拉列表中选择')
+}
+
+// 从图书详情页跳转时带过来的书目：无需再扫条码
+async function loadSelectedBook() {
+  const bookId = Number(route.query.bookId)
+  if (!bookId) {
+    selectedBook.value = null
+    return
+  }
+  try {
+    const { data } = await booksApi.getById(bookId)
+    selectedBook.value = data
+  } catch (err) {
+    selectedBook.value = null
+    window.$toast?.error('未找到待办理的图书')
+  }
+}
+
+function clearSelectedBook() {
+  selectedBook.value = null
+  router.replace({ path: '/circulation' })
+}
+
+// 在借图书下拉：拉取全部未归还记录（含逾期），前端按书名/读者/卡号/条码过滤
+async function loadReturnable() {
+  returnsLoading.value = true
+  try {
+    const { data } = await borrowsApi.getList({ status_filter: 'unreturned', limit: 100 })
+    returnableAll.value = data
+    applyReturnFilter()
+  } catch (err) {
+    returnableAll.value = []
+    returnOptions.value = []
+  } finally {
+    returnsLoading.value = false
+  }
+}
+
+function applyReturnFilter() {
+  const keyword = returnQuery.value.trim().toLowerCase()
+  if (!keyword) {
+    returnOptions.value = returnableAll.value
+    return
+  }
+  returnOptions.value = returnableAll.value.filter((record) =>
+    [record.book?.title, record.user?.full_name, record.user?.card_number, record.copy?.barcode].some(
+      (value) => (value || '').toLowerCase().includes(keyword)
+    )
+  )
+}
+
+function openReturnOptions() {
+  returnOptionsOpen.value = true
+  if (returnableAll.value.length) applyReturnFilter()
+  else loadReturnable()
+}
+
+function onReturnSearch() {
+  returnOptionsOpen.value = true
+  if (returnableAll.value.length) applyReturnFilter()
+  else loadReturnable()
+}
+
+function selectReturn(record) {
+  selectedReturn.value = record
+  returnOptionsOpen.value = false
+  returnQuery.value = ''
+}
+
+function clearReturnRecord() {
+  selectedReturn.value = null
+  returnQuery.value = ''
+  returnScanMode.value = false
+}
+
+// 回车：唯一匹配或条码完全一致时直接选中，否则提示改用扫码
+function pickExactReturn() {
+  const value = returnQuery.value.trim()
+  if (!value) return
+  const exact = returnOptions.value.find((record) => record.copy?.barcode === value)
+  if (exact) {
+    selectReturn(exact)
+    return
+  }
+  if (returnOptions.value.length === 1) {
+    selectReturn(returnOptions.value[0])
+    return
+  }
+  window.$toast?.warning('未匹配到在借图书，可点击「改为扫码」直接归还')
+}
+
 async function handleBorrow() {
-  const cardNumber = borrowForm.cardNumber.trim()
   const barcode = borrowForm.barcode.trim()
-  if (!cardNumber || !barcode) {
-    window.$toast?.warning('请先扫描读者卡号与图书条码')
+  if (!selectedReader.value) {
+    window.$toast?.warning('请先选择读者')
+    return
+  }
+  if (!selectedBook.value && !barcode) {
+    window.$toast?.warning('请先扫描图书条码或从图书详情选择图书')
     return
   }
 
   borrowLoading.value = true
   errorMessage.value = ''
   try {
-    const { data } = await circulationApi.borrow(cardNumber, barcode)
+    const payload = { card_number: selectedReader.value.card_number }
+    if (selectedBook.value) payload.book_id = selectedBook.value.id
+    else payload.barcode = barcode
+
+    const { data } = await circulationApi.borrow(payload)
     lastResult.value = { kind: 'borrow', record: data }
     window.$toast?.success('借出成功')
     borrowForm.barcode = ''
-    // 借出后条码框保持聚焦，方便连续扫码
+    // 一次办理完成，清掉带入的书目，避免重复借出
+    if (selectedBook.value) clearSelectedBook()
+    returnableAll.value = [] // 刚借出的书进入在借书单，下次展开重新拉取
     loadRecords()
     loadOverview()
   } catch (err) {
     lastResult.value = null
-    errorMessage.value = err.response?.data?.detail || '借出失败，请核对卡号与条码'
+    errorMessage.value = err.response?.data?.detail || '借出失败，请核对读者与图书'
     window.$toast?.error(errorMessage.value)
   } finally {
     borrowLoading.value = false
@@ -398,15 +703,16 @@ async function handleBorrow() {
 
 async function handleReturn() {
   const barcode = returnForm.barcode.trim()
-  if (!barcode) {
-    window.$toast?.warning('请先扫描图书条码')
+  if (!selectedReturn.value && !barcode) {
+    window.$toast?.warning('请先选择在借图书或扫描图书条码')
     return
   }
 
   returnLoading.value = true
   errorMessage.value = ''
   try {
-    const { data } = await circulationApi.return(barcode)
+    const payload = selectedReturn.value ? { record_id: selectedReturn.value.id } : { barcode }
+    const { data } = await circulationApi.return(payload)
     // 接口回传记录不含罚金金额，逾期时按记录反查自动生成的罚金单
     let fineAmount = Number(data.calculated_fine || 0)
     const overdue = data.return_date && data.due_date && new Date(data.return_date) > new Date(data.due_date)
@@ -425,11 +731,13 @@ async function handleReturn() {
       fineAmount > 0 ? `归还成功，产生逾期罚金 ¥${fineAmount.toFixed(2)}` : '归还成功，无罚金'
     )
     returnForm.barcode = ''
+    if (selectedReturn.value) clearReturnRecord()
+    returnableAll.value = [] // 库存与在借书单已变化，下次展开重新拉取
     loadRecords()
     loadOverview()
   } catch (err) {
     lastResult.value = null
-    errorMessage.value = err.response?.data?.detail || '归还失败，请核对图书条码'
+    errorMessage.value = err.response?.data?.detail || '归还失败，请核对所选图书'
     window.$toast?.error(errorMessage.value)
   } finally {
     returnLoading.value = false
@@ -449,15 +757,26 @@ async function handleRenew(record) {
   }
 }
 
-// 卡号变动后旧读者信息失效，避免误判借阅资格
-watch(
-  () => borrowForm.cardNumber,
-  () => {
-    readerInfo.value = null
+// 路由带参变化时同步待办理图书（例如从另一本书的详情页再跳进来）
+watch(() => route.query.bookId, loadSelectedBook)
+
+// 点击面板外收起下拉，避免遮住下方按钮
+function handleDocumentClick(event) {
+  if (readerOptionsOpen.value && !readerPickerRef.value?.contains(event.target)) {
+    readerOptionsOpen.value = false
   }
-)
+  if (returnOptionsOpen.value && !returnPickerRef.value?.contains(event.target)) {
+    returnOptionsOpen.value = false
+  }
+}
 
 onMounted(() => {
   refreshAll()
+  loadSelectedBook()
+  document.addEventListener('click', handleDocumentClick)
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('click', handleDocumentClick)
 })
 </script>

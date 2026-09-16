@@ -202,8 +202,10 @@ class BorrowRecordCreate(BaseModel):
     copy_barcode: Optional[str] = None
 
 class QuickCirculationBorrow(BaseModel):
+    """服务台借书：barcode（扫实体册）与 book_id（按书目自动分配在架复本）二选一"""
     card_number: str
-    barcode: str
+    barcode: Optional[str] = None
+    book_id: Optional[int] = None
 
 class QuickCirculationReturn(BaseModel):
     barcode: Optional[str] = None

@@ -41,7 +41,7 @@
                 variant="primary"
                 block
                 :prepend-icon="BookOpenIcon"
-                @click="router.push('/circulation')"
+                @click="goToCirculation"
               >
                 前往服务台办理借出
               </Button>
@@ -374,6 +374,11 @@ async function handleDeleteMyReview() {
   } catch (err) {
     window.$toast?.error(err.response?.data?.detail || '删除失败')
   }
+}
+
+// 馆员办理：带着当前书目跳转服务台，落地后无需再扫条码
+function goToCirculation() {
+  router.push({ path: '/circulation', query: { bookId: book.value.id } })
 }
 
 async function handleSelfBorrow() {

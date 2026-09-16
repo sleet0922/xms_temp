@@ -79,6 +79,56 @@ def test_borrow_unknown_card_or_barcode(client, librarian_headers):
                        json={"card_number": "CARD-202601", "barcode": "NO-SUCH-BARCODE"}).status_code == 404
 
 
+def test_borrow_by_book_id_auto_assigns_copy(client, db, librarian_headers, available_copy):
+    """服务台按书目办理：无需条码，自动分配一册在架复本"""
+    book = db.query(Book).filter(Book.id == available_copy.book_id).first()
+    stock_before = book.available_copies
+
+    resp = client.post("/api/circulation/borrow", headers=librarian_headers,
+                       json={"card_number": "CARD-202601", "book_id": book.id})
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    assert body["book_id"] == book.id
+    assert body["copy_id"] is not None
+
+    db.refresh(book)
+    assert book.available_copies == stock_before - 1
+
+
+def test_borrow_requires_barcode_or_book_id(client, librarian_headers):
+    resp = client.post("/api/circulation/borrow", headers=librarian_headers,
+                       json={"card_number": "CARD-202601"})
+    assert resp.status_code == 400
+    assert "图书条码" in resp.json()["detail"]
+
+
+def test_borrow_by_unknown_book_id(client, librarian_headers):
+    assert client.post("/api/circulation/borrow", headers=librarian_headers,
+                       json={"card_number": "CARD-202601", "book_id": 999999}).status_code == 404
+
+
+def test_borrow_by_book_id_without_available_copy(client, db, librarian_headers):
+    book = db.query(Book).filter(Book.available_copies > 0).first()
+    for copy in db.query(BookCopy).filter(BookCopy.book_id == book.id).all():
+        copy.status = "borrowed"
+    book.available_copies = 0
+    db.commit()
+
+    resp = client.post("/api/circulation/borrow", headers=librarian_headers,
+                       json={"card_number": "CARD-202601", "book_id": book.id})
+    assert resp.status_code == 400
+    assert "预约" in resp.json()["detail"]
+
+
+def test_borrows_unreturned_filter_includes_overdue(client, db, librarian_headers, overdue_record):
+    """服务台还书下拉：未归还筛选应同时包含在借与逾期记录"""
+    records = client.get("/api/borrows", headers=librarian_headers,
+                         params={"status_filter": "unreturned", "limit": 100}).json()
+    assert records, "应有未归还记录"
+    assert all(r["return_date"] is None for r in records)
+    assert overdue_record.id in {r["id"] for r in records}
+
+
 def test_self_borrow_success(client, db, reader_headers, available_copy):
     """读者在线自助借阅：自动分配在架复本并同步库存"""
     student = _reader(db, "student")

@@ -22,14 +22,14 @@ from services.circulation import (
 router = APIRouter(tags=["流通借还"])
 
 
-@router.post("/api/circulation/borrow", response_model=BorrowRecordResponse, summary="服务台扫码借书")
+@router.post("/api/circulation/borrow", response_model=BorrowRecordResponse, summary="服务台借书（扫条码或按书目自动分配复本）")
 def quick_borrow(
     circ: QuickCirculationBorrow,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_librarian),
     request: Request = None,
 ):
-    return borrow_by_card(db, circ.card_number, circ.barcode, current_user, request)
+    return borrow_by_card(db, circ.card_number, circ.barcode, current_user, request, circ.book_id)
 
 
 @router.post("/api/circulation/return", response_model=BorrowRecordResponse, summary="服务台扫码还书（自动核算罚金）")
@@ -92,7 +92,10 @@ def list_borrow_records(
         query = query.filter(BorrowRecord.book_id == book_id)
 
     now = datetime.now()
-    if status_filter == "borrowed":
+    if status_filter == "unreturned":
+        # 服务台还书下拉：所有尚未归还的记录（含已逾期）
+        query = query.filter(BorrowRecord.return_date.is_(None))
+    elif status_filter == "borrowed":
         query = query.filter(BorrowRecord.return_date.is_(None), BorrowRecord.due_date >= now)
     elif status_filter == "overdue":
         query = query.filter(BorrowRecord.return_date.is_(None), BorrowRecord.due_date < now)

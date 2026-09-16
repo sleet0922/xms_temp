@@ -94,8 +94,10 @@ export const notificationsApi = {
 
 // Circulation API
 export const circulationApi = {
-  borrow: (cardNumber, barcode) => api.post('/circulation/borrow', { card_number: cardNumber, barcode }),
-  return: (barcode) => api.post('/circulation/return', { barcode }),
+  // 借书：传 barcode（扫实体册）或 book_id（按书目自动分配在架复本）
+  borrow: (data) => api.post('/circulation/borrow', data),
+  // 还书：传 barcode（扫实体册）或 record_id（按借阅记录归还）
+  return: (data) => api.post('/circulation/return', data),
   renew: (recordId) => api.post(`/circulation/renew/${recordId}`)
 }
 
