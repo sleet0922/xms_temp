@@ -37,13 +37,23 @@
 
             <div class="flex flex-col gap-3">
               <Button
-                v-if="book.available_copies > 0"
+                v-if="book.available_copies > 0 && userStore.isLibrarian"
                 variant="primary"
                 block
                 :prepend-icon="BookOpenIcon"
-                @click="handleBorrowHint"
+                @click="router.push('/circulation')"
               >
-                {{ userStore.isLibrarian ? '前往服务台办理借出' : '在架可借 · 查看服务台' }}
+                前往服务台办理借出
+              </Button>
+              <Button
+                v-else-if="book.available_copies > 0"
+                variant="primary"
+                block
+                :loading="borrowing"
+                :prepend-icon="BookOpenIcon"
+                @click="handleSelfBorrow"
+              >
+                立即借阅
               </Button>
               <Button
                 v-else
@@ -238,7 +248,7 @@ import {
   TrashIcon
 } from '@heroicons/vue/24/outline'
 import { useUserStore } from '@/stores/user'
-import { booksApi, reservationsApi, reviewsApi } from '@/api'
+import { booksApi, borrowsApi, reservationsApi, reviewsApi } from '@/api'
 import Card from '@/components/ui/Card.vue'
 import Button from '@/components/ui/Button.vue'
 import Badge from '@/components/ui/Badge.vue'
@@ -257,6 +267,7 @@ const similar = ref([])
 const loading = ref(true)
 const submittingReview = ref(false)
 const reserving = ref(false)
+const borrowing = ref(false)
 
 const reviewForm = reactive({ rating: 5, content: '' })
 
@@ -365,11 +376,16 @@ async function handleDeleteMyReview() {
   }
 }
 
-function handleBorrowHint() {
-  if (userStore.isLibrarian) {
-    router.push('/circulation')
-  } else {
-    window.$toast?.info('该图书在架可借，请携借书卡到馆内服务台或自助机办理借出')
+async function handleSelfBorrow() {
+  borrowing.value = true
+  try {
+    await borrowsApi.selfBorrow(book.value.id)
+    window.$toast?.success('借阅成功，可在「我的书架」查看归还日期')
+    await loadBook()
+  } catch (err) {
+    window.$toast?.error(err.response?.data?.detail || '借阅失败')
+  } finally {
+    borrowing.value = false
   }
 }
 

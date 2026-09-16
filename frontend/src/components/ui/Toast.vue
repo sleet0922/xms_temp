@@ -1,5 +1,5 @@
 <template>
-  <div v-if="message" class="fixed top-4 right-4 z-50 max-w-sm">
+  <div v-if="toasts.length" class="fixed top-4 right-4 z-50 max-w-sm">
     <TransitionGroup
       enter-active-class="transition-all duration-200 ease-out"
       enter-from-class="opacity-0 translate-x-8"

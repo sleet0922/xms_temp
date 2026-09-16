@@ -209,6 +209,10 @@ class QuickCirculationReturn(BaseModel):
     barcode: Optional[str] = None
     record_id: Optional[int] = None
 
+class SelfBorrowRequest(BaseModel):
+    """读者在线自助借阅：只需指定书目，系统自动分配在架复本"""
+    book_id: int
+
 class BorrowRecordResponse(BaseModel):
     id: int
     user_id: int

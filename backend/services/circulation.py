@@ -25,17 +25,8 @@ def enrich_borrow_record(rec: BorrowRecord, daily_fine_rate: Decimal) -> BorrowR
     return rec
 
 
-def borrow_by_card(
-    db: Session,
-    card_number: str,
-    barcode: str,
-    operator: User,
-    request: Optional[Request] = None,
-) -> BorrowRecord:
-    """服务台快速扫码借书：借书卡号 + 单册条形码"""
-    reader = db.query(User).filter(User.card_number == card_number).first()
-    if not reader:
-        raise HTTPException(status_code=404, detail=f"未找到借书卡号为 {card_number} 的读者")
+def ensure_reader_eligible(db: Session, reader: User) -> None:
+    """借阅前置校验：冻结账户、未缴罚款、最大借阅限额"""
     if reader.status == "frozen":
         raise HTTPException(status_code=403, detail="该读者借书卡已被冻结，无法借阅")
 
@@ -50,6 +41,21 @@ def borrow_by_card(
     ).count()
     if cur_count >= reader.max_borrow_limit:
         raise HTTPException(status_code=400, detail=f"已达该读者最大借阅限额({reader.max_borrow_limit}本)，请先还书")
+
+
+def borrow_by_card(
+    db: Session,
+    card_number: str,
+    barcode: str,
+    operator: User,
+    request: Optional[Request] = None,
+) -> BorrowRecord:
+    """服务台快速扫码借书：借书卡号 + 单册条形码"""
+    reader = db.query(User).filter(User.card_number == card_number).first()
+    if not reader:
+        raise HTTPException(status_code=404, detail=f"未找到借书卡号为 {card_number} 的读者")
+
+    ensure_reader_eligible(db, reader)
 
     copy = db.query(BookCopy).filter(BookCopy.barcode == barcode).first()
     if not copy:
@@ -86,6 +92,50 @@ def borrow_by_card(
     record_audit(
         db, operator, "CIRC_BORROW", "BORROW", str(record.id),
         f"为读者 {reader.full_name} 借出图书《{book.title}》(条码: {copy.barcode})", request,
+    )
+    return record
+
+
+def borrow_self(db: Session, reader: User, book_id: int, request: Optional[Request] = None) -> BorrowRecord:
+    """读者在线自助借阅：校验借阅资格后自动分配一册在架复本"""
+    ensure_reader_eligible(db, reader)
+
+    book = db.query(Book).filter(Book.id == book_id).first()
+    if not book:
+        raise HTTPException(status_code=404, detail="图书不存在或已下架")
+
+    copy = (
+        db.query(BookCopy)
+        .filter(BookCopy.book_id == book.id, BookCopy.status == "available")
+        .first()
+    )
+    if not copy:
+        raise HTTPException(status_code=400, detail="该图书暂无可借的在架复本，可先加入预约队列")
+
+    rules = get_rules(db)
+    now = datetime.now()
+    record = BorrowRecord(
+        user_id=reader.id,
+        book_id=book.id,
+        copy_id=copy.id,
+        borrow_date=now,
+        due_date=now + timedelta(days=rules["borrow_days"]),
+        renew_count=0,
+        status="borrowed",
+        notes="读者在线自助借阅",
+    )
+
+    copy.status = "borrowed"
+    book.available_copies = max(0, book.available_copies - 1)
+    book.borrow_count += 1
+
+    db.add(record)
+    db.commit()
+    db.refresh(record)
+
+    record_audit(
+        db, reader, "CIRC_SELF_BORROW", "BORROW", str(record.id),
+        f"读者 {reader.full_name} 在线自助借阅《{book.title}》(条码: {copy.barcode})", request,
     )
     return record
 

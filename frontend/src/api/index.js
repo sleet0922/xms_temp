@@ -103,7 +103,8 @@ export const circulationApi = {
 export const borrowsApi = {
   getList: (params) => api.get('/borrows', { params }),
   getMyBorrows: () => api.get('/borrows/my'),
-  renewBorrow: (id) => api.post(`/circulation/renew/${id}`)
+  renewBorrow: (id) => api.post(`/circulation/renew/${id}`),
+  selfBorrow: (bookId) => api.post('/borrows/self', { book_id: bookId })
 }
 
 // Readers API

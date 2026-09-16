@@ -79,6 +79,55 @@ def test_borrow_unknown_card_or_barcode(client, librarian_headers):
                        json={"card_number": "CARD-202601", "barcode": "NO-SUCH-BARCODE"}).status_code == 404
 
 
+def test_self_borrow_success(client, db, reader_headers, available_copy):
+    """读者在线自助借阅：自动分配在架复本并同步库存"""
+    student = _reader(db, "student")
+    book = db.query(Book).filter(Book.id == available_copy.book_id).first()
+    stock_before = book.available_copies
+
+    resp = client.post("/api/borrows/self", headers=reader_headers, json={"book_id": book.id})
+    assert resp.status_code == 201, resp.text
+    body = resp.json()
+    assert body["user_id"] == student.id
+    assert body["status"] == "borrowed"
+    assert body["copy_id"] is not None
+
+    db.refresh(book)
+    db.refresh(available_copy)
+    assert book.available_copies == stock_before - 1
+    assert available_copy.status == "borrowed"
+
+
+def test_self_borrow_requires_available_copy(client, db, reader_headers):
+    """全部复本借出后不可自助借阅，应引导预约排队"""
+    book = db.query(Book).filter(Book.available_copies > 0).first()
+    for copy in db.query(BookCopy).filter(BookCopy.book_id == book.id).all():
+        copy.status = "borrowed"
+    book.available_copies = 0
+    db.commit()
+
+    resp = client.post("/api/borrows/self", headers=reader_headers, json={"book_id": book.id})
+    assert resp.status_code == 400
+    assert "预约" in resp.json()["detail"]
+
+
+def test_self_borrow_blocked_by_unpaid_fine(client, db, available_copy):
+    zhangsan = _reader(db, "zhangsan")
+    book = db.query(Book).filter(Book.id == available_copy.book_id).first()
+
+    resp = client.post("/api/borrows/self", headers=auth_headers(client, "zhangsan"),
+                       json={"book_id": book.id})
+    assert resp.status_code == 400
+    assert "罚款" in resp.json()["detail"]
+    assert db.query(BorrowRecord).filter(BorrowRecord.user_id == zhangsan.id,
+                                         BorrowRecord.notes.like("%自助%")).count() == 0
+
+
+def test_self_borrow_unknown_book(client, reader_headers):
+    assert client.post("/api/borrows/self", headers=reader_headers,
+                       json={"book_id": 999999}).status_code == 404
+
+
 def test_return_overdue_creates_fine_and_notification(client, db, librarian_headers, overdue_record):
     overdue_days = (datetime.now() - overdue_record.due_date).days
 

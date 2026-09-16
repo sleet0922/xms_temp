@@ -12,11 +12,11 @@ from database import get_db
 from models import Book, BorrowRecord, Reservation, User
 from schemas import (
     BorrowRecordResponse, QuickCirculationBorrow, QuickCirculationReturn,
-    ReservationCreate, ReservationResponse,
+    ReservationCreate, ReservationResponse, SelfBorrowRequest,
 )
 from services.audit import get_rules
 from services.circulation import (
-    borrow_by_card, enrich_borrow_record, renew_record, return_by_barcode_or_record,
+    borrow_by_card, borrow_self, enrich_borrow_record, renew_record, return_by_barcode_or_record,
 )
 
 router = APIRouter(tags=["流通借还"])
@@ -41,6 +41,21 @@ def quick_return(
 ):
     record, _fine = return_by_barcode_or_record(db, circ.barcode, circ.record_id, current_user, request)
     return record
+
+
+@router.post(
+    "/api/borrows/self",
+    response_model=BorrowRecordResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="读者在线自助借阅（自动分配在架复本）",
+)
+def self_borrow(
+    payload: SelfBorrowRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    request: Request = None,
+):
+    return borrow_self(db, current_user, payload.book_id, request)
 
 
 @router.post("/api/circulation/renew/{record_id}", response_model=BorrowRecordResponse, summary="续借（读者自助 / 馆员代办）")
