@@ -1,0 +1,57 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+.venv/
+env/
+ENV/
+*.egg-info/
+build/
+
+# 前端构建产物
+dist/
+node_modules/
+
+# Node
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.DS_Store
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 环境变量
+.env
+.env.local
+
+# 数据库（SQLite 及 WAL 副本）
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+*.sql.backup
+
+# 日志
+*.log
+
+# 工具缓存
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.eslintcache
+
+# 爬虫产物：封面图不入库，需要时运行 pc/crawler.py 重新下载
+resources/covers/
+
+# 临时/探索性目录
+resources/_probe/
