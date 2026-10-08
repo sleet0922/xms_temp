@@ -1,5 +1,5 @@
 <template>
-  <div class="p-6 lg:p-8 max-w-7xl mx-auto">
+  <div class="neo-page p-6 lg:p-8 max-w-7xl mx-auto">
     <PageHeader title="预约排队" subtitle="缺货图书的预约队列与到馆提醒">
       <template #actions>
         <Button variant="outline" :prepend-icon="ArrowPathIcon" :loading="loading" @click="loadReservations">刷新</Button>

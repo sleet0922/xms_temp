@@ -1,12 +1,12 @@
 <template>
   <HeadlessTabGroup :selected-index="selectedIndex" @change="handleChange">
-    <HeadlessTabList class="flex gap-2 border-b border-gray-200">
+    <HeadlessTabList class="neo-tab-list flex gap-2 border-b">
       <HeadlessTab v-for="(tab, index) in tabs" :key="index" v-slot="{ selected }" as="template">
         <button :class="[
-          'px-4 py-2 text-sm font-medium transition-all duration-200 border-b-2 -mb-px rounded-t-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 active:scale-[0.98]',
+          'px-4 py-2 text-sm font-medium transition-all duration-200 border-b-2 -mb-px rounded-t-xl focus:outline-none focus:ring-2 focus:ring-teal-600 focus:ring-offset-2 active:scale-[0.98]',
           selected
-            ? 'border-blue-600 text-blue-700'
-            : 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50 hover:border-gray-300'
+            ? 'neo-tab-active'
+            : 'neo-tab-idle border-transparent'
         ]">
           {{ tab }}
         </button>

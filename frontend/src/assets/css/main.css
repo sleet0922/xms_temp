@@ -2,20 +2,48 @@
 @tailwind components;
 @tailwind utilities;
 
-/*
- * Corporate Clean 基础层
- * 页面统一浅色底 + 灰阶文字层级，交互反馈交由组件类控制
- */
+:root {
+  color-scheme: light;
+  --neo-bg: #e8edf2;
+  --neo-surface: #e8edf2;
+  --neo-ink: #27333d;
+  --neo-muted: #71808d;
+  --neo-line: rgba(255, 255, 255, 0.7);
+  --neo-dark-shadow: rgba(159, 172, 187, 0.62);
+  --neo-light-shadow: rgba(255, 255, 255, 0.96);
+  --neo-raised: 10px 10px 22px var(--neo-dark-shadow), -10px -10px 22px var(--neo-light-shadow);
+  --neo-raised-small: 6px 6px 14px rgba(159, 172, 187, 0.5), -6px -6px 14px rgba(255, 255, 255, 0.92);
+  --neo-inset: inset 5px 5px 11px rgba(159, 172, 187, 0.45), inset -5px -5px 11px rgba(255, 255, 255, 0.9);
+  --neo-teal: #3d777b;
+  --neo-teal-dark: #2e5e62;
+  --neo-coral: #c86d63;
+  --neo-amber: #b88643;
+  --neo-green: #4f806c;
+  --neo-red: #b85e61;
+  --neo-radius: 18px;
+  --neo-ease: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
 @layer base {
   html {
     -webkit-tap-highlight-color: transparent;
   }
 
   body {
-    @apply bg-slate-50 text-gray-900 antialiased;
+    @apply antialiased;
+    background: var(--neo-bg);
+    color: var(--neo-ink);
+    font-family: 'Inter var', 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
   }
 
-  /* 数字输入框去掉浏览器默认步进箭头，保持输入框视觉一致 */
+  button,
+  a,
+  input,
+  textarea,
+  select {
+    -webkit-tap-highlight-color: transparent;
+  }
+
   input[type='number']::-webkit-outer-spin-button,
   input[type='number']::-webkit-inner-spin-button {
     -webkit-appearance: none;
@@ -27,26 +55,107 @@
   }
 
   ::selection {
-    @apply bg-blue-100 text-blue-900;
+    background: #c9dedd;
+    color: #24464a;
   }
 }
 
 @layer utilities {
-  /* 细滚动条：低对比、不抢视觉焦点 */
   .scrollbar-thin::-webkit-scrollbar {
     width: 8px;
     height: 8px;
   }
 
   .scrollbar-thin::-webkit-scrollbar-thumb {
-    @apply rounded-full bg-gray-300;
+    border: 2px solid transparent;
+    border-radius: 999px;
+    background: #b8c4ce;
+    background-clip: padding-box;
   }
 
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-    @apply bg-gray-400;
+    background: #93a4b1;
+    background-clip: padding-box;
   }
 
   .scrollbar-thin::-webkit-scrollbar-track {
     background: transparent;
   }
+}
+
+/* Shared material layer used by every authenticated screen. */
+.neo-page { min-height: calc(100vh - 76px); }
+.neo-auth { background: var(--neo-bg); }
+.neo-shell { background: var(--neo-bg); }
+.neo-sidebar {
+  background: var(--neo-bg);
+  box-shadow: 12px 0 30px rgba(159, 172, 187, 0.18), inset -1px 0 rgba(255, 255, 255, 0.7);
+}
+.neo-brand-mark { background: var(--neo-bg); box-shadow: var(--neo-raised-small); }
+.neo-header {
+  background: rgba(232, 237, 242, 0.88);
+  border-color: rgba(255, 255, 255, 0.7);
+  box-shadow: 0 8px 22px rgba(159, 172, 187, 0.24);
+  backdrop-filter: blur(14px);
+}
+.neo-nav-item {
+  color: var(--neo-muted);
+  border: 1px solid transparent;
+  transition: color 180ms var(--neo-ease), background 180ms var(--neo-ease), box-shadow 180ms var(--neo-ease), transform 180ms var(--neo-ease);
+}
+.neo-nav-item:hover { color: var(--neo-ink); background: rgba(255, 255, 255, 0.35); box-shadow: var(--neo-raised-small); transform: translateX(2px); }
+.neo-nav-item.is-active { color: var(--neo-teal-dark); background: var(--neo-bg); border-color: rgba(255, 255, 255, 0.65); box-shadow: var(--neo-inset); }
+.neo-user-orb { color: #f5fbfa; background: var(--neo-teal); box-shadow: 5px 5px 12px rgba(49, 95, 99, 0.28), -4px -4px 10px rgba(255, 255, 255, 0.72); }
+.neo-card { background: var(--neo-surface); border: 1px solid var(--neo-line); border-radius: var(--neo-radius); box-shadow: var(--neo-raised); }
+.neo-card.neo-card-hover:hover { transform: translateY(-3px); box-shadow: 13px 13px 28px var(--neo-dark-shadow), -13px -13px 28px var(--neo-light-shadow); }
+.neo-page-title { color: var(--neo-ink); letter-spacing: -0.02em; }
+.neo-page-subtitle, .neo-muted { color: var(--neo-muted); }
+.neo-control, .neo-textarea, .neo-select-button { color: var(--neo-ink); background: var(--neo-bg); border: 1px solid rgba(255, 255, 255, 0.62); box-shadow: var(--neo-inset); }
+.neo-control::placeholder, .neo-textarea::placeholder { color: #8b99a5; }
+.neo-control:focus, .neo-textarea:focus, .neo-select-button:focus { border-color: rgba(61, 119, 123, 0.6); box-shadow: inset 4px 4px 9px rgba(159, 172, 187, 0.34), inset -4px -4px 9px rgba(255, 255, 255, 0.82), 0 0 0 3px rgba(61, 119, 123, 0.16); }
+.neo-button { border: 1px solid rgba(255, 255, 255, 0.5); border-radius: 14px; transition: transform 160ms var(--neo-ease), box-shadow 160ms var(--neo-ease), background 160ms var(--neo-ease), color 160ms var(--neo-ease); }
+.neo-button:active { transform: scale(0.97) translateY(1px); box-shadow: var(--neo-inset); }
+.neo-button-primary { color: #f5fbfa; background: var(--neo-teal); box-shadow: 6px 6px 13px rgba(52, 102, 105, 0.32), -5px -5px 12px rgba(255, 255, 255, 0.78); }
+.neo-button-primary:hover { background: var(--neo-teal-dark); box-shadow: 8px 8px 17px rgba(52, 102, 105, 0.35), -6px -6px 14px rgba(255, 255, 255, 0.84); }
+.neo-button-danger { color: #fff8f7; background: var(--neo-coral); box-shadow: 6px 6px 13px rgba(158, 85, 82, 0.28), -5px -5px 12px rgba(255, 255, 255, 0.78); }
+.neo-button-outline, .neo-button-secondary { color: var(--neo-ink); background: var(--neo-bg); box-shadow: var(--neo-raised-small); }
+.neo-button-outline:hover, .neo-button-secondary:hover { color: var(--neo-teal-dark); box-shadow: var(--neo-inset); }
+.neo-button-ghost { color: var(--neo-muted); background: transparent; }
+.neo-button-ghost:hover { color: var(--neo-ink); background: rgba(255, 255, 255, 0.38); box-shadow: var(--neo-raised-small); }
+.neo-badge { border: 1px solid rgba(255, 255, 255, 0.65); box-shadow: 2px 2px 5px rgba(159, 172, 187, 0.25), -2px -2px 5px rgba(255, 255, 255, 0.7); }
+.neo-stat-icon { background: var(--neo-bg); box-shadow: var(--neo-inset); }
+.neo-dialog-backdrop { background: rgba(40, 53, 64, 0.38); backdrop-filter: blur(8px); }
+.neo-dialog { background: var(--neo-bg); border: 1px solid rgba(255, 255, 255, 0.72); box-shadow: 18px 18px 42px rgba(73, 91, 107, 0.34), -12px -12px 30px rgba(255, 255, 255, 0.76); }
+.neo-table-head { color: var(--neo-muted); background: rgba(207, 218, 226, 0.52); }
+.neo-table-row { border-color: rgba(255, 255, 255, 0.62); }
+.neo-table-row:hover { background: rgba(255, 255, 255, 0.35); }
+.neo-page table thead.bg-gray-50 { background: rgba(207, 218, 226, 0.52) !important; border-color: rgba(255, 255, 255, 0.62) !important; }
+.neo-page table tbody tr:hover { background: rgba(255, 255, 255, 0.35) !important; }
+.neo-page table tbody.divide-y { --tw-divide-opacity: 1; border-color: rgba(255, 255, 255, 0.62); }
+.neo-tab-list { border-color: rgba(255, 255, 255, 0.62); }
+.neo-tab-active { color: var(--neo-teal-dark); border-color: var(--neo-teal); background: rgba(255, 255, 255, 0.35); box-shadow: var(--neo-inset); }
+.neo-tab-idle { color: var(--neo-muted); }
+.neo-tab-idle:hover { color: var(--neo-ink); background: rgba(255, 255, 255, 0.35); }
+
+/* Legacy utility classes remain in a few dense data views; map them to the same palette. */
+.neo-page .bg-white, .neo-auth .bg-white { background: var(--neo-surface) !important; }
+.neo-page .bg-gray-50, .neo-auth .bg-gray-50 { background: rgba(214, 224, 231, 0.58) !important; }
+.neo-page .bg-gray-100, .neo-auth .bg-gray-100 { background: rgba(207, 218, 226, 0.72) !important; }
+.neo-page .border-gray-200, .neo-auth .border-gray-200 { border-color: rgba(255, 255, 255, 0.62) !important; }
+.neo-page .shadow-sm, .neo-auth .shadow-sm { box-shadow: var(--neo-raised-small) !important; }
+.neo-page .text-gray-900, .neo-auth .text-gray-900 { color: var(--neo-ink) !important; }
+.neo-page .text-gray-700, .neo-page .text-gray-600, .neo-auth .text-gray-700, .neo-auth .text-gray-600 { color: var(--neo-muted) !important; }
+.neo-page .text-blue-600, .neo-page .text-blue-700, .neo-auth .text-blue-600, .neo-auth .text-blue-700 { color: var(--neo-teal) !important; }
+.neo-page .bg-blue-600, .neo-page .bg-blue-500, .neo-auth .bg-blue-600, .neo-auth .bg-blue-500 { background: var(--neo-teal) !important; }
+.neo-page .bg-blue-50, .neo-auth .bg-blue-50 { background: #d7e6e5 !important; }
+.neo-page .bg-green-600, .neo-page .bg-green-500 { background: var(--neo-green) !important; }
+.neo-page .bg-red-600, .neo-page .bg-red-500 { background: var(--neo-coral) !important; }
+.neo-page .bg-amber-600, .neo-page .bg-amber-500 { background: var(--neo-amber) !important; }
+
+@media (max-width: 1023px) {
+  .neo-sidebar { box-shadow: 16px 0 32px rgba(73, 91, 107, 0.25); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
 }

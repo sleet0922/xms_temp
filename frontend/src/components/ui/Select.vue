@@ -28,13 +28,13 @@
             as="template"
           >
             <li :class="[
-              active ? 'bg-blue-50 text-blue-900' : 'text-gray-900',
+              active ? 'bg-[#d5e4e3] text-[#2e5e62]' : 'text-gray-900',
               'relative cursor-pointer select-none py-2 pl-10 pr-4 transition-colors duration-150'
             ]">
               <span :class="[isSelected ? 'font-medium' : 'font-normal', 'block truncate']">
                 {{ getDisplayValue(option) }}
               </span>
-              <span v-if="isSelected" class="absolute inset-y-0 left-0 flex items-center pl-3 text-blue-600">
+              <span v-if="isSelected" class="absolute inset-y-0 left-0 flex items-center pl-3 text-[#3d777b]">
                 <CheckIcon class="h-5 w-5" aria-hidden="true" />
               </span>
             </li>
@@ -93,16 +93,16 @@ const selected = computed({
 })
 
 const buttonClasses = computed(() => {
-  const base = 'relative w-full cursor-pointer rounded-lg bg-white py-2 pl-3 pr-10 text-left border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-50 disabled:cursor-not-allowed'
+  const base = 'neo-select-button relative w-full cursor-pointer rounded-xl py-2 pl-3 pr-10 text-left transition-all duration-200 focus:outline-none disabled:bg-gray-50 disabled:cursor-not-allowed'
 
   const borderColor = props.error
     ? 'border-red-300'
-    : 'border-gray-300'
+    : ''
 
   return [base, borderColor].join(' ')
 })
 
-const optionsClasses = 'absolute z-10 mt-1 max-h-60 w-full overflow-auto scrollbar-thin rounded-lg bg-white py-1 shadow-md border border-gray-200 focus:outline-none'
+const optionsClasses = 'absolute z-10 mt-2 max-h-60 w-full overflow-auto scrollbar-thin rounded-2xl bg-[#e8edf2] py-2 shadow-xl border border-white/70 focus:outline-none'
 
 const getDisplayValue = (option) => {
   if (!option) return ''

@@ -13,12 +13,12 @@
         :disabled="p === '...'"
         @click="p !== '...' && go(p)"
         :class="[
-          'min-w-[2.25rem] h-9 px-2 rounded-lg text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
+          'neo-button min-w-[2.25rem] h-9 px-2 rounded-xl text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2',
           p === page
-            ? 'bg-blue-600 text-white shadow-sm'
+            ? 'neo-button-primary text-white'
             : p === '...'
               ? 'text-gray-400 cursor-default'
-              : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 hover:-translate-y-0.5 hover:shadow-sm active:scale-[0.98] active:translate-y-0'
+              : 'neo-button-outline text-gray-700'
         ]"
       >
         {{ p }}

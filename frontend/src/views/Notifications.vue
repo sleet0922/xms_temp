@@ -1,5 +1,5 @@
 <template>
-  <div class="p-6 lg:p-8 max-w-7xl mx-auto">
+  <div class="neo-page p-6 lg:p-8 max-w-7xl mx-auto">
     <PageHeader title="消息通知中心" subtitle="到期提醒、逾期预警、预约到书与罚金通知的统一入口">
       <template #actions>
         <Button

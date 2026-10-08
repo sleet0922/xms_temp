@@ -1,5 +1,5 @@
 <template>
-  <div class="p-6 lg:p-8 max-w-7xl mx-auto">
+  <div class="neo-page p-6 lg:p-8 max-w-7xl mx-auto">
     <PageHeader
       title="罚金账务中心"
       subtitle="逾期滞纳、损坏赔偿的账单结算与催缴管理"

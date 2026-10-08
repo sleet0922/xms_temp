@@ -1,5 +1,5 @@
 <template>
-  <div class="p-6 lg:p-8 max-w-7xl mx-auto">
+  <div class="neo-page p-6 lg:p-8 max-w-7xl mx-auto">
     <PageHeader title="系统设置与审计" subtitle="借阅规则配置、公告发布与操作留痕">
       <template #actions>
         <Button variant="outline" :prepend-icon="ArrowPathIcon" :loading="refreshing" @click="loadAll">

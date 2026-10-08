@@ -1,5 +1,5 @@
 <template>
-  <div class="p-6 lg:p-8 max-w-7xl mx-auto">
+  <div class="neo-page p-6 lg:p-8 max-w-7xl mx-auto">
     <PageHeader title="我的书架" subtitle="在借图书、借阅时间线、预约排队与我的书评">
       <template #actions>
         <Button variant="outline" :prepend-icon="ArrowPathIcon" :loading="loading" @click="loadAll">刷新</Button>

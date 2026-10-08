@@ -1,5 +1,5 @@
 <template>
-  <div class="p-6 lg:p-8 max-w-7xl mx-auto">
+  <div class="neo-page p-6 lg:p-8 max-w-7xl mx-auto">
     <PageHeader title="书目大厅" subtitle="电子馆藏检索、筛选与编目管理">
       <template #actions>
         <Button variant="outline" :prepend-icon="DocumentArrowDownIcon" @click="exportBooks">导出</Button>

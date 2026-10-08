@@ -1,5 +1,5 @@
 <template>
-  <div class="p-6 lg:p-8 max-w-7xl mx-auto">
+  <div class="neo-page p-6 lg:p-8 max-w-7xl mx-auto">
     <PageHeader title="智慧借还服务台" subtitle="扫码即借、即还，逾期自动核算罚金">
       <template #actions>
         <Button variant="outline" :prepend-icon="ArrowPathIcon" :loading="refreshing" @click="refreshAll">

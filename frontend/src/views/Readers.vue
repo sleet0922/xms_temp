@@ -1,5 +1,5 @@
 <template>
-  <div class="p-6 lg:p-8 max-w-7xl mx-auto">
+  <div class="neo-page p-6 lg:p-8 max-w-7xl mx-auto">
     <PageHeader title="读者档案管理" subtitle="借书卡发放、读者信息维护与借阅画像">
       <template #actions>
         <Button variant="outline" :prepend-icon="ArrowPathIcon" :loading="loading" @click="loadReaders">

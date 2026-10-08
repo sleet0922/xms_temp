@@ -5,7 +5,7 @@
       :key="star"
       type="button"
       :disabled="!editable"
-      class="rounded transition-all duration-150 ease-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+      class="rounded-lg transition-all duration-150 ease-out focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
       :class="editable ? 'hover:scale-110 active:scale-[0.98] cursor-pointer' : 'cursor-default'"
       @click="select(star)"
       @mouseenter="hovered = star"

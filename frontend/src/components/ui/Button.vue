@@ -58,7 +58,7 @@ const props = defineProps({
 const emit = defineEmits(['click'])
 
 const buttonClasses = computed(() => {
-  const base = 'inline-flex items-center justify-center font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]'
+  const base = 'neo-button inline-flex items-center justify-center font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]'
 
   const sizes = {
     small: 'px-3 py-1.5 text-sm rounded-lg',
@@ -67,11 +67,11 @@ const buttonClasses = computed(() => {
   }
 
   const variants = {
-    primary: 'bg-blue-600 text-white hover:bg-blue-700 hover:-translate-y-0.5 hover:shadow shadow-sm',
-    secondary: 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:-translate-y-0.5 hover:shadow-sm',
-    danger: 'bg-red-600 text-white hover:bg-red-700 hover:-translate-y-0.5 hover:shadow shadow-sm',
-    ghost: 'bg-transparent text-gray-700 hover:bg-gray-100',
-    outline: 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 hover:-translate-y-0.5 hover:shadow-sm'
+    primary: 'neo-button-primary',
+    secondary: 'neo-button-secondary',
+    danger: 'neo-button-danger',
+    ghost: 'neo-button-ghost',
+    outline: 'neo-button-outline'
   }
 
   const width = props.block ? 'w-full' : ''

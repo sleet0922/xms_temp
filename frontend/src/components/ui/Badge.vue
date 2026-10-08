@@ -21,7 +21,7 @@ const props = defineProps({
 })
 
 const badgeClasses = computed(() => {
-  const base = 'inline-flex items-center font-medium rounded-lg'
+  const base = 'neo-badge inline-flex items-center font-medium rounded-xl'
 
   const sizes = {
     small: 'px-2 py-0.5 text-xs',

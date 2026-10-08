@@ -1,5 +1,5 @@
 <template>
-  <div :class="['relative bg-gray-100 overflow-hidden flex items-center justify-center', ratioClass]">
+  <div :class="['neo-stat-icon relative overflow-hidden flex items-center justify-center rounded-2xl', ratioClass]">
     <img
       v-if="src && !failed"
       :src="src"

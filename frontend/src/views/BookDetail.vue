@@ -1,5 +1,5 @@
 <template>
-  <div class="p-6 lg:p-8 max-w-7xl mx-auto">
+  <div class="neo-page p-6 lg:p-8 max-w-7xl mx-auto">
     <div class="mb-6 flex items-center gap-3">
       <Button variant="ghost" size="small" :prepend-icon="ArrowLeftIcon" @click="router.back()">返回</Button>
       <nav class="text-sm text-gray-500">

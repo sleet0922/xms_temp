@@ -1,5 +1,5 @@
 <template>
-  <div class="p-6 lg:p-8 max-w-7xl mx-auto">
+  <div class="neo-page p-6 lg:p-8 max-w-7xl mx-auto">
     <PageHeader title="全馆仪表盘" subtitle="馆藏、流通、读者互动与数字资源的实时总览">
       <template #actions>
         <Button variant="outline" :prepend-icon="ChartBarIcon" @click="router.push('/analytics')">
@@ -29,7 +29,7 @@
             <h2 class="text-lg font-semibold tracking-tight text-gray-900">我的阅读</h2>
             <p class="text-xs text-gray-500 mt-1">与你账号关联的在借、逾期、罚金与通知概览</p>
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
-              <div v-for="item in myReading" :key="item.label" class="bg-gray-50 rounded-lg p-4">
+              <div v-for="item in myReading" :key="item.label" class="neo-stat-icon rounded-2xl p-4">
                 <div class="text-xs text-gray-500">{{ item.label }}</div>
                 <div class="text-2xl font-semibold tracking-tight mt-1" :class="item.tone">
                   {{ item.value }}
@@ -159,7 +159,7 @@
           v-for="item in recommendations"
           :key="item.book.id"
           type="button"
-          class="text-left bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 active:scale-[0.98]"
+          class="neo-card neo-card-hover text-left overflow-hidden transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 active:scale-[0.98]"
           @click="router.push(`/books/${item.book.id}`)"
         >
           <BookCover :book="item.book" ratio="3/4" />

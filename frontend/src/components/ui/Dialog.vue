@@ -10,7 +10,7 @@
         leave-from="opacity-100"
         leave-to="opacity-0"
       >
-        <div class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm" />
+        <div class="neo-dialog-backdrop fixed inset-0" />
       </TransitionChild>
 
       <div class="fixed inset-0 overflow-y-auto">
@@ -25,14 +25,14 @@
             leave-to="opacity-0 scale-95"
           >
             <DialogPanel :class="dialogClasses">
-              <div v-if="title" class="flex items-center justify-between mb-4">
+              <div v-if="title" class="flex items-center justify-between mb-5">
                 <DialogTitle class="text-xl font-semibold tracking-tight text-gray-900">
                   {{ title }}
                 </DialogTitle>
                 <button
                   v-if="showClose"
                   @click="handleClose"
-                  class="p-1 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-150 ease-out active:scale-[0.98]"
+                    class="p-2 rounded-xl text-gray-400 hover:bg-white/40 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 transition-all duration-150 ease-out active:scale-[0.98]"
                 >
                   <XMarkIcon class="w-6 h-6" />
                 </button>
@@ -93,7 +93,7 @@ const dialogClasses = computed(() => {
   }
 
   return [
-    'relative bg-white rounded-xl shadow-md border border-gray-200 p-6 w-full',
+    'neo-dialog relative rounded-3xl p-6 w-full',
     maxWidths[props.maxWidth]
   ].join(' ')
 })

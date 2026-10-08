@@ -47,7 +47,7 @@ const props = defineProps({
 defineEmits(['update:modelValue'])
 
 const alertClasses = computed(() => {
-  const base = 'rounded-lg border p-4'
+  const base = 'rounded-2xl border p-4 shadow-sm'
 
   const variants = {
     success: 'bg-green-50 border-green-200 text-green-800',

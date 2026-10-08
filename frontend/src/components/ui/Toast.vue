@@ -44,7 +44,7 @@ import {
 const toasts = ref([])
 
 const toastClasses = (type) => {
-  const base = 'bg-white border rounded-xl shadow-md p-4 transition-all duration-200'
+  const base = 'bg-[#e8edf2] border rounded-2xl shadow-[8px_8px_18px_rgba(159,172,187,.55),-8px_-8px_18px_rgba(255,255,255,.9)] p-4 transition-all duration-200'
 
   const types = {
     success: 'border-green-200 text-green-800',

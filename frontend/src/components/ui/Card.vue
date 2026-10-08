@@ -18,7 +18,7 @@ const props = defineProps({
 })
 
 const cardClasses = computed(() => {
-  const base = 'bg-white border border-gray-200 rounded-xl shadow-sm transition-all duration-200'
+  const base = 'neo-card transition-all duration-200'
 
   const paddings = {
     none: '',
@@ -28,7 +28,7 @@ const cardClasses = computed(() => {
   }
 
   const interactive = props.hover || props.clickable
-    ? 'hover:-translate-y-0.5 hover:shadow-md'
+    ? 'neo-card-hover'
     : ''
 
   const cursor = props.clickable ? 'cursor-pointer' : ''

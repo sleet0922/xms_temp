@@ -1,6 +1,6 @@
 <template>
   <div class="flex flex-col items-center justify-center py-12 px-4 text-center">
-    <div class="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center mb-3">
+    <div class="neo-stat-icon w-12 h-12 rounded-2xl flex items-center justify-center mb-3">
       <component :is="icon" class="w-6 h-6 text-gray-400" />
     </div>
     <p class="text-sm font-medium text-gray-900">{{ title }}</p>

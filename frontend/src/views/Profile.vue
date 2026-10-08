@@ -1,5 +1,5 @@
 <template>
-  <div class="p-6 lg:p-8 max-w-7xl mx-auto">
+  <div class="neo-page p-6 lg:p-8 max-w-7xl mx-auto">
     <PageHeader title="个人中心与借书卡" subtitle="借书卡信息、个人资料维护、密码修改与我的书评" />
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -7,7 +7,7 @@
       <div class="space-y-6">
         <Card padding="normal">
           <div class="flex items-center gap-4">
-            <div class="w-16 h-16 rounded-full bg-blue-600 text-white text-2xl font-semibold flex items-center justify-center flex-shrink-0">
+            <div class="neo-user-orb w-16 h-16 rounded-3xl text-2xl font-semibold flex items-center justify-center flex-shrink-0">
               {{ initial }}
             </div>
             <div class="min-w-0">

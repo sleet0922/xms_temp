@@ -1,24 +1,24 @@
 <template>
-  <div class="min-h-screen bg-slate-50">
+  <div class="neo-shell min-h-screen">
     <!-- 移动端遮罩 -->
     <div
       v-if="sidebarOpen"
-      class="fixed inset-0 z-30 bg-gray-900/40 lg:hidden transition-opacity duration-200"
+      class="neo-dialog-backdrop fixed inset-0 z-30 lg:hidden transition-opacity duration-200"
       @click="sidebarOpen = false"
     ></div>
 
     <!-- 侧边栏 -->
     <aside
       :class="[
-        'fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-gray-200 transform transition-transform duration-200 ease-out lg:translate-x-0',
+        'neo-sidebar fixed inset-y-0 left-0 z-40 w-64 border-r border-white/60 transform transition-transform duration-200 ease-out lg:translate-x-0',
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       ]"
     >
       <div class="flex flex-col h-full">
         <!-- Logo -->
         <RouterLink to="/" class="flex items-center gap-3 px-6 h-16 border-b border-gray-200 group">
-          <div class="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center transition-all duration-200 ease-out group-hover:bg-blue-500 group-hover:scale-110">
-            <component :is="getIconComponent('mdi-library')" class="w-5 h-5 text-blue-600 transition-colors duration-200 group-hover:text-white" />
+          <div class="neo-brand-mark w-10 h-10 rounded-2xl flex items-center justify-center transition-all duration-200 ease-out group-hover:scale-105">
+            <component :is="getIconComponent('mdi-library')" class="w-5 h-5 text-[#3d777b] transition-colors duration-200" />
           </div>
           <div class="min-w-0">
             <div class="text-gray-900 font-semibold tracking-tight leading-tight truncate">智慧云图书馆</div>
@@ -37,10 +37,10 @@
               :to="item.path"
               @click="sidebarOpen = false"
               :class="[
-                'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ease-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 active:scale-[0.98]',
+                'neo-nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 ease-out focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 active:scale-[0.98]',
                 isActive(item.path)
-                  ? 'bg-blue-50 text-blue-700 shadow-sm'
-                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  ? 'is-active'
+                  : ''
               ]"
             >
               <component :is="getIconComponent(item.icon)" class="w-5 h-5 flex-shrink-0" />
@@ -56,13 +56,13 @@
         </nav>
 
         <!-- 底部用户信息 -->
-        <div class="border-t border-gray-200 p-4">
+          <div class="border-t border-white/60 p-4">
           <RouterLink
             to="/profile"
             @click="sidebarOpen = false"
-            class="flex items-center gap-3 px-2 py-2 rounded-lg transition-all duration-150 ease-out hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            class="flex items-center gap-3 px-2 py-2 rounded-xl transition-all duration-150 ease-out hover:bg-white/30 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
           >
-            <div class="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold flex-shrink-0">
+            <div class="neo-user-orb w-10 h-10 rounded-2xl flex items-center justify-center font-semibold flex-shrink-0">
               {{ userInitial }}
             </div>
             <div class="min-w-0">
@@ -77,9 +77,9 @@
     <!-- 主内容区 -->
     <div class="lg:pl-64 flex flex-col min-h-screen">
       <!-- 顶栏 -->
-      <header class="sticky top-0 z-20 h-16 bg-white border-b border-gray-200 flex items-center gap-4 px-4 sm:px-6">
+      <header class="neo-header sticky top-0 z-20 h-[76px] border-b flex items-center gap-4 px-4 sm:px-6">
         <button
-          class="lg:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-150 ease-out active:scale-[0.98]"
+          class="lg:hidden p-2 rounded-xl text-gray-600 hover:bg-white/40 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 transition-all duration-150 ease-out active:scale-[0.98]"
           @click="sidebarOpen = true"
         >
           <component :is="getIconComponent('mdi-menu')" class="w-6 h-6" />
@@ -97,7 +97,7 @@
           <!-- 通知铃铛 -->
           <RouterLink
             to="/notifications"
-            class="relative p-2 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-150 ease-out active:scale-[0.98]"
+            class="relative p-2 rounded-xl text-gray-500 hover:bg-white/40 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 transition-all duration-150 ease-out active:scale-[0.98]"
             title="消息通知"
           >
             <component :is="getIconComponent('mdi-bell-outline')" class="w-5 h-5" />
@@ -114,7 +114,7 @@
           </div>
 
           <button
-            class="p-2 rounded-lg text-gray-500 hover:bg-red-50 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-150 ease-out active:scale-[0.98]"
+            class="p-2 rounded-xl text-gray-500 hover:bg-red-50 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 transition-all duration-150 ease-out active:scale-[0.98]"
             title="退出登录"
             @click="handleLogout"
           >
@@ -174,10 +174,10 @@ const roleLabel = computed(() => ({
 }[userStore.user?.role] || '用户'))
 
 const roleBadgeClass = computed(() => ({
-  admin: 'bg-purple-50 text-purple-700',
-  librarian: 'bg-blue-50 text-blue-700',
-  reader: 'bg-green-50 text-green-700'
-}[userStore.user?.role] || 'bg-gray-100 text-gray-700'))
+  admin: 'bg-[#f0d9d5] text-[#8d4f4a]',
+  librarian: 'bg-[#d7e6e5] text-[#2e5e62]',
+  reader: 'bg-[#dce8df] text-[#3f6b55]'
+}[userStore.user?.role] || 'bg-[#d0dbe3] text-[#526370]'))
 
 const userInitial = computed(() => {
   const name = userStore.user?.full_name || userStore.user?.username || '?'

@@ -62,7 +62,7 @@ defineEmits(['update:modelValue', 'blur', 'focus', 'append-click'])
 const inputId = computed(() => `input-${Math.random().toString(36).substr(2, 9)}`)
 
 const inputClasses = computed(() => {
-  const base = 'block w-full px-3 py-2 border rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed'
+  const base = 'neo-control block w-full px-3 py-2 rounded-xl transition-all duration-200 focus:outline-none disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed'
 
   const padding = {
     left: props.prependIcon ? 'pl-10' : '',
@@ -71,7 +71,7 @@ const inputClasses = computed(() => {
 
   const borderColor = props.error
     ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
-    : 'border-gray-300 focus:border-blue-500'
+    : ''
 
   return [base, padding.left, padding.right, borderColor].filter(Boolean).join(' ')
 })
