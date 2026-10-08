@@ -2,10 +2,12 @@
 import csv
 import io
 from datetime import datetime
+from decimal import Decimal
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
 from sqlalchemy import desc, func, or_
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from auth import require_admin, require_librarian
@@ -46,11 +48,15 @@ def create_category(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_librarian),
 ):
-    if db.query(Category).filter(Category.code == cat.code).first():
-        raise HTTPException(status_code=400, detail="分类编码已存在")
+    if db.query(Category).filter(or_(Category.code == cat.code, Category.name == cat.name)).first():
+        raise HTTPException(status_code=400, detail="分类名称或编码已存在")
     new_cat = Category(**cat.model_dump())
     db.add(new_cat)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="分类名称或编码已存在")
     db.refresh(new_cat)
     return new_cat
 
@@ -70,7 +76,11 @@ def create_shelf_location(
         raise HTTPException(status_code=400, detail="书架位置编码已存在")
     new_loc = ShelfLocation(**loc.model_dump())
     db.add(new_loc)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="书架位置编码已存在")
     db.refresh(new_loc)
     return new_loc
 
@@ -102,8 +112,8 @@ def list_books(
     format: Optional[str] = None,
     in_stock_only: bool = False,
     sort_by: str = "created_at",
-    skip: int = 0,
-    limit: int = 100,
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=500),
     db: Session = Depends(get_db),
 ):
     query = db.query(Book)
@@ -160,7 +170,7 @@ def export_books_csv(db: Session = Depends(get_db)):
     for b in books:
         writer.writerow([
             b.id, b.title, b.author, b.isbn, b.publisher or "", b.publish_date or "",
-            f"{b.price:.2f}", b.total_copies, b.available_copies, b.borrow_count,
+            f"{(b.price if b.price is not None else Decimal('0.00')):.2f}", b.total_copies, b.available_copies, b.borrow_count,
             b.language or "", b.format or "", b.pages or "", b.file_size or "",
             b.category.name if b.category else "",
         ])
@@ -176,6 +186,8 @@ def get_book_detail(book_id: int, db: Session = Depends(get_db)):
     b = db.query(Book).filter(Book.id == book_id).first()
     if not b:
         raise HTTPException(status_code=404, detail="图书不存在")
+    if copy_in.book_id != book_id:
+        raise HTTPException(status_code=400, detail="请求体中的书目 ID 与路径不一致")
     return b
 
 
@@ -189,9 +201,16 @@ def create_book(
 ):
     if book_in.isbn and db.query(Book).filter(Book.isbn == book_in.isbn).first():
         raise HTTPException(status_code=400, detail="该 ISBN 书目已在馆内登记，请直接添加单册")
+    if book_in.category_id is not None and not db.query(Category).filter(Category.id == book_in.category_id).first():
+        raise HTTPException(status_code=404, detail="指定的图书分类不存在")
+    if book_in.location_id is not None and not db.query(ShelfLocation).filter(ShelfLocation.id == book_in.location_id).first():
+        raise HTTPException(status_code=404, detail="指定的书架位置不存在")
 
+    book_values = book_in.model_dump(exclude={"total_copies"})
+    if book_values.get("price") is None:
+        book_values["price"] = Decimal("0.00")
     new_book = Book(
-        **{k: v for k, v in book_in.model_dump().items() if k != "total_copies"},
+        **book_values,
         total_copies=copies_count,
         available_copies=copies_count,
         borrow_count=0,
@@ -209,7 +228,11 @@ def create_book(
             location_note="新编目入库",
         ))
 
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="图书 ISBN 或其他唯一字段已存在")
     db.refresh(new_book)
     record_audit(db, current_user, "CREATE_BOOK", "BOOK", str(new_book.id),
                  f"录入新书: {new_book.title} (副本数: {copies_count})", request)
@@ -227,9 +250,24 @@ def update_book(
     if not b:
         raise HTTPException(status_code=404, detail="图书不存在")
 
-    for k, v in book_in.model_dump(exclude_unset=True).items():
+    changes = book_in.model_dump(exclude_unset=True)
+    if changes.get("isbn"):
+        duplicate = db.query(Book).filter(Book.isbn == changes["isbn"], Book.id != book_id).first()
+        if duplicate:
+            raise HTTPException(status_code=400, detail="该 ISBN 已被其他书目使用")
+    if "category_id" in changes and changes["category_id"] is not None:
+        if not db.query(Category).filter(Category.id == changes["category_id"]).first():
+            raise HTTPException(status_code=404, detail="指定的图书分类不存在")
+    if "location_id" in changes and changes["location_id"] is not None:
+        if not db.query(ShelfLocation).filter(ShelfLocation.id == changes["location_id"]).first():
+            raise HTTPException(status_code=404, detail="指定的书架位置不存在")
+    for k, v in changes.items():
         setattr(b, k, v)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="图书信息已与现有书目冲突")
     db.refresh(b)
     return b
 
@@ -278,9 +316,12 @@ def add_book_copy(
         condition_status=copy_in.condition_status or "good",
         location_note=copy_in.location_note,
     )
-    b.total_copies += 1
-    b.available_copies += 1
     db.add(copy)
+    db.flush()
+    b.total_copies = db.query(BookCopy).filter(BookCopy.book_id == b.id).count()
+    b.available_copies = db.query(BookCopy).filter(
+        BookCopy.book_id == b.id, BookCopy.status == "available"
+    ).count()
     db.commit()
     db.refresh(copy)
     return copy

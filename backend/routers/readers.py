@@ -3,8 +3,9 @@ from datetime import datetime
 from decimal import Decimal
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy import desc, func, or_
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from auth import get_password_hash, require_librarian
@@ -22,8 +23,8 @@ def list_readers(
     search: Optional[str] = None,
     status_filter: Optional[str] = None,
     role_filter: Optional[str] = None,
-    skip: int = 0,
-    limit: int = 100,
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=500),
     db: Session = Depends(get_db),
     current_user: User = Depends(require_librarian),
 ):
@@ -63,8 +64,16 @@ def create_reader_by_admin(
         raise HTTPException(status_code=400, detail="借书卡号已存在")
 
     role = user_in.role or "reader"
+    if role not in {"reader", "librarian", "admin"}:
+        raise HTTPException(status_code=400, detail="用户角色无效")
     if role in ["admin", "librarian"] and current_user.role != "admin":
         raise HTTPException(status_code=403, detail="仅系统管理员有权指派管理员或图书员角色")
+    if user_in.status and user_in.status not in {"active", "frozen"}:
+        raise HTTPException(status_code=400, detail="账户状态无效")
+    if user_in.max_borrow_limit is not None and user_in.max_borrow_limit < 1:
+        raise HTTPException(status_code=400, detail="最大借阅册数必须大于 0")
+    if user_in.balance is not None and user_in.balance < 0:
+        raise HTTPException(status_code=400, detail="账户余额不能为负数")
 
     new_user = User(
         username=user_in.username,
@@ -79,7 +88,11 @@ def create_reader_by_admin(
         status=user_in.status or "active",
     )
     db.add(new_user)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="用户名、邮箱或借书卡号已存在")
     db.refresh(new_user)
     record_audit(db, current_user, "CREATE_READER", "USER", str(new_user.id),
                  f"录入新读者: {new_user.username} ({new_user.card_number})", request)
@@ -92,16 +105,31 @@ def update_reader(
     user_in: UserUpdate,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_librarian),
+    request: Request = None,
 ):
     reader = db.query(User).filter(User.id == reader_id).first()
     if not reader:
         raise HTTPException(status_code=404, detail="读者不存在")
 
+    if current_user.role != "admin" and reader.role != "reader":
+        raise HTTPException(status_code=403, detail="图书员仅可维护普通读者账户")
+
+    if user_in.role and user_in.role not in {"reader", "librarian", "admin"}:
+        raise HTTPException(status_code=400, detail="用户角色无效")
+    if user_in.status and user_in.status not in {"active", "frozen"}:
+        raise HTTPException(status_code=400, detail="账户状态无效")
+
     if user_in.role and user_in.role != reader.role:
         if current_user.role != "admin":
             raise HTTPException(status_code=403, detail="仅系统管理员有权修改用户角色")
+        if reader.id == current_user.id:
+            raise HTTPException(status_code=400, detail="不能修改当前管理员自己的管理员角色")
         reader.role = user_in.role
 
+    if user_in.email is not None and user_in.email != reader.email:
+        if db.query(User).filter(User.email == user_in.email, User.id != reader.id).first():
+            raise HTTPException(status_code=400, detail="该邮箱已被其他用户使用")
+        reader.email = user_in.email
     if user_in.full_name:
         reader.full_name = user_in.full_name
     if user_in.phone is not None:
@@ -109,14 +137,23 @@ def update_reader(
     if user_in.status:
         reader.status = user_in.status
     if user_in.max_borrow_limit is not None:
+        if user_in.max_borrow_limit < 1:
+            raise HTTPException(status_code=400, detail="最大借阅册数必须大于 0")
         reader.max_borrow_limit = user_in.max_borrow_limit
     if user_in.balance is not None:
+        if user_in.balance < 0:
+            raise HTTPException(status_code=400, detail="账户余额不能为负数")
         reader.balance = user_in.balance
     if user_in.password:
         reader.hashed_password = get_password_hash(user_in.password)
 
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="用户信息已被其他账户占用")
     db.refresh(reader)
+    record_audit(db, current_user, "UPDATE_READER", "USER", str(reader.id), f"更新用户资料: {reader.username}", request)
     return reader
 
 
@@ -129,6 +166,8 @@ def reset_reader_password(
     reader = db.query(User).filter(User.id == reader_id).first()
     if not reader:
         raise HTTPException(status_code=404, detail="读者不存在")
+    if current_user.role != "admin" and reader.role != "reader":
+        raise HTTPException(status_code=403, detail="图书员仅可重置普通读者密码")
 
     reader.hashed_password = get_password_hash("123456")
     db.commit()

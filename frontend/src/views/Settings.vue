@@ -292,6 +292,7 @@ const infoRows = computed(() => {
     renew_days: '续借天数',
     daily_fine_rate: '日罚金（元/天）',
     max_borrow_books: '最大可借册数',
+    reservation_expire_days: '预约保留天数',
     due_reminder_days: '到期提醒提前天数'
   }
   const rows = []

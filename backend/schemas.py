@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 from decimal import Decimal
@@ -14,8 +14,7 @@ class SettingResponse(BaseModel):
     description: Optional[str] = None
     updated_at: Optional[datetime] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # --- 分类与书架 ---
 class CategoryBase(BaseModel):
@@ -32,8 +31,7 @@ class CategoryResponse(CategoryBase):
     created_at: Optional[datetime] = None
     book_count: Optional[int] = 0
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class ShelfLocationBase(BaseModel):
     name: str
@@ -48,14 +46,13 @@ class ShelfLocationResponse(ShelfLocationBase):
     id: int
     created_at: Optional[datetime] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # --- 用户与鉴权 ---
 class UserBase(BaseModel):
-    username: str
+    username: str = Field(min_length=1, max_length=50)
     email: EmailStr
-    full_name: str
+    full_name: str = Field(min_length=1, max_length=100)
     phone: Optional[str] = None
     role: Optional[str] = "reader"
     card_number: Optional[str] = None
@@ -64,7 +61,7 @@ class UserBase(BaseModel):
     status: Optional[str] = "active"
 
 class UserCreate(UserBase):
-    password: str
+    password: str = Field(min_length=6, max_length=128)
 
 class UserUpdate(BaseModel):
     email: Optional[EmailStr] = None
@@ -74,14 +71,13 @@ class UserUpdate(BaseModel):
     max_borrow_limit: Optional[int] = None
     status: Optional[str] = None
     balance: Optional[Decimal] = None
-    password: Optional[str] = None
+    password: Optional[str] = Field(default=None, min_length=6, max_length=128)
 
 class UserResponse(UserBase):
     id: int
     created_at: Optional[datetime] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class LoginRequest(BaseModel):
     username: str
@@ -111,13 +107,12 @@ class BookCopyResponse(BookCopyBase):
     book_id: int
     created_at: Optional[datetime] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # --- 图书主表 ---
 class BookBase(BaseModel):
-    title: str
-    author: str
+    title: str = Field(min_length=1, max_length=200)
+    author: str = Field(min_length=1, max_length=100)
     isbn: Optional[str] = None
     publisher: Optional[str] = None
     publish_date: Optional[str] = None
@@ -175,10 +170,9 @@ class BookResponse(BookBase):
     updated_at: Optional[datetime] = None
     category: Optional[CategoryResponse] = None
     location: Optional[ShelfLocationResponse] = None
-    copies: Optional[List[BookCopyResponse]] = []
+    copies: Optional[List[BookCopyResponse]] = Field(default_factory=list)
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class BookBrief(BaseModel):
     """轻量书目摘要：用于书评、推荐、通知等嵌套场景"""
@@ -193,8 +187,7 @@ class BookBrief(BaseModel):
     rating: Optional[Decimal] = Decimal("0.00")
     rating_count: Optional[int] = 0
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # --- 借还流通 ---
 class BorrowRecordCreate(BaseModel):
@@ -229,12 +222,11 @@ class BorrowRecordResponse(BaseModel):
     created_at: Optional[datetime] = None
     user: Optional[UserResponse] = None
     book: Optional[BookResponse] = None
-    copy: Optional[BookCopyResponse] = None
+    copy_: Optional[BookCopyResponse] = Field(default=None, alias="copy")
     overdue_days: Optional[int] = 0
     calculated_fine: Optional[Decimal] = Decimal("0.00")
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
 # --- 预约 ---
 class ReservationCreate(BaseModel):
@@ -251,8 +243,7 @@ class ReservationResponse(BaseModel):
     book: Optional[BookResponse] = None
     user: Optional[UserResponse] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # --- 罚金账单 ---
 class FinePayRequest(BaseModel):
@@ -271,13 +262,12 @@ class FineRecordResponse(BaseModel):
     created_at: Optional[datetime] = None
     user: Optional[UserResponse] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # --- 公告 ---
 class AnnouncementCreate(BaseModel):
-    title: str
-    content: str
+    title: str = Field(min_length=1, max_length=150)
+    content: str = Field(min_length=1)
     priority: Optional[str] = "normal"
     is_active: Optional[bool] = True
 
@@ -290,8 +280,7 @@ class AnnouncementResponse(BaseModel):
     author_id: Optional[int] = None
     created_at: Optional[datetime] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # --- 审计日志 ---
 class AuditLogResponse(BaseModel):
@@ -305,8 +294,7 @@ class AuditLogResponse(BaseModel):
     ip_address: Optional[str] = None
     created_at: Optional[datetime] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # --- 统计报表概览 ---
 class StatsOverview(BaseModel):
@@ -351,8 +339,7 @@ class ReviewResponse(BaseModel):
     user: Optional[UserResponse] = None
     book: Optional[BookBrief] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # --- 站内通知 ---
 class NotificationResponse(BaseModel):
@@ -365,8 +352,7 @@ class NotificationResponse(BaseModel):
     is_read: bool = False
     created_at: Optional[datetime] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # --- 智能推荐 ---
 class RecommendationItem(BaseModel):

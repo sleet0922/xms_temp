@@ -2,7 +2,7 @@
 from datetime import datetime, timedelta
 from decimal import Decimal
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy import desc, func
 from sqlalchemy.orm import Session
 
@@ -72,7 +72,7 @@ def get_stats_overview(db: Session = Depends(get_db), current_user: User = Depen
 
 
 @router.get("/trends", summary="近 N 天借还走势")
-def get_stats_trends(days: int = 15, db: Session = Depends(get_db)):
+def get_stats_trends(days: int = Query(15, ge=1, le=366), db: Session = Depends(get_db)):
     timeline = []
     now = datetime.now()
     for i in range(days - 1, -1, -1):
@@ -110,7 +110,7 @@ def get_category_stats(db: Session = Depends(get_db)):
 
 
 @router.get("/popular-books", summary="借阅热度榜")
-def get_popular_books(limit: int = 8, db: Session = Depends(get_db)):
+def get_popular_books(limit: int = Query(8, ge=1, le=100), db: Session = Depends(get_db)):
     books = db.query(Book).order_by(desc(Book.borrow_count)).limit(limit).all()
     return [
         {
@@ -129,7 +129,7 @@ def get_popular_books(limit: int = 8, db: Session = Depends(get_db)):
 
 
 @router.get("/top-rated", summary="读者高分榜")
-def get_top_rated_books(limit: int = 8, db: Session = Depends(get_db)):
+def get_top_rated_books(limit: int = Query(8, ge=1, le=100), db: Session = Depends(get_db)):
     books = (
         db.query(Book)
         .filter(Book.rating_count > 0)
@@ -179,7 +179,7 @@ def get_language_stats(db: Session = Depends(get_db)):
 
 
 @router.get("/active-readers", summary="读者活跃度排行")
-def get_active_readers(limit: int = 10, db: Session = Depends(get_db)):
+def get_active_readers(limit: int = Query(10, ge=1, le=100), db: Session = Depends(get_db)):
     rows = (
         db.query(
             User.id,
@@ -188,6 +188,7 @@ def get_active_readers(limit: int = 10, db: Session = Depends(get_db)):
             func.count(BorrowRecord.id).label("borrow_total"),
         )
         .join(BorrowRecord, BorrowRecord.user_id == User.id)
+        .filter(User.role == "reader")
         .group_by(User.id)
         .order_by(desc("borrow_total"))
         .limit(limit)

@@ -11,6 +11,29 @@ from services.audit import get_rules, record_audit
 from services import notify
 
 
+def sync_book_inventory(db: Session, book: Book) -> None:
+    """根据实体册状态回写聚合库存，避免历史数据或重复操作造成计数漂移。"""
+    if not book:
+        return
+    db.flush()
+    copies = db.query(BookCopy).filter(BookCopy.book_id == book.id)
+    book.total_copies = copies.count()
+    book.available_copies = copies.filter(BookCopy.status == "available").count()
+
+
+def claim_copy(db: Session, copy: BookCopy) -> None:
+    """以条件更新抢占实体册，避免并发借阅重复分配同一册。"""
+    changed = (
+        db.query(BookCopy)
+        .filter(BookCopy.id == copy.id, BookCopy.status == "available")
+        .update({BookCopy.status: "borrowed"}, synchronize_session=False)
+    )
+    if changed != 1:
+        db.rollback()
+        raise HTTPException(status_code=409, detail="该实体册刚刚被其他操作借出，请刷新后重试")
+    db.refresh(copy)
+
+
 def enrich_borrow_record(rec: BorrowRecord, daily_fine_rate: Decimal) -> BorrowRecord:
     """为借阅记录补充实时的逾期天数与应缴罚金（不落库，仅用于展示）"""
     now = datetime.now()
@@ -97,8 +120,8 @@ def borrow_by_card(
         notes=f"前台服务台办理 (经办人: {operator.username})",
     )
 
-    copy.status = "borrowed"
-    book.available_copies = max(0, book.available_copies - 1)
+    claim_copy(db, copy)
+    sync_book_inventory(db, book)
     book.borrow_count += 1
 
     db.add(record)
@@ -141,8 +164,8 @@ def borrow_self(db: Session, reader: User, book_id: int, request: Optional[Reque
         notes="读者在线自助借阅",
     )
 
-    copy.status = "borrowed"
-    book.available_copies = max(0, book.available_copies - 1)
+    claim_copy(db, copy)
+    sync_book_inventory(db, book)
     book.borrow_count += 1
 
     db.add(record)
@@ -181,13 +204,27 @@ def return_by_barcode_or_record(
         raise HTTPException(status_code=400, detail="该借阅记录已于较早前归还")
 
     now = datetime.now()
-    record.return_date = now
-    record.status = "returned"
+    book_title = record.book.title if record.book else f"书目#{record.book_id}"
+    changed = (
+        db.query(BorrowRecord)
+        .filter(BorrowRecord.id == record.id, BorrowRecord.return_date.is_(None))
+        .update(
+            {BorrowRecord.return_date: now, BorrowRecord.status: "returned"},
+            synchronize_session=False,
+        )
+    )
+    if changed != 1:
+        db.rollback()
+        raise HTTPException(status_code=409, detail="该借阅记录刚刚被其他操作归还，请刷新后重试")
+    db.refresh(record)
 
     if record.copy:
-        record.copy.status = "available"
+        db.query(BookCopy).filter(
+            BookCopy.id == record.copy.id, BookCopy.status == "borrowed"
+        ).update({BookCopy.status: "available"}, synchronize_session=False)
+        db.refresh(record.copy)
     if record.book:
-        record.book.available_copies += 1
+        sync_book_inventory(db, record.book)
 
     rate = get_rules(db)["fine_rate"]
     fine_record = None
@@ -201,14 +238,14 @@ def return_by_barcode_or_record(
                 amount=fine_amount,
                 reason="overdue",
                 status="unpaid",
-                notes=f"图书《{record.book.title}》逾期 {overdue_days} 天，系统按 {rate:.2f} 元/天自动生成罚款单",
+                notes=f"图书《{book_title}》逾期 {overdue_days} 天，系统按 {rate:.2f} 元/天自动生成罚款单",
             )
             db.add(fine_record)
 
     db.commit()
     db.refresh(record)
 
-    audit_msg = f"归还图书《{record.book.title}》成功"
+    audit_msg = f"归还图书《{book_title}》成功"
     if fine_record:
         db.refresh(fine_record)
         notify.notify_fine_generated(db, fine_record)
@@ -222,7 +259,14 @@ def return_by_barcode_or_record(
     return record, fine_record
 
 
-def renew_record(db: Session, record: BorrowRecord, operator: User, max_renew: int, extend_days: int) -> BorrowRecord:
+def renew_record(
+    db: Session,
+    record: BorrowRecord,
+    operator: User,
+    max_renew: int,
+    extend_days: int,
+    request: Optional[Request] = None,
+) -> BorrowRecord:
     """续借：读者仅可续借本人记录，逾期或超次数将拒绝"""
     if operator.role == "reader" and record.user_id != operator.id:
         raise HTTPException(status_code=403, detail="无权操作其他读者的借阅记录")
@@ -237,4 +281,9 @@ def renew_record(db: Session, record: BorrowRecord, operator: User, max_renew: i
     record.renew_count += 1
     db.commit()
     db.refresh(record)
+    record_audit(
+        db, operator, "CIRC_RENEW", "BORROW", str(record.id),
+        f"续借图书《{record.book.title if record.book else record.book_id}》，第 {record.renew_count} 次续借",
+        request,
+    )
     return record

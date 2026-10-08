@@ -23,6 +23,8 @@ SETTINGS = [
     ("renew_days", "15", "每次续借延长天数"),
     ("daily_fine_rate", "0.50", "每日逾期罚金(元/天)"),
     ("max_borrow_books", "8", "普通读者最大借阅本数"),
+    ("reservation_expire_days", "7", "预约到书后的保留天数"),
+    ("due_reminder_days", "3", "借阅到期前提醒天数"),
 ]
 
 CATEGORIES = [

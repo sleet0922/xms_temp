@@ -37,6 +37,8 @@ def create_announcement(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_librarian),
 ):
+    if ann.priority not in {"normal", "important", "urgent"}:
+        raise HTTPException(status_code=400, detail="公告优先级无效")
     new_ann = Announcement(
         title=ann.title,
         content=ann.content,
@@ -57,9 +59,10 @@ def delete_announcement(
     current_user: User = Depends(require_admin),
 ):
     ann = db.query(Announcement).filter(Announcement.id == ann_id).first()
-    if ann:
-        db.delete(ann)
-        db.commit()
+    if not ann:
+        raise HTTPException(status_code=404, detail="公告不存在")
+    db.delete(ann)
+    db.commit()
     return {"message": "公告已删除"}
 
 
@@ -72,6 +75,8 @@ def list_book_reviews(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    if not db.query(Book).filter(Book.id == book_id).first():
+        raise HTTPException(status_code=404, detail="图书不存在")
     query = db.query(Review).filter(Review.book_id == book_id)
     if not (include_hidden and current_user.role in ["admin", "librarian"]):
         query = query.filter(Review.is_hidden.is_(False))

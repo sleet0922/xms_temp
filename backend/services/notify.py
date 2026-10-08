@@ -5,8 +5,8 @@ from typing import Optional
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
-from config import settings
 from models import Book, BorrowRecord, FineRecord, Notification, Reservation
+from services.audit import get_rules
 
 
 def _notified(db: Session, user_id: int, category: str, link: Optional[str]) -> bool:
@@ -41,10 +41,30 @@ def create_notification(
     return note
 
 
+def expire_reservations(db: Session) -> int:
+    """将超过保留期限的排队或待取预约标记为失效。"""
+    now = datetime.now()
+    expired = (
+        db.query(Reservation)
+        .filter(
+            Reservation.status.in_(["waiting", "notified"]),
+            Reservation.expire_date <= now,
+        )
+        .all()
+    )
+    for res in expired:
+        res.status = "cancelled"
+    if expired:
+        db.commit()
+    return len(expired)
+
+
 def notify_reservation_ready(db: Session, book: Book) -> Optional[Reservation]:
     """图书归还后触发：队列首位读者的预约转为「到书待取」并通知"""
     if not book or book.available_copies <= 0:
         return None
+    expire_reservations(db)
+    rules = get_rules(db)
     res = (
         db.query(Reservation)
         .filter(Reservation.book_id == book.id, Reservation.status == "waiting")
@@ -55,7 +75,7 @@ def notify_reservation_ready(db: Session, book: Book) -> Optional[Reservation]:
         return None
 
     res.status = "notified"
-    res.expire_date = datetime.now() + timedelta(days=settings.reservation_expire_days)
+    res.expire_date = datetime.now() + timedelta(days=rules["reservation_expire_days"])
     link = f"/reservations?res={res.id}"
     if not _notified(db, res.user_id, "reservation_ready", link):
         create_notification(
@@ -63,7 +83,7 @@ def notify_reservation_ready(db: Session, book: Book) -> Optional[Reservation]:
             res.user_id,
             "reservation_ready",
             f"预约到书：{book.title}",
-            f"您预约的《{book.title}》已归还到馆，请在 {settings.reservation_expire_days} 天内前往服务台办理借阅，逾期预约将自动失效。",
+            f"您预约的《{book.title}》已归还到馆，请在 {rules['reservation_expire_days']} 天内前往服务台办理借阅，逾期预约将自动失效。",
             link,
             commit=False,
         )
@@ -90,7 +110,7 @@ def notify_fine_generated(db: Session, fine: FineRecord) -> None:
 def sync_due_reminders(db: Session, user_id: Optional[int] = None) -> int:
     """扫描未归还借阅记录，幂等生成「即将到期」与「已逾期」提醒，返回新增条数"""
     now = datetime.now()
-    deadline = now + timedelta(days=settings.due_reminder_days)
+    deadline = now + timedelta(days=get_rules(db)["due_reminder_days"])
 
     query = db.query(BorrowRecord).filter(BorrowRecord.return_date.is_(None))
     if user_id is not None:

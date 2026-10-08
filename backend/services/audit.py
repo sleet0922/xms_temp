@@ -55,18 +55,29 @@ def get_setting_int(db: Session, key: str, default: int) -> int:
 def get_setting_decimal(db: Session, key: str, default: Decimal) -> Decimal:
     raw = (get_setting_val(db, key, str(default)) or "").strip()
     try:
-        return Decimal(raw)
+        value = Decimal(raw)
+        return value if value.is_finite() else default
     except (InvalidOperation, TypeError, ValueError):
         return default
 
 
 def get_rules(db: Session) -> dict:
     """一次性取出全部业务规则，避免路由中重复查询"""
+    borrow_days = get_setting_int(db, "default_borrow_days", settings.default_borrow_days)
+    max_renew_times = get_setting_int(db, "max_renew_times", settings.max_renew_times)
+    renew_days = get_setting_int(db, "renew_days", settings.renew_days)
+    fine_rate = get_setting_decimal(db, "daily_fine_rate", settings.daily_fine_rate)
+    max_borrow_books = get_setting_int(db, "max_borrow_books", settings.max_borrow_books)
+    reservation_expire_days = get_setting_int(
+        db, "reservation_expire_days", settings.reservation_expire_days
+    )
+    due_reminder_days = get_setting_int(db, "due_reminder_days", settings.due_reminder_days)
     return {
-        "borrow_days": get_setting_int(db, "default_borrow_days", settings.default_borrow_days),
-        "max_renew_times": get_setting_int(db, "max_renew_times", settings.max_renew_times),
-        "renew_days": get_setting_int(db, "renew_days", settings.renew_days),
-        "fine_rate": get_setting_decimal(db, "daily_fine_rate", settings.daily_fine_rate),
-        "max_borrow_books": get_setting_int(db, "max_borrow_books", settings.max_borrow_books),
-        "reservation_expire_days": get_setting_int(db, "reservation_expire_days", settings.reservation_expire_days),
+        "borrow_days": max(1, borrow_days),
+        "max_renew_times": max(0, max_renew_times),
+        "renew_days": max(1, renew_days),
+        "fine_rate": max(Decimal("0.00"), fine_rate),
+        "max_borrow_books": max(1, max_borrow_books),
+        "reservation_expire_days": max(1, reservation_expire_days),
+        "due_reminder_days": max(0, due_reminder_days),
     }

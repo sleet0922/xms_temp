@@ -2,12 +2,11 @@
 from datetime import datetime, timedelta
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy import desc, or_
 from sqlalchemy.orm import Session
 
 from auth import get_current_user, require_librarian
-from config import settings
 from database import get_db
 from models import Book, BorrowRecord, Reservation, User
 from schemas import (
@@ -15,6 +14,7 @@ from schemas import (
     ReservationCreate, ReservationResponse, SelfBorrowRequest,
 )
 from services.audit import get_rules
+from services import notify
 from services.circulation import (
     borrow_by_card, borrow_self, enrich_borrow_record, renew_record, return_by_barcode_or_record,
 )
@@ -63,12 +63,13 @@ def renew_book(
     record_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
+    request: Request = None,
 ):
     record = db.query(BorrowRecord).filter(BorrowRecord.id == record_id).first()
     if not record:
         raise HTTPException(status_code=404, detail="借阅记录不存在")
     rules = get_rules(db)
-    return renew_record(db, record, current_user, rules["max_renew_times"], rules["renew_days"])
+    return renew_record(db, record, current_user, rules["max_renew_times"], rules["renew_days"], request)
 
 
 @router.get("/api/borrows", response_model=List[BorrowRecordResponse], summary="借阅流水查询")
@@ -77,8 +78,8 @@ def list_borrow_records(
     user_id: Optional[int] = None,
     book_id: Optional[int] = None,
     search: Optional[str] = None,
-    skip: int = 0,
-    limit: int = 100,
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=500),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -130,6 +131,7 @@ def list_my_borrows(db: Session = Depends(get_db), current_user: User = Depends(
 
 @router.get("/api/reservations", response_model=List[ReservationResponse], summary="预约列表")
 def list_reservations(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    notify.expire_reservations(db)
     query = db.query(Reservation)
     if current_user.role == "reader":
         query = query.filter(Reservation.user_id == current_user.id)
@@ -142,6 +144,7 @@ def create_reservation(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    notify.expire_reservations(db)
     book = db.query(Book).filter(Book.id == res_in.book_id).first()
     if not book:
         raise HTTPException(status_code=404, detail="图书不存在")
@@ -157,11 +160,12 @@ def create_reservation(
         raise HTTPException(status_code=400, detail="您已预约过该图书，正在队列中等待到书")
 
     now = datetime.now()
+    rules = get_rules(db)
     res = Reservation(
         user_id=current_user.id,
         book_id=res_in.book_id,
         reserve_date=now,
-        expire_date=now + timedelta(days=settings.reservation_expire_days),
+        expire_date=now + timedelta(days=rules["reservation_expire_days"]),
         status="waiting",
     )
     db.add(res)

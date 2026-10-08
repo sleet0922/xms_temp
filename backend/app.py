@@ -45,7 +45,8 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
-    allow_credentials=True,
+    # 通配来源不能与凭据模式同时启用；生产环境可在配置中指定明确来源。
+    allow_credentials=settings.cors_origins != ["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )

@@ -3,6 +3,7 @@ from datetime import datetime
 from decimal import Decimal
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from auth import (
@@ -14,6 +15,7 @@ from schemas import (
     ChangePasswordRequest, LoginRequest, TokenResponse, UserCreate, UserResponse, UserUpdate,
 )
 from services.audit import record_audit
+from config import settings
 
 router = APIRouter(prefix="/api/auth", tags=["认证与个人中心"])
 
@@ -40,7 +42,15 @@ def register(user_data: UserCreate, request: Request, db: Session = Depends(get_
 
     card_number = user_data.card_number
     if not card_number:
-        card_number = f"CARD-{datetime.now().strftime('%Y%m')}{db.query(User).count() + 101:03d}"
+        sequence = db.query(User).count() + 101
+        while True:
+            candidate = f"CARD-{datetime.now().strftime('%Y%m')}{sequence:03d}"
+            if not db.query(User).filter(User.card_number == candidate).first():
+                card_number = candidate
+                break
+            sequence += 1
+    elif db.query(User).filter(User.card_number == card_number).first():
+        raise HTTPException(status_code=400, detail="借书卡号已被占用")
 
     new_user = User(
         username=user_data.username,
@@ -50,12 +60,16 @@ def register(user_data: UserCreate, request: Request, db: Session = Depends(get_
         hashed_password=get_password_hash(user_data.password),
         role="reader",
         card_number=card_number,
-        max_borrow_limit=user_data.max_borrow_limit or 5,
+        max_borrow_limit=settings.max_borrow_books,
         balance=Decimal("0.00"),
         status="active",
     )
     db.add(new_user)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="用户名、邮箱或借书卡号已被占用")
     db.refresh(new_user)
     record_audit(db, new_user, "REGISTER", "USER", str(new_user.id), f"读者注册: {new_user.username}", request)
     return new_user
