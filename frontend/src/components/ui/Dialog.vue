@@ -6,7 +6,7 @@
         enter="duration-200 ease-out"
         enter-from="opacity-0"
         enter-to="opacity-100"
-        leave="duration-200 ease-in"
+        leave="duration-150 ease-out"
         leave-from="opacity-100"
         leave-to="opacity-0"
       >
@@ -20,7 +20,7 @@
             enter="duration-200 ease-out"
             enter-from="opacity-0 scale-95"
             enter-to="opacity-100 scale-100"
-            leave="duration-200 ease-in"
+            leave="duration-150 ease-out"
             leave-from="opacity-100 scale-100"
             leave-to="opacity-0 scale-95"
           >
@@ -31,8 +31,10 @@
                 </DialogTitle>
                 <button
                   v-if="showClose"
+                  type="button"
                   @click="handleClose"
-                    class="p-2 rounded-xl text-gray-400 hover:bg-white/40 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 transition-all duration-150 ease-out active:scale-[0.98]"
+                  aria-label="关闭对话框"
+                  class="p-2 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#2f6f68] focus:ring-offset-2 transition-colors duration-150 active:scale-[0.98]"
                 >
                   <XMarkIcon class="w-6 h-6" />
                 </button>
@@ -93,7 +95,7 @@ const dialogClasses = computed(() => {
   }
 
   return [
-    'neo-dialog relative rounded-3xl p-6 w-full',
+    'neo-dialog relative rounded-xl p-6 w-full',
     maxWidths[props.maxWidth]
   ].join(' ')
 })

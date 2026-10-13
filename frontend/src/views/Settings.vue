@@ -30,7 +30,7 @@
 
               <div class="flex items-center gap-3 flex-shrink-0">
                 <template v-if="isBoolValue(item.value)">
-                  <Switch :model-value="isTrue(item.draft)" @update:modelValue="toggleBool(item, $event)" />
+                  <Switch :model-value="isTrue(item.draft)" :label="metaOf(item.key).label" @update:modelValue="toggleBool(item, $event)" />
                   <span class="text-sm text-gray-600 w-10">{{ isTrue(item.draft) ? '启用' : '停用' }}</span>
                 </template>
                 <template v-else>
@@ -82,7 +82,7 @@
           <div class="flex items-center justify-between gap-4 mb-4">
             <h3 class="text-lg font-semibold tracking-tight text-gray-900">操作审计日志</h3>
             <div class="w-56 flex-shrink-0">
-              <Select v-model="actionSelected" :options="actionOptions" placeholder="全部动作" />
+              <Select v-model="actionSelected" :options="actionOptions" placeholder="全部动作" return-object />
             </div>
           </div>
 
@@ -154,7 +154,7 @@
       <form class="space-y-4" @submit.prevent="submitAnnouncement">
         <Input v-model="annForm.title" label="公告标题" placeholder="请输入公告标题" required />
         <Textarea v-model="annForm.content" label="公告内容" rows="4" placeholder="请输入公告正文" required />
-        <Select v-model="prioritySelected" :options="priorityOptions" label="优先级" required />
+        <Select v-model="prioritySelected" :options="priorityOptions" label="优先级" required return-object />
         <div class="flex justify-end gap-3">
           <Button variant="outline" @click="annDialogOpen = false">取消</Button>
           <Button type="submit" variant="primary" :loading="submitting">发布</Button>

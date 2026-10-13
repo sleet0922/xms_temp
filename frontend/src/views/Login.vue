@@ -4,7 +4,7 @@
       <Card padding="large">
         <div class="text-center mb-6">
           <div class="neo-brand-mark inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-3 group transition-all duration-200 ease-out hover:scale-105">
-            <BuildingLibraryIcon class="w-8 h-8 text-[#3d777b] transition-colors duration-200" aria-hidden="true" />
+            <BuildingLibraryIcon class="w-8 h-8 text-[#2f6f68] transition-colors duration-200" aria-hidden="true" />
           </div>
           <h1 class="text-2xl font-semibold tracking-tight text-gray-900">智慧云图书馆</h1>
           <p class="text-sm text-gray-500 mt-1">登录以使用馆藏检索与借阅服务</p>
@@ -16,6 +16,8 @@
               v-model="username"
               label="用户名"
               placeholder="请输入用户名"
+              autocomplete="username"
+              name="username"
               :prepend-icon="UserIcon"
               required
             />
@@ -25,8 +27,11 @@
               label="密码"
               :type="showPassword ? 'text' : 'password'"
               placeholder="请输入密码"
+              autocomplete="current-password"
+              name="password"
               :prepend-icon="LockClosedIcon"
               :append-icon="showPassword ? EyeIcon : EyeSlashIcon"
+              :append-label="showPassword ? '隐藏密码' : '显示密码'"
               @append-click="showPassword = !showPassword"
               required
             />

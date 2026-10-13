@@ -7,6 +7,9 @@
   2. 详情页 —— 作者、语言、类型、页数、大小、出版社、出版时间、ISBN、分类、内容简介、目录
 详情与封面阶段使用线程池并发（默认 8 线程），封面存入 resources/covers/。
 
+目标站没有读者评分字段，为保证书目大厅星级、「读者评分」排序可用，
+抓取结束后会为每本书离线合成一组演示评分与书评（见 generate_fake_ratings）。
+
 用法:
     python crawler.py                       # 默认抓取 历史、地理(zhongtu-k) 前 16 页（含详情与封面）
     python crawler.py --pages 4             # 抓取前 4 页
@@ -14,12 +17,15 @@
     python crawler.py --category zhongtu-i  # 换分类（文学）
     python crawler.py --no-covers           # 只抓数据不下载封面
     python crawler.py --list-only           # 只抓列表页
+    python crawler.py --no-fake-ratings     # 不合成演示评分
+    python crawler.py --fake-only           # 不访问目标站，只给已有 JSON 重算演示评分
 """
 
 import argparse
 import csv
 import json
 import os
+import random
 import re
 import socket
 import sys
@@ -27,6 +33,7 @@ import threading
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
+from decimal import Decimal, ROUND_HALF_UP
 
 import requests
 from bs4 import BeautifulSoup
@@ -358,6 +365,90 @@ def download_cover(url, dest_dir, book_id, timeout=30):
 
 
 # --------------------------------------------------------------------------- #
+# 演示评分与书评合成（离线生成，不来自目标站）
+#
+# 目标站只暴露浏览量/点赞/评论数，没有读者评分。而书目大厅的星级、
+# 「读者评分」排序都依赖 Book.rating / Book.rating_count 聚合值。
+# 这里按 book id 派生确定性伪随机序列，为每本书合成一组整数星级书评，
+# 并令 rating = 这组书评的均值、rating_count = 书评条数，
+# 保证「平均分 / 评价人数 / 书评列表」三者完全自洽（不会出现有分数没书评）。
+# --------------------------------------------------------------------------- #
+REVIEW_TEXTS = {
+    5: [
+        "内容扎实、结构清晰，读完收获很大，强烈推荐。",
+        "经典之作，值得反复翻阅，每次都有新的体会。",
+        "论证透彻，资料翔实，同类读物里最好的之一。",
+        "非常喜欢，已经推荐给同学一起读了。",
+        "从入门到进阶都合适，可读性很强。",
+        "观点新颖，案例丰富，几乎一口气读完。",
+    ],
+    4: [
+        "整体不错，个别章节略显冗长。",
+        "内容有价值，翻译偶有生硬之处。",
+        "值得一读，少数观点可以商榷。",
+        "脉络清楚，案例贴切，读起来比较顺畅。",
+        "有启发，但深度还可以再挖一挖。",
+        "适合作为入门参考，推荐阅读。",
+    ],
+    3: [
+        "中规中矩，翻翻即可，不必精读。",
+        "内容尚可，但同题材里有更好的选择。",
+        "前几章精彩，后面略显注水。",
+        "开卷有益，但谈不上惊艳。",
+        "当作消遣读物还可以。",
+    ],
+    2: [
+        "内容偏浅，与预期差距较大。",
+        "信息量一般，重复内容较多。",
+        "校对和排版有些问题，阅读体验一般。",
+    ],
+}
+
+# 合成书评的虚拟评分人数量：同一本书内的评分人互不重复，
+# 导入脚本会按 slot 映射到对应数量的演示读者账号。
+FAKE_REVIEWER_COUNT = 12
+
+
+def generate_fake_ratings(books, seed=20261013, min_reviews=2, max_reviews=9):
+    """为每本书补上 {rating, rating_count, reviews} 三个字段（原地修改）。
+
+    reviews 元素为 {reviewer_slot, rating, content, days_ago}，
+    其中 reviewer_slot ∈ [0, FAKE_REVIEWER_COUNT) 且同书内唯一，
+    以便导入时落在不同的读者账号上（reviews 表对 (user_id, book_id) 有唯一约束）。
+    """
+    for book in books:
+        rng = random.Random(f"{seed}:{book.get('id')}")
+        n = rng.randint(min_reviews, max_reviews)
+
+        # 浏览量高的书略微偏高分：热门读物口碑更稳
+        hot = min(int(book.get("views") or 0), 8000) / 8000
+        stars = rng.choices([5, 4, 3, 2, 1], weights=[42 + 8 * hot, 34, 15, 6, 3], k=n)
+
+        slots = rng.sample(range(FAKE_REVIEWER_COUNT), n)
+        used_texts = set()
+        reviews = []
+        for slot, star in zip(slots, stars):
+            pool = REVIEW_TEXTS.get(star, REVIEW_TEXTS[4])
+            fresh = [t for t in pool if t not in used_texts]
+            text = rng.choice(fresh or pool)  # 同书内尽量不重复文案
+            used_texts.add(text)
+            reviews.append({
+                "reviewer_slot": slot,
+                "rating": star,
+                "content": text,
+                "days_ago": rng.randint(1, 420),
+            })
+        book["reviews"] = reviews
+        # 与后端 services/reviews.py 的 quantize(0.01, ROUND_HALF_UP) 保持一致，
+        # 保证「显示的平均分」与「重算平均分」完全相等
+        avg = (Decimal(sum(stars)) / Decimal(n)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        book["rating"] = float(avg)
+        book["rating_count"] = n
+
+    return books
+
+
+# --------------------------------------------------------------------------- #
 # 主流程
 # --------------------------------------------------------------------------- #
 def save(books, out_dir, category_slug, category_name, pages, total_pages, extra):
@@ -382,7 +473,7 @@ def save(books, out_dir, category_slug, category_name, pages, total_pages, extra
     cols = ["id", "title", "author", "author_bio", "language", "format", "format_note",
             "pages", "file_size", "publisher", "publish_date", "isbn", "category",
             "description", "toc", "cover_file", "cover_url", "url",
-            "likes", "comments", "views", "source_page"]
+            "likes", "comments", "views", "rating", "rating_count", "source_page"]
     with open(csv_path, "w", encoding="utf-8-sig", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=cols, extrasaction="ignore")
         writer.writeheader()
@@ -417,7 +508,8 @@ def process_book(book, with_detail, with_covers, covers_dir, cover_delay):
     return result
 
 
-def crawl(category_slug, pages, delay, out_dir, with_detail, with_covers, cover_delay, workers):
+def crawl(category_slug, pages, delay, out_dir, with_detail, with_covers, cover_delay, workers,
+          with_fake=True):
     category_name = CATEGORIES.get(category_slug, category_slug)
     session = requests.Session()
     books, seen = [], set()
@@ -459,6 +551,15 @@ def crawl(category_slug, pages, delay, out_dir, with_detail, with_covers, cover_
         print("未抓取到任何数据", file=sys.stderr)
         return []
 
+    # 合成演示评分与书评（目标站无评分字段）
+    extra = {"fake_ratings": with_fake}
+    if with_fake:
+        generate_fake_ratings(books)
+        print("-" * 62)
+        print(f"已为 {len(books)} 本书合成演示评分与书评"
+              f"（每本 2-9 条，评分 {min(b['rating'] for b in books):.2f}"
+              f"~{max(b['rating'] for b in books):.2f}）")
+
     # 阶段二：详情页 + 封面，线程池并发
     if with_detail or with_covers:
         os.makedirs(covers_dir, exist_ok=True)
@@ -487,11 +588,11 @@ def crawl(category_slug, pages, delay, out_dir, with_detail, with_covers, cover_
                     print(f"  [{done}/{len(books)}] 详情成功 {stats['detail_ok']} / 失败 {stats['detail_fail']}"
                           f"    封面成功 {stats['cover_ok']} / 失败 {stats['cover_fail']}"
                           f"    {rate:.1f} 本/秒  剩余 {eta:.0f}s")
-                    save(books, out_dir, category_slug, category_name, pages, total_pages, {})
+                    save(books, out_dir, category_slug, category_name, pages, total_pages, extra)
 
         print("-" * 62)
 
-    json_path, csv_path = save(books, out_dir, category_slug, category_name, pages, total_pages, {})
+    json_path, csv_path = save(books, out_dir, category_slug, category_name, pages, total_pages, extra)
     print(f"\n完成: {len(books)} 条书目")
     print(f"  JSON   -> {json_path}")
     print(f"  CSV    -> {csv_path}")
@@ -512,10 +613,27 @@ def main():
     parser.add_argument("--out", default=None, help="输出目录，默认 ../resources")
     parser.add_argument("--list-only", action="store_true", help="只抓列表页，不抓详情")
     parser.add_argument("--no-covers", action="store_true", help="不下载封面")
+    parser.add_argument("--no-fake-ratings", action="store_true", help="不合成演示评分与书评")
+    parser.add_argument("--fake-only", action="store_true",
+                        help="不访问目标站，仅对已抓取的 JSON 重新合成演示评分")
     args = parser.parse_args()
 
     here = os.path.dirname(os.path.abspath(__file__))
     out_dir = args.out or os.path.join(os.path.dirname(here), "resources")
+
+    if args.fake_only:
+        json_path = os.path.join(out_dir, f"{args.category}_books.json")
+        if not os.path.exists(json_path):
+            raise SystemExit(f"[错误] 未找到已抓取数据: {json_path}")
+        with open(json_path, encoding="utf-8") as f:
+            payload = json.load(f)
+        books = payload.get("books") or []
+        generate_fake_ratings(books)
+        save(books, out_dir, args.category, payload.get("category"),
+             payload.get("pages_crawled") or 0, payload.get("total_pages_available"),
+             {"fake_ratings": True, "fake_only": True})
+        print(f"完成: 已为 {len(books)} 本书重算演示评分与书评（未访问目标站）")
+        return
 
     crawl(
         category_slug=args.category,
@@ -526,6 +644,7 @@ def main():
         with_covers=not args.no_covers and not args.list_only,
         cover_delay=args.cover_delay,
         workers=args.workers,
+        with_fake=not args.no_fake_ratings,
     )
 
 

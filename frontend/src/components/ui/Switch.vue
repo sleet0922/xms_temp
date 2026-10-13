@@ -1,15 +1,16 @@
 <template>
   <HeadlessSwitch
     v-model="enabled"
+    :aria-label="label"
     :class="[
-      enabled ? 'bg-[#3d777b] shadow-[inset_2px_2px_5px_rgba(30,70,72,.35)]' : 'bg-[#d4dde4] shadow-[inset_3px_3px_7px_rgba(159,172,187,.45),inset_-3px_-3px_7px_rgba(255,255,255,.8)]',
+      enabled ? 'bg-[#2f6f68]' : 'bg-[#cbd5d3]',
       'relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:ring-offset-2'
     ]"
   >
     <span
       :class="[
         enabled ? 'translate-x-6' : 'translate-x-1',
-        'inline-block h-4 w-4 transform rounded-full bg-[#e8edf2] shadow-[2px_2px_5px_rgba(36,56,66,.3),-2px_-2px_5px_rgba(255,255,255,.8)] transition-transform duration-200'
+        'inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform duration-200'
       ]"
     />
   </HeadlessSwitch>
@@ -20,7 +21,11 @@ import { computed } from 'vue'
 import { Switch as HeadlessSwitch } from '@headlessui/vue'
 
 const props = defineProps({
-  modelValue: Boolean
+  modelValue: Boolean,
+  label: {
+    type: String,
+    default: '切换开关'
+  }
 })
 
 const emit = defineEmits(['update:modelValue'])

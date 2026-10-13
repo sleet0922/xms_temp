@@ -7,7 +7,7 @@
       <div class="space-y-6">
         <Card padding="normal">
           <div class="flex items-center gap-4">
-            <div class="neo-user-orb w-16 h-16 rounded-3xl text-2xl font-semibold flex items-center justify-center flex-shrink-0">
+            <div class="neo-user-orb w-16 h-16 rounded-2xl text-2xl font-semibold flex items-center justify-center flex-shrink-0">
               {{ initial }}
             </div>
             <div class="min-w-0">
@@ -52,7 +52,7 @@
                   item.hover
                 ]"
               >
-                <component :is="item.icon" :class="['w-5 h-5 transition-colors duration-200', item.color, 'group-hover:text-white']" />
+                <component :is="item.icon" :class="['w-5 h-5', item.color]" />
               </div>
               <div class="min-w-0">
                 <div class="text-xs text-gray-500">{{ item.label }}</div>
@@ -264,33 +264,33 @@ const summaryItems = computed(() => [
     label: '在借图书',
     value: `${overview.value.user_borrowed || 0} 本`,
     icon: BookOpenIcon,
-    bg: 'bg-blue-50',
-    hover: 'group-hover:bg-blue-500',
-    color: 'text-blue-600'
+    bg: 'bg-[#edf5f2]',
+    hover: 'group-hover:bg-[#e2efeb]',
+    color: 'text-[#2f6f68]'
   },
   {
     label: '逾期未还',
     value: `${overview.value.user_overdue || 0} 本`,
     icon: ExclamationTriangleIcon,
-    bg: 'bg-red-50',
-    hover: 'group-hover:bg-red-500',
-    color: 'text-red-600'
+    bg: 'bg-[#fbefef]',
+    hover: 'group-hover:bg-[#f8e6e6]',
+    color: 'text-[#bd5b58]'
   },
   {
     label: '未缴罚金',
     value: `¥${money(overview.value.user_fines)}`,
     icon: BanknotesIcon,
-    bg: 'bg-amber-50',
-    hover: 'group-hover:bg-amber-500',
-    color: 'text-amber-600'
+    bg: 'bg-[#fbf4e8]',
+    hover: 'group-hover:bg-[#f7eddc]',
+    color: 'text-[#a87532]'
   },
   {
     label: '预约中',
     value: `${reservationCount.value} 本`,
     icon: ClockIcon,
-    bg: 'bg-green-50',
-    hover: 'group-hover:bg-green-500',
-    color: 'text-green-600'
+    bg: 'bg-[#eef6f1]',
+    hover: 'group-hover:bg-[#e4f1e9]',
+    color: 'text-[#34745c]'
   }
 ])
 

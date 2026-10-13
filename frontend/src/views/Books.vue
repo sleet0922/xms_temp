@@ -31,7 +31,7 @@
         <Select v-model="sortBy" :options="sortOptions" label="排序" item-title="label" item-value="value" />
         <div class="flex items-end gap-6">
           <label class="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer">
-            <Switch v-model="inStockOnly" />
+            <Switch v-model="inStockOnly" label="仅看有库存" />
             仅看有库存
           </label>
         </div>
@@ -44,6 +44,7 @@
       <div v-if="formatChips.length || languageChips.length" class="flex flex-wrap items-center gap-2 mt-5 pt-5 border-t border-gray-200">
         <span class="text-xs font-medium text-gray-500 mr-1">快捷筛选</span>
         <button
+          type="button"
           v-for="chip in formatChips"
           :key="`fmt-${chip.value}`"
           class="px-3 py-1 rounded-lg text-xs font-medium transition-all duration-150 ease-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 active:scale-[0.98]"
@@ -53,6 +54,7 @@
           {{ chip.value }} · {{ chip.count }}
         </button>
         <button
+          type="button"
           v-for="chip in languageChips"
           :key="`lang-${chip.value}`"
           class="px-3 py-1 rounded-lg text-xs font-medium transition-all duration-150 ease-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 active:scale-[0.98]"
@@ -73,6 +75,7 @@
       <div class="flex items-center gap-2">
         <div class="flex rounded-lg border border-gray-300 overflow-hidden">
           <button
+            type="button"
             class="px-3 py-1.5 text-sm font-medium transition-all duration-150 ease-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 active:scale-[0.98]"
             :class="viewMode === 'grid' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'"
             @click="viewMode = 'grid'"
@@ -80,6 +83,7 @@
             网格
           </button>
           <button
+            type="button"
             class="px-3 py-1.5 text-sm font-medium transition-all duration-150 ease-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 active:scale-[0.98]"
             :class="viewMode === 'table' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'"
             @click="viewMode = 'table'"

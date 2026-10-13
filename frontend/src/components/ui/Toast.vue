@@ -1,10 +1,10 @@
 <template>
-  <div v-if="toasts.length" class="fixed top-4 right-4 z-50 max-w-sm">
+  <div v-if="toasts.length" class="fixed top-4 right-4 z-50 w-[min(24rem,calc(100vw-2rem))]" aria-live="polite" aria-atomic="false">
     <TransitionGroup
       enter-active-class="transition-all duration-200 ease-out"
       enter-from-class="opacity-0 translate-x-8"
       enter-to-class="opacity-100 translate-x-0"
-      leave-active-class="transition-all duration-200 ease-in"
+      leave-active-class="transition-all duration-150 ease-out"
       leave-from-class="opacity-100 translate-x-0"
       leave-to-class="opacity-0 translate-x-8"
     >
@@ -13,6 +13,7 @@
         :key="toast.id"
         :class="toastClasses(toast.type)"
         class="mb-3"
+        role="status"
       >
         <div class="flex items-start gap-3">
           <component :is="getIcon(toast.type)" class="w-5 h-5 flex-shrink-0 mt-0.5" />
@@ -20,8 +21,10 @@
             <p class="text-sm font-medium">{{ toast.message }}</p>
           </div>
           <button
+            type="button"
             @click="remove(toast.id)"
-            class="p-1 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-all duration-150 ease-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 active:scale-[0.98] flex-shrink-0"
+            aria-label="关闭提示"
+            class="p-1 rounded-lg text-gray-400 hover:bg-black/5 hover:text-gray-700 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-[#2f6f68] focus:ring-offset-2 active:scale-[0.98] flex-shrink-0"
           >
             <XMarkIcon class="w-5 h-5" />
           </button>
@@ -42,15 +45,16 @@ import {
 } from '@heroicons/vue/24/outline'
 
 const toasts = ref([])
+let nextId = 0
 
 const toastClasses = (type) => {
-  const base = 'bg-[#e8edf2] border rounded-2xl shadow-[8px_8px_18px_rgba(159,172,187,.55),-8px_-8px_18px_rgba(255,255,255,.9)] p-4 transition-all duration-200'
+  const base = 'bg-white border rounded-xl shadow-lg p-4 transition-all duration-150'
 
   const types = {
-    success: 'border-green-200 text-green-800',
-    error: 'border-red-200 text-red-800',
-    warning: 'border-yellow-200 text-yellow-800',
-    info: 'border-blue-200 text-blue-800'
+    success: 'border-[#cfe4dd] text-[#24564f]',
+    error: 'border-[#efd1d1] text-[#8d3f41]',
+    warning: 'border-[#eeddbf] text-[#7d5a27]',
+    info: 'border-[#d1dfeb] text-[#3f617f]'
   }
 
   return [base, types[type] || types.info].join(' ')
@@ -67,7 +71,7 @@ const getIcon = (type) => {
 }
 
 const show = (message, type = 'info', duration = 3500) => {
-  const id = Date.now()
+  const id = ++nextId
   toasts.value.push({ id, message, type })
 
   setTimeout(() => {

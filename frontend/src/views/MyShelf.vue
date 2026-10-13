@@ -83,6 +83,7 @@
               <span class="absolute -left-[7px] top-1.5 w-3 h-3 rounded-full" :class="nodeClass(record)"></span>
               <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
                 <button
+                  type="button"
                   class="text-left text-sm font-medium text-gray-900 hover:text-blue-700 rounded-lg transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                   @click="goBook(record.book?.id)"
                 >
@@ -123,6 +124,7 @@
                 <tr v-for="reservation in reservations" :key="reservation.id" class="hover:bg-gray-50 transition-colors">
                   <td class="px-4 py-3 text-sm">
                     <button
+                      type="button"
                       class="text-left font-medium text-gray-900 hover:text-blue-700 rounded-lg transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                       @click="goBook(reservation.book?.id)"
                     >
@@ -170,6 +172,7 @@
               <div class="flex items-start justify-between gap-4">
                 <div class="min-w-0">
                   <button
+                    type="button"
                     class="text-left text-sm font-medium text-gray-900 hover:text-blue-700 rounded-lg transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                     @click="goBook(review.book?.id)"
                   >

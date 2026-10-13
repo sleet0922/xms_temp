@@ -4,7 +4,7 @@
       <Card padding="large">
         <div class="text-center mb-6">
           <div class="neo-brand-mark inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-3 group transition-all duration-200 ease-out hover:scale-105">
-            <UserPlusIcon class="w-8 h-8 text-[#3d777b] transition-colors duration-200" aria-hidden="true" />
+            <UserPlusIcon class="w-8 h-8 text-[#2f6f68] transition-colors duration-200" aria-hidden="true" />
           </div>
           <h1 class="text-2xl font-semibold tracking-tight text-gray-900">读者注册</h1>
           <p class="text-sm text-gray-500 mt-1">免费申请图书馆借阅证</p>
@@ -16,6 +16,8 @@
               v-model="form.username"
               label="用户名"
               placeholder="3 位以上字符"
+              autocomplete="username"
+              name="username"
               :prepend-icon="UserIcon"
               :error="errors.username"
               required
@@ -25,6 +27,8 @@
               v-model="form.full_name"
               label="真实姓名"
               placeholder="请输入真实姓名"
+              autocomplete="name"
+              name="name"
               :prepend-icon="IdentificationIcon"
               :error="errors.full_name"
               required
@@ -35,6 +39,8 @@
               label="电子邮箱"
               type="email"
               placeholder="your@example.com"
+              autocomplete="email"
+              name="email"
               :prepend-icon="EnvelopeIcon"
               :error="errors.email"
               required
@@ -45,6 +51,8 @@
               label="联系电话"
               type="tel"
               placeholder="手机号码（可选）"
+              autocomplete="tel"
+              name="tel"
               :prepend-icon="PhoneIcon"
             />
 
@@ -61,8 +69,11 @@
               label="登录密码"
               :type="showPassword ? 'text' : 'password'"
               placeholder="至少 6 位字符"
+              autocomplete="new-password"
+              name="new-password"
               :prepend-icon="LockClosedIcon"
               :append-icon="showPassword ? EyeIcon : EyeSlashIcon"
+              :append-label="showPassword ? '隐藏密码' : '显示密码'"
               @append-click="showPassword = !showPassword"
               :error="errors.password"
               required
@@ -73,6 +84,8 @@
               label="确认密码"
               :type="showPassword ? 'text' : 'password'"
               placeholder="请再次输入密码"
+              autocomplete="new-password"
+              name="confirm-password"
               :prepend-icon="LockClosedIcon"
               :error="errors.confirmPassword"
               required

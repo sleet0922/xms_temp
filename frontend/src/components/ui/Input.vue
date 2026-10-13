@@ -17,20 +17,23 @@
         :placeholder="placeholder"
         :disabled="disabled"
         :required="required"
+        :autocomplete="autocomplete"
+        :name="name"
         :class="inputClasses"
         @input="$emit('update:modelValue', $event.target.value)"
         @blur="$emit('blur', $event)"
         @focus="$emit('focus', $event)"
       />
 
-      <div v-if="appendIcon" class="absolute inset-y-0 right-0 pr-3 flex items-center">
-        <component
-          :is="appendIcon"
-          class="h-5 w-5 text-gray-400 cursor-pointer hover:text-gray-600"
-          @click="$emit('append-click')"
-          aria-hidden="true"
-        />
-      </div>
+      <button
+        v-if="appendIcon"
+        type="button"
+        class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-700 focus:outline-none focus:text-[#24564f]"
+        :aria-label="appendLabel"
+        @click="$emit('append-click')"
+      >
+        <component :is="appendIcon" class="h-5 w-5" aria-hidden="true" />
+      </button>
     </div>
 
     <p v-if="error" class="mt-1 text-sm text-red-600">{{ error }}</p>
@@ -49,12 +52,18 @@ const props = defineProps({
     default: 'text'
   },
   placeholder: String,
+  autocomplete: String,
+  name: String,
   disabled: Boolean,
   required: Boolean,
   error: String,
   hint: String,
   prependIcon: Object,
-  appendIcon: Object
+  appendIcon: Object,
+  appendLabel: {
+    type: String,
+    default: '显示或隐藏内容'
+  }
 })
 
 defineEmits(['update:modelValue', 'blur', 'focus', 'append-click'])

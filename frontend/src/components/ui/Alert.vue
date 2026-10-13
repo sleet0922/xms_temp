@@ -10,7 +10,9 @@
       </div>
       <button
         v-if="closable"
+        type="button"
         @click="$emit('update:modelValue', false)"
+        aria-label="关闭提示"
         class="text-current opacity-70 hover:opacity-100 transition-opacity flex-shrink-0"
       >
         <XMarkIcon class="w-5 h-5" />
@@ -47,13 +49,13 @@ const props = defineProps({
 defineEmits(['update:modelValue'])
 
 const alertClasses = computed(() => {
-  const base = 'rounded-2xl border p-4 shadow-sm'
+  const base = 'rounded-xl border p-4 shadow-sm'
 
   const variants = {
-    success: 'bg-green-50 border-green-200 text-green-800',
-    error: 'bg-red-50 border-red-200 text-red-800',
-    warning: 'bg-yellow-50 border-yellow-200 text-yellow-800',
-    info: 'bg-blue-50 border-blue-200 text-blue-800'
+    success: 'bg-[#f0f8f4] border-[#cfe4dd] text-[#24564f]',
+    error: 'bg-[#fdf1f1] border-[#efd1d1] text-[#8d3f41]',
+    warning: 'bg-[#fff8ec] border-[#eeddbf] text-[#7d5a27]',
+    info: 'bg-[#f1f6fa] border-[#d1dfeb] text-[#3f617f]'
   }
 
   return [base, variants[props.variant]].join(' ')

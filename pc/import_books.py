@@ -9,28 +9,66 @@
     2) 书架分配：按分类落到对应阅览室书架
     3) 复本与条码：每本生成 3 册可借复本，条码 BK-{年月}-{书号}-{序号}
     4) 封面托管：resources/covers/*.jpg → backend/static/covers/，并写入 cover_file
-    5) 幂等：按 source_url（缺失时用 书名+作者）去重，已存在的书目跳过
+    5) 演示评分：写入爬虫合成的 rating/rating_count，并把 reviews 落成真实书评行
+    6) 幂等：按 source_url（缺失时用 书名+作者）去重，已存在的书目跳过
 """
 import argparse
 import json
 import shutil
 import sys
 from collections import Counter
-from datetime import datetime
+from datetime import datetime, timedelta
+from decimal import Decimal
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 BACKEND = ROOT / "backend"
 sys.path.insert(0, str(BACKEND))
 
+from auth import get_password_hash  # noqa: E402
 from database import Base, SessionLocal, engine  # noqa: E402
-from models import Book, BookCopy, Category, ShelfLocation  # noqa: E402
+from models import Book, BookCopy, Category, Review, ShelfLocation, User  # noqa: E402
 
 JSON_PATH = ROOT / "resources" / "zhongtu-k_books.json"
 COVERS_SRC = ROOT / "resources" / "covers"
 COVERS_DST = BACKEND / "static" / "covers"
 
 COPIES_PER_BOOK = 3  # 电子馆藏复本数（支持并发借阅演示）
+
+# 演示评分人：爬虫合成的书评按 reviewer_slot 落到这些账号上。
+# 数量必须 >= crawler.py 的 FAKE_REVIEWER_COUNT，且同书内 slot 唯一
+# （reviews 表对 (user_id, book_id) 有唯一约束）。
+FAKE_REVIEWERS = [
+    ("demo_reader01", "李静"), ("demo_reader02", "王强"), ("demo_reader03", "陈晨"),
+    ("demo_reader04", "赵敏"), ("demo_reader05", "刘洋"), ("demo_reader06", "孙丽"),
+    ("demo_reader07", "周杰"), ("demo_reader08", "吴倩"), ("demo_reader09", "郑凯"),
+    ("demo_reader10", "冯雪"), ("demo_reader11", "许阳"), ("demo_reader12", "何雨"),
+]
+FAKE_REVIEWER_PASSWORD = "admin123"  # 与其它演示账号一致
+
+
+def ensure_fake_reviewers(db):
+    """确保演示评分人账号存在（幂等），返回 slot -> User 映射"""
+    reviewers = {}
+    for slot, (username, full_name) in enumerate(FAKE_REVIEWERS):
+        user = db.query(User).filter(User.username == username).first()
+        if not user:
+            user = User(
+                username=username,
+                email=f"{username}@demo.library",
+                full_name=full_name,
+                phone="",
+                hashed_password=get_password_hash(FAKE_REVIEWER_PASSWORD),
+                role="reader",
+                card_number=f"CARD-97{slot + 1:04d}",
+                max_borrow_limit=5,
+                balance=Decimal("0.00"),
+                status="active",
+            )
+            db.add(user)
+            db.flush()
+        reviewers[slot] = user
+    return reviewers
 
 # 分类关键词表：命中越多得分越高，全无命中时归入「历史传记」
 CATEGORY_KEYWORDS = {
@@ -125,6 +163,8 @@ def import_books(dry_run: bool = False) -> None:
         if not cats:
             raise SystemExit("[错误] 数据库缺少分类数据，请先执行 backend/init_db.py")
 
+        reviewers = ensure_fake_reviewers(db)
+
         existing_urls = {u for (u,) in db.query(Book.source_url).filter(Book.source_url.isnot(None)).all()}
         existing_keys = {(t, a) for t, a in db.query(Book.title, Book.author).all()}
         used_isbns = {i for (i,) in db.query(Book.isbn).filter(Book.isbn.isnot(None)).all()}
@@ -132,7 +172,7 @@ def import_books(dry_run: bool = False) -> None:
         now = datetime.now()
         barcode_month = now.strftime("%Y%m")
 
-        created = skipped = cover_copied = 0
+        created = skipped = cover_copied = review_created = 0
         for rec in records:
             title = (rec.get("title") or "").strip()
             author = (rec.get("author") or "佚名").strip()
@@ -169,6 +209,21 @@ def import_books(dry_run: bool = False) -> None:
             fmt = normalize_format(rec.get("format"))
             raw_category = (rec.get("category") or "").strip()
 
+            # 合成书评：同一本书内 slot 去重，避免撞 (user_id, book_id) 唯一约束
+            review_rows, seen_slots = [], set()
+            for rv in (rec.get("reviews") or []):
+                slot = to_int(rv.get("reviewer_slot"), 0) % len(FAKE_REVIEWERS)
+                if slot in seen_slots:
+                    continue
+                seen_slots.add(slot)
+                review_rows.append((slot, rv))
+
+            if review_rows:
+                rating_value = Decimal(str(rec.get("rating") or 0))
+                rating_count_value = len(review_rows)
+            else:
+                rating_value, rating_count_value = Decimal("0.00"), 0
+
             book = Book(
                 title=title[:200],
                 author=author[:100],
@@ -192,6 +247,8 @@ def import_books(dry_run: bool = False) -> None:
                 source_views=to_int(rec.get("views")),
                 source_likes=to_int(rec.get("likes")),
                 source_comments=to_int(rec.get("comments")),
+                rating=rating_value,
+                rating_count=rating_count_value,
                 total_copies=COPIES_PER_BOOK,
                 available_copies=COPIES_PER_BOOK,
                 borrow_count=0,
@@ -208,6 +265,20 @@ def import_books(dry_run: bool = False) -> None:
                     location_note=f"电子馆藏复本 · {location.name if location else '综合阅览'}",
                 ))
 
+            # 合成书评落库，时间回填到过去，让书评列表有先后顺序
+            for slot, rv in review_rows:
+                created_at = now - timedelta(days=to_int(rv.get("days_ago"), 1))
+                db.add(Review(
+                    user_id=reviewers[slot].id,
+                    book_id=book.id,
+                    rating=max(1, min(5, to_int(rv.get("rating"), 5))),
+                    content=rv.get("content"),
+                    is_hidden=False,
+                    created_at=created_at,
+                    updated_at=created_at,
+                ))
+                review_created += 1
+
             if source_url:
                 existing_urls.add(source_url)
             existing_keys.add((title, author))
@@ -220,8 +291,12 @@ def import_books(dry_run: bool = False) -> None:
         db.commit()
         total_books = db.query(Book).count()
         total_copies = db.query(BookCopy).count()
-        print(f"[完成] 新增书目 {created} 本，跳过已存在 {skipped} 本，新增封面 {cover_copied} 张")
-        print(f"[统计] 当前馆藏: 书目 {total_books} 种 / 复本 {total_copies} 册")
+        total_reviews = db.query(Review).count()
+        rated = db.query(Book).filter(Book.rating_count > 0).count()
+        print(f"[完成] 新增书目 {created} 本，跳过已存在 {skipped} 本，"
+              f"新增封面 {cover_copied} 张，新增书评 {review_created} 条")
+        print(f"[统计] 当前馆藏: 书目 {total_books} 种 / 复本 {total_copies} 册 / 书评 {total_reviews} 条")
+        print(f"[评分] 已合成评分书目 {rated} 本（演示评分人 {len(FAKE_REVIEWERS)} 个）")
         print(f"[分类] 本次归类分布: {dict(cat_counter)}")
     finally:
         db.close()

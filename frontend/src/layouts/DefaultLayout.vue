@@ -10,7 +10,7 @@
     <!-- 侧边栏 -->
     <aside
       :class="[
-        'neo-sidebar fixed inset-y-0 left-0 z-40 w-64 border-r border-white/60 transform transition-transform duration-200 ease-out lg:translate-x-0',
+        'neo-sidebar fixed inset-y-0 left-0 z-40 w-64 border-r border-gray-200 transform transition-transform duration-200 ease-out lg:translate-x-0',
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       ]"
     >
@@ -18,7 +18,7 @@
         <!-- Logo -->
         <RouterLink to="/" class="flex items-center gap-3 px-6 h-16 border-b border-gray-200 group">
           <div class="neo-brand-mark w-10 h-10 rounded-2xl flex items-center justify-center transition-all duration-200 ease-out group-hover:scale-105">
-            <component :is="getIconComponent('mdi-library')" class="w-5 h-5 text-[#3d777b] transition-colors duration-200" />
+            <component :is="getIconComponent('mdi-library')" class="w-5 h-5 text-[#2f6f68] transition-colors duration-200" />
           </div>
           <div class="min-w-0">
             <div class="text-gray-900 font-semibold tracking-tight leading-tight truncate">智慧云图书馆</div>
@@ -56,11 +56,11 @@
         </nav>
 
         <!-- 底部用户信息 -->
-          <div class="border-t border-white/60 p-4">
+          <div class="border-t border-gray-200 p-4">
           <RouterLink
             to="/profile"
             @click="sidebarOpen = false"
-            class="flex items-center gap-3 px-2 py-2 rounded-xl transition-all duration-150 ease-out hover:bg-white/30 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
+            class="flex items-center gap-3 px-2 py-2 rounded-lg transition-colors duration-150 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
           >
             <div class="neo-user-orb w-10 h-10 rounded-2xl flex items-center justify-center font-semibold flex-shrink-0">
               {{ userInitial }}
@@ -79,7 +79,9 @@
       <!-- 顶栏 -->
       <header class="neo-header sticky top-0 z-20 h-[76px] border-b flex items-center gap-4 px-4 sm:px-6">
         <button
-          class="lg:hidden p-2 rounded-xl text-gray-600 hover:bg-white/40 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 transition-all duration-150 ease-out active:scale-[0.98]"
+          type="button"
+          aria-label="打开导航菜单"
+          class="lg:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 transition-colors duration-150 active:scale-[0.98]"
           @click="sidebarOpen = true"
         >
           <component :is="getIconComponent('mdi-menu')" class="w-6 h-6" />
@@ -90,14 +92,15 @@
         </div>
 
         <div class="ml-auto flex items-center gap-2 sm:gap-3">
-          <span class="hidden sm:inline-flex px-2.5 py-1 rounded-lg text-xs font-medium" :class="roleBadgeClass">
+          <span class="neo-role-badge hidden sm:inline-flex px-2.5 py-1 rounded-lg text-xs font-medium" :class="roleBadgeClass">
             {{ roleLabel }}
           </span>
 
           <!-- 通知铃铛 -->
           <RouterLink
             to="/notifications"
-            class="relative p-2 rounded-xl text-gray-500 hover:bg-white/40 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 transition-all duration-150 ease-out active:scale-[0.98]"
+            aria-label="消息通知"
+            class="relative p-2 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 transition-colors duration-150 active:scale-[0.98]"
             title="消息通知"
           >
             <component :is="getIconComponent('mdi-bell-outline')" class="w-5 h-5" />
@@ -114,7 +117,8 @@
           </div>
 
           <button
-            class="p-2 rounded-xl text-gray-500 hover:bg-red-50 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 transition-all duration-150 ease-out active:scale-[0.98]"
+            type="button"
+            class="p-2 rounded-lg text-gray-500 hover:bg-red-50 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 transition-colors duration-150 active:scale-[0.98]"
             title="退出登录"
             @click="handleLogout"
           >
@@ -125,7 +129,11 @@
 
       <!-- 页面内容 -->
       <main class="flex-1">
-        <RouterView />
+        <RouterView v-slot="{ Component, route: renderedRoute }">
+          <Transition name="page-transition" mode="out-in">
+            <component :is="Component" :key="renderedRoute.fullPath" />
+          </Transition>
+        </RouterView>
       </main>
     </div>
   </div>
@@ -174,10 +182,10 @@ const roleLabel = computed(() => ({
 }[userStore.user?.role] || '用户'))
 
 const roleBadgeClass = computed(() => ({
-  admin: 'bg-[#f0d9d5] text-[#8d4f4a]',
-  librarian: 'bg-[#d7e6e5] text-[#2e5e62]',
-  reader: 'bg-[#dce8df] text-[#3f6b55]'
-}[userStore.user?.role] || 'bg-[#d0dbe3] text-[#526370]'))
+  admin: 'role-admin',
+  librarian: 'role-librarian',
+  reader: 'role-reader'
+}[userStore.user?.role] || 'role-default'))
 
 const userInitial = computed(() => {
   const name = userStore.user?.full_name || userStore.user?.username || '?'

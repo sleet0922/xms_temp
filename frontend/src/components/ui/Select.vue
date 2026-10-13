@@ -13,9 +13,18 @@
           <ChevronDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true" />
         </span>
       </HeadlessListboxButton>
+      <button
+        v-if="clearable && selected"
+        type="button"
+        class="absolute inset-y-0 right-8 flex items-center px-1 text-gray-400 hover:text-gray-700 focus:outline-none"
+        aria-label="清除选择"
+        @click.stop="clearSelection"
+      >
+        <XMarkIcon class="h-4 w-4" aria-hidden="true" />
+      </button>
 
       <transition
-        leave-active-class="transition duration-100 ease-in"
+        leave-active-class="transition duration-100 ease-out"
         leave-from-class="opacity-100"
         leave-to-class="opacity-0"
       >
@@ -28,13 +37,13 @@
             as="template"
           >
             <li :class="[
-              active ? 'bg-[#d5e4e3] text-[#2e5e62]' : 'text-gray-900',
+              active ? 'bg-[#edf5f2] text-[#24564f]' : 'text-gray-900',
               'relative cursor-pointer select-none py-2 pl-10 pr-4 transition-colors duration-150'
             ]">
               <span :class="[isSelected ? 'font-medium' : 'font-normal', 'block truncate']">
                 {{ getDisplayValue(option) }}
               </span>
-              <span v-if="isSelected" class="absolute inset-y-0 left-0 flex items-center pl-3 text-[#3d777b]">
+              <span v-if="isSelected" class="absolute inset-y-0 left-0 flex items-center pl-3 text-[#2f6f68]">
                 <CheckIcon class="h-5 w-5" aria-hidden="true" />
               </span>
             </li>
@@ -57,7 +66,7 @@ import {
   ListboxOption as HeadlessListboxOption,
   ListboxLabel as HeadlessListboxLabel
 } from '@headlessui/vue'
-import { CheckIcon, ChevronDownIcon } from '@heroicons/vue/24/outline'
+import { CheckIcon, ChevronDownIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 
 const props = defineProps({
   modelValue: [String, Number, Object],
@@ -82,14 +91,19 @@ const props = defineProps({
   required: Boolean,
   error: String,
   hint: String,
-  clearable: Boolean
+  clearable: Boolean,
+  returnObject: Boolean
 })
 
 const emit = defineEmits(['update:modelValue'])
 
 const selected = computed({
-  get: () => props.modelValue,
-  set: (value) => emit('update:modelValue', value)
+  get: () => {
+    if (props.modelValue === null || props.modelValue === undefined || props.modelValue === '') return null
+    if (props.returnObject) return props.modelValue
+    return props.options.find(option => getOptionValue(option) === props.modelValue) || null
+  },
+  set: (value) => emit('update:modelValue', props.returnObject ? value : getOptionValue(value))
 })
 
 const buttonClasses = computed(() => {
@@ -102,7 +116,7 @@ const buttonClasses = computed(() => {
   return [base, borderColor].join(' ')
 })
 
-const optionsClasses = 'absolute z-10 mt-2 max-h-60 w-full overflow-auto scrollbar-thin rounded-2xl bg-[#e8edf2] py-2 shadow-xl border border-white/70 focus:outline-none'
+const optionsClasses = 'absolute z-30 mt-2 max-h-60 w-full overflow-auto scrollbar-thin rounded-xl bg-white py-1 shadow-lg border border-gray-200 focus:outline-none'
 
 const getDisplayValue = (option) => {
   if (!option) return ''
@@ -118,4 +132,6 @@ const getOptionValue = (option) => {
   }
   return option
 }
+
+const clearSelection = () => emit('update:modelValue', null)
 </script>

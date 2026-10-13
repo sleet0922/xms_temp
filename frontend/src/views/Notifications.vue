@@ -45,6 +45,7 @@
         :aria-label="`${note.title}${note.is_read ? '' : '（未读）'}`"
         @click="handleOpen(note)"
         @keydown.enter="handleCardKeydown($event, note)"
+        @keydown.space="handleCardKeydown($event, note)"
       >
         <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
           <div class="min-w-0 flex-1">
@@ -199,6 +200,7 @@ const handleOpen = async (note) => {
 const handleCardKeydown = (event, note) => {
   // 避免内部按钮的回车冒泡触发卡片跳转
   if (event.target !== event.currentTarget) return
+  event.preventDefault()
   handleOpen(note)
 }
 

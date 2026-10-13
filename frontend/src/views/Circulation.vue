@@ -38,9 +38,9 @@
       <Card class="group" hover>
         <div class="flex items-start gap-4 mb-5">
           <div
-            class="w-12 h-12 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0 transition-all duration-200 ease-out group-hover:bg-blue-500 group-hover:scale-110"
+            class="neo-action-icon neo-action-icon-primary"
           >
-            <ArrowUpTrayIcon class="w-6 h-6 text-blue-600 transition-colors duration-200 group-hover:text-white" />
+            <ArrowUpTrayIcon class="w-6 h-6" />
           </div>
           <div class="min-w-0">
             <h2 class="text-lg font-semibold tracking-tight text-gray-900">借书办理</h2>
@@ -154,9 +154,9 @@
       <Card class="group" hover>
         <div class="flex items-start gap-4 mb-5">
           <div
-            class="w-12 h-12 rounded-lg bg-green-50 flex items-center justify-center flex-shrink-0 transition-all duration-200 ease-out group-hover:bg-green-500 group-hover:scale-110"
+            class="neo-action-icon neo-action-icon-success"
           >
-            <ArrowDownTrayIcon class="w-6 h-6 text-green-600 transition-colors duration-200 group-hover:text-white" />
+            <ArrowDownTrayIcon class="w-6 h-6" />
           </div>
           <div class="min-w-0">
             <h2 class="text-lg font-semibold tracking-tight text-gray-900">还书办理</h2>

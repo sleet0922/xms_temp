@@ -8,6 +8,7 @@
       <Button size="small" variant="outline" :disabled="page <= 1" @click="go(page - 1)">上一页</Button>
 
       <button
+        type="button"
         v-for="(p, index) in pageNumbers"
         :key="index"
         :disabled="p === '...'"
