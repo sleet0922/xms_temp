@@ -30,13 +30,8 @@ build-exe.cmd
 
 打包后的 `dist-exe/library-manager/` 是自包含目录，目标 Windows 电脑不需要安装 Python、Node 或 npm，复制整个目录并双击 `library-manager.exe` 即可。程序默认把数据库写入 exe 同目录，封面写入同目录的 `library-data/covers`，不会修改项目源目录数据库。Windows `.exe` 必须在 Windows 构建机或 Windows CI 上生成，不能用 Linux PyInstaller 直接交叉编译。
 
-Windows：
-
-```bat
-run.cmd
-```
-
-脚本会在项目目录创建 `.venv` 和 `frontend/node_modules`，构建前端并初始化 `backend/library.db`。访问 `http://127.0.0.1:8000`，接口文档为 `/docs`。删除数据库文件后重新运行可恢复演示数据。
+Windows 目标电脑无需安装 Python、Node 或 npm。请从 GitHub Actions 下载
+`library-manager-windows.zip`，解压后双击 `library-manager.exe` 即可启动。
 
 也可以手动启动：
 

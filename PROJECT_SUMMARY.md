@@ -20,7 +20,7 @@ frontend/      Vue 3 单页应用及组件
 resources/     演示导入数据
 pc/            数据导入与封面采集辅助脚本
 run.sh         Linux/macOS 一键启动脚本
-run.cmd        Windows 一键启动脚本
+build-exe.cmd  Windows 自包含程序构建脚本
 ```
 
 ## 质量验证
