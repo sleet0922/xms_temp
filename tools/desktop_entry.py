@@ -1,6 +1,8 @@
 """PyInstaller 启动入口：把打包后的 Vue 静态资源交给 FastAPI 托管。"""
 import os
 import sys
+import threading
+import webbrowser
 from pathlib import Path
 
 
@@ -23,4 +25,6 @@ from app import app  # noqa: E402
 
 
 if __name__ == "__main__":
+    url = f"http://{os.getenv('HOST', '127.0.0.1')}:{os.getenv('PORT', '8000')}"
+    threading.Timer(1.2, lambda: webbrowser.open(url)).start()
     uvicorn.run(app, host=os.getenv("HOST", "127.0.0.1"), port=int(os.getenv("PORT", "8000")))

@@ -20,11 +20,13 @@ Linux/macOS：
 
 如果需要生成桌面可执行程序：
 
-```bash
-./build-exe.sh        # 构建单目录可执行程序到 dist-exe/
+Windows 构建机可直接运行：
+
+```bat
+build-exe.cmd
 ```
 
-`build-exe.sh` 使用 PyInstaller 打包当前平台的程序；在 Linux/macOS 上运行会生成对应平台的可执行文件，要生成 Windows `.exe`，请在 Windows 或 Windows CI 环境中运行该脚本。程序默认把数据库写入可执行文件同目录，封面写入同目录的 `library-data/covers`，不会修改项目源目录数据库。
+打包后的 `dist-exe/library-manager/` 是自包含目录，目标 Windows 电脑不需要安装 Python、Node 或 npm，复制整个目录并双击 `library-manager.exe` 即可。程序默认把数据库写入 exe 同目录，封面写入同目录的 `library-data/covers`，不会修改项目源目录数据库。Windows `.exe` 必须在 Windows 构建机或 Windows CI 上生成，不能用 Linux PyInstaller 直接交叉编译。
 
 Windows：
 
