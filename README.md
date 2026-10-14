@@ -18,11 +18,9 @@ Linux/macOS：
 ./run.sh
 ```
 
-也可以分步执行：
+如果需要生成桌面可执行程序：
 
 ```bash
-./vue-build.sh        # 只构建 Vue 前端
-./run-python.sh       # 启动已构建的 FastAPI 服务
 ./build-exe.sh        # 构建单目录可执行程序到 dist-exe/
 ```
 

@@ -4,7 +4,12 @@ set -Eeuo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$ROOT_DIR"
 
-"$ROOT_DIR/vue-build.sh"
+command -v node >/dev/null 2>&1 || { echo "[错误] 未找到 Node.js 18+。" >&2; exit 1; }
+command -v npm >/dev/null 2>&1 || { echo "[错误] 未找到 npm。" >&2; exit 1; }
+if [[ ! -d "$ROOT_DIR/frontend/node_modules" ]]; then
+  (cd "$ROOT_DIR/frontend" && npm ci --no-audit --no-fund)
+fi
+(cd "$ROOT_DIR/frontend" && npm run build)
 
 PYTHON="$ROOT_DIR/.venv/bin/python"
 if [[ ! -x "$PYTHON" ]]; then
