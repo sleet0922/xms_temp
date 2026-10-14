@@ -172,7 +172,7 @@
               <div v-else class="space-y-4">
                 <div v-for="lang in languageRows" :key="lang.language">
                   <div class="flex items-center justify-between gap-3 text-sm">
-                    <span class="text-gray-700 truncate">{{ lang.language }}</span>
+                    <span class="text-gray-700 truncate">{{ languageLabel(lang.language) }}</span>
                     <span class="text-gray-500 flex-shrink-0">{{ lang.count }} 种 · {{ lang.percent }}%</span>
                   </div>
                   <div class="w-full bg-gray-200 rounded-full h-2 mt-1.5">
@@ -324,6 +324,7 @@ import EmptyState from '@/components/ui/EmptyState.vue'
 import BookCover from '@/components/ui/BookCover.vue'
 import RatingStars from '@/components/ui/RatingStars.vue'
 import { statsApi } from '@/api'
+import { languageLabel } from '@/utils/labels'
 
 const TREND_DAYS = 30
 

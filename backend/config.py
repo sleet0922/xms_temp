@@ -25,6 +25,7 @@ class Settings(BaseSettings):
     app_name: str = "未来智慧图书馆管理系统 API"
     app_version: str = "3.0.0"
     app_description: str = "支持 RBAC 权限隔离、全流程智慧借还台、条码追踪、逾期罚金、书评推荐与数据可视化的企业级图书管理系统"
+    library_name: str = "未来智慧云图书馆"  # 系统设置 library_name 缺失时的兜底显示名
 
     # --- 数据库 ---
     database_url: str = ""  # 留空则使用 backend/library.db

@@ -13,12 +13,15 @@
 
     <EmptyState
       v-else-if="!book"
-      title="未找到该图书"
-      description="图书可能已下架，返回书目大厅重新检索"
+      :title="loadError.status === 404 ? '未找到该图书' : '图书详情加载失败'"
+      :description="loadError.message"
       :icon="BookOpenIcon"
     >
       <template #action>
-        <Button variant="primary" @click="router.push('/books')">返回书目大厅</Button>
+        <div class="flex flex-wrap items-center justify-center gap-3">
+          <Button v-if="loadError.status !== 404" variant="outline" @click="loadBook">重试</Button>
+          <Button variant="primary" @click="router.push('/books')">返回书目大厅</Button>
+        </div>
       </template>
     </EmptyState>
 
@@ -64,6 +67,15 @@
                 @click="handleReserve"
               >
                 预约排队
+              </Button>
+              <Button
+                v-if="userStore.isLibrarian"
+                variant="outline"
+                block
+                :prepend-icon="PlusIcon"
+                @click="openAddCopyDialog"
+              >
+                补录单册
               </Button>
               <a
                 v-if="book.source_url"
@@ -155,7 +167,11 @@
               </tbody>
             </table>
           </div>
-          <EmptyState v-if="!book.copies?.length" title="暂无单册记录" description="馆员可在编目页为该书目补充复本" />
+          <EmptyState
+            v-if="!book.copies?.length"
+            title="暂无单册记录"
+            :description="userStore.isLibrarian ? '可点击左侧「补录单册」为该书目新增实体复本' : '该书目暂无可借实体册'"
+          />
         </Card>
 
         <!-- 书评 -->
@@ -233,6 +249,36 @@
         </Card>
       </div>
     </div>
+
+    <!-- 补录单册：为馆员提供新增实体复本的入口（对应 POST /api/books/{id}/copies） -->
+    <Dialog v-model="showAddCopyDialog" title="补录单册" max-width="sm">
+      <div class="space-y-4">
+        <p class="text-sm text-gray-600">
+          为《{{ book?.title || '' }}》新增实体复本，条码需在馆内唯一。
+        </p>
+        <Input
+          v-model="copyForm.count"
+          type="number"
+          label="新增册数"
+          hint="系统按“起始条码 + 序号”自动生成，也可手工修改"
+        />
+        <Input
+          v-model="copyForm.barcode"
+          label="起始条码"
+          :prepend-icon="QrCodeIcon"
+          placeholder="例如 BK-202610-0554-04"
+        />
+        <Input
+          v-model="copyForm.locationNote"
+          label="存放位置备注"
+          placeholder="选填，例如 C-2F-02-A"
+        />
+      </div>
+      <template #footer>
+        <Button variant="outline" @click="showAddCopyDialog = false">取消</Button>
+        <Button variant="primary" :loading="addingCopy" @click="handleAddCopy">确认新增</Button>
+      </template>
+    </Dialog>
   </div>
 </template>
 
@@ -245,6 +291,8 @@ import {
   CalendarDaysIcon,
   ChatBubbleLeftRightIcon,
   LinkIcon,
+  PlusIcon,
+  QrCodeIcon,
   TrashIcon
 } from '@heroicons/vue/24/outline'
 import { useUserStore } from '@/stores/user'
@@ -253,6 +301,8 @@ import Card from '@/components/ui/Card.vue'
 import Button from '@/components/ui/Button.vue'
 import Badge from '@/components/ui/Badge.vue'
 import Textarea from '@/components/ui/Textarea.vue'
+import Input from '@/components/ui/Input.vue'
+import Dialog from '@/components/ui/Dialog.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
 import RatingStars from '@/components/ui/RatingStars.vue'
 import BookCover from '@/components/ui/BookCover.vue'
@@ -268,6 +318,13 @@ const loading = ref(true)
 const submittingReview = ref(false)
 const reserving = ref(false)
 const borrowing = ref(false)
+
+// 详情加载失败时区分「图书不存在(404)」与「服务异常」，避免把 500 显示成已下架
+const loadError = ref({ status: 0, message: '' })
+
+const showAddCopyDialog = ref(false)
+const addingCopy = ref(false)
+const copyForm = reactive({ count: 1, barcode: '', locationNote: '' })
 
 const reviewForm = reactive({ rating: 5, content: '' })
 
@@ -316,14 +373,88 @@ function formatDateTime(value) {
 
 async function loadBook() {
   loading.value = true
+  loadError.value = { status: 0, message: '' }
   try {
     const { data } = await booksApi.getById(route.params.id)
     book.value = data
   } catch (err) {
     book.value = null
-    window.$toast?.error('加载图书详情失败')
+    const status = err.response?.status || 0
+    loadError.value = {
+      status,
+      message:
+        status === 404
+          ? '图书可能已下架，返回书目大厅重新检索'
+          : err.response?.data?.detail || '服务暂时不可用，请稍后重试'
+    }
+    window.$toast?.error(status === 404 ? '未找到该图书' : `加载图书详情失败（HTTP ${status || '网络异常'}）`)
   } finally {
     loading.value = false
+  }
+}
+
+/** 按现有复本序号推算下一个可用条码，格式与导入脚本保持一致 */
+function suggestNextBarcode() {
+  const copies = book.value?.copies || []
+  const month = new Date().toISOString().slice(0, 7).replace('-', '')
+  const bookId = String(book.value?.id || '').padStart(4, '0')
+  const used = new Set(copies.map(c => c.barcode))
+  let candidate = `BK-${month}-${bookId}-${String(copies.length + 1).padStart(2, '0')}`
+  let seq = copies.length + 1
+  while (used.has(candidate)) {
+    seq += 1
+    candidate = `BK-${month}-${bookId}-${String(seq).padStart(2, '0')}`
+  }
+  return candidate
+}
+
+/**
+ * 依据起始条码推出本次要新增的若干条码。
+ * 起始条码形如 BK-202610-0009-04 时依次递增尾号（04/05/…），
+ * 否则退化为追加序号（base-01/base-02/…），避免与既有复本条码撞号。
+ */
+function buildBarcodes(base, count) {
+  const matched = base.match(/^(.*?)(\d+)$/)
+  if (!matched) {
+    return Array.from({ length: count }, (_, i) =>
+      count === 1 ? base : `${base}-${String(i + 1).padStart(2, '0')}`
+    )
+  }
+  const [, prefix, digits] = matched
+  const start = parseInt(digits, 10)
+  return Array.from({ length: count }, (_, i) =>
+    `${prefix}${String(start + i).padStart(digits.length, '0')}`
+  )
+}
+
+function openAddCopyDialog() {
+  copyForm.count = 1
+  copyForm.barcode = suggestNextBarcode()
+  copyForm.locationNote = ''
+  showAddCopyDialog.value = true
+}
+
+async function handleAddCopy() {
+  const count = Math.max(1, Math.min(20, Number(copyForm.count) || 1))
+  const base = copyForm.barcode.trim()
+  if (!base) {
+    window.$toast?.warning('请填写起始条码')
+    return
+  }
+  const barcodes = buildBarcodes(base, count)
+
+  addingCopy.value = true
+  try {
+    for (const barcode of barcodes) {
+      await booksApi.addCopy(route.params.id, { barcode, location_note: copyForm.locationNote.trim() || null })
+    }
+    window.$toast?.success(`已新增 ${count} 册复本`)
+    showAddCopyDialog.value = false
+    await loadBook()
+  } catch (err) {
+    window.$toast?.error(err.response?.data?.detail || '补录单册失败')
+  } finally {
+    addingCopy.value = false
   }
 }
 

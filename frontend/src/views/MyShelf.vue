@@ -57,7 +57,8 @@
                   size="small"
                   variant="outline"
                   :loading="renewingId === record.id"
-                  :disabled="record.renew_count >= 2"
+                  :disabled="record.renew_count >= systemStore.maxRenewTimes"
+                  :title="record.renew_count >= systemStore.maxRenewTimes ? `已达最大续借次数（${systemStore.maxRenewTimes} 次）` : ''"
                   @click="renew(record)"
                 >
                   续借
@@ -143,7 +144,7 @@
                   </td>
                   <td class="px-4 py-3 text-right">
                     <Button
-                      v-if="reservation.status === 'waiting'"
+                      v-if="isActiveReservation(reservation.status)"
                       size="small"
                       variant="outline"
                       @click="cancelReservation(reservation)"
@@ -213,6 +214,12 @@ import {
   ExclamationCircleIcon
 } from '@heroicons/vue/24/outline'
 import { borrowsApi, reservationsApi, reviewsApi, statsApi } from '@/api'
+import { useSystemStore } from '@/stores/system'
+import {
+  isActiveReservation,
+  reservationStatusLabel,
+  reservationStatusVariant
+} from '@/utils/labels'
 import PageHeader from '@/components/ui/PageHeader.vue'
 import StatCard from '@/components/ui/StatCard.vue'
 import Card from '@/components/ui/Card.vue'
@@ -224,6 +231,7 @@ import BookCover from '@/components/ui/BookCover.vue'
 import RatingStars from '@/components/ui/RatingStars.vue'
 
 const router = useRouter()
+const systemStore = useSystemStore()
 
 const tabs = ['在借图书', '借阅时间线', '我的预约', '我的书评']
 const activeTab = ref(0)
@@ -292,15 +300,8 @@ const isExpiring = (reservation) => {
   return days !== null && days <= 3
 }
 
-const reservationLabel = (status) => {
-  const labels = { waiting: '等待中', notified: '已到馆', fulfilled: '已兑现', cancelled: '已取消' }
-  return labels[status] || status
-}
-
-const reservationVariant = (status) => {
-  const variants = { waiting: 'warning', notified: 'primary', fulfilled: 'success', cancelled: 'default' }
-  return variants[status] || 'default'
-}
+const reservationLabel = reservationStatusLabel
+const reservationVariant = reservationStatusVariant
 
 const goBook = (bookId) => {
   if (bookId) router.push(`/books/${bookId}`)

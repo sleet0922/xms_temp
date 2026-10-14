@@ -228,10 +228,18 @@ def return_by_barcode_or_record(
 
     rate = get_rules(db)["fine_rate"]
     fine_record = None
-    if now > record.due_date:
-        overdue_days = (now - record.due_date).days
-        if overdue_days > 0:
-            fine_amount = Decimal(str(overdue_days)) * rate
+    overdue_days = max(0, (now - record.due_date).days) if now > record.due_date else 0
+    if overdue_days > 0:
+        fine_amount = Decimal(str(overdue_days)) * rate
+        # 同一笔借阅只允许存在一张罚金单：逾期期间可能已由种子数据/定时逻辑预生成，
+        # 归还时按最终逾期天数核定金额，而不是再开一张（避免重复计费）。
+        existing_fine = (
+            db.query(FineRecord)
+            .filter(FineRecord.borrow_id == record.id)
+            .order_by(FineRecord.id)
+            .first()
+        )
+        if existing_fine is None:
             fine_record = FineRecord(
                 user_id=record.user_id,
                 borrow_id=record.id,
@@ -241,9 +249,22 @@ def return_by_barcode_or_record(
                 notes=f"图书《{book_title}》逾期 {overdue_days} 天，系统按 {rate:.2f} 元/天自动生成罚款单",
             )
             db.add(fine_record)
+        elif existing_fine.status == "unpaid":
+            existing_fine.amount = fine_amount
+            existing_fine.notes = (
+                f"图书《{book_title}》逾期 {overdue_days} 天，归还时按 {rate:.2f} 元/天核定"
+            )
+            fine_record = existing_fine
+        else:
+            # 已结清或已减免的账单不重复开单，仅回显
+            fine_record = existing_fine
 
     db.commit()
     db.refresh(record)
+
+    # 回填展示字段：归还响应直接带上逾期天数与最终罚金，前端无需再反查罚金接口
+    record.overdue_days = overdue_days
+    record.calculated_fine = fine_record.amount if fine_record else Decimal("0.00")
 
     audit_msg = f"归还图书《{book_title}》成功"
     if fine_record:

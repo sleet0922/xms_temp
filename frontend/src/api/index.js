@@ -130,7 +130,9 @@ export const finesApi = {
 export const reservationsApi = {
   getList: () => api.get('/reservations'),
   create: (bookId) => api.post('/reservations', { book_id: bookId }),
-  cancel: (id) => api.post(`/reservations/${id}/cancel`)
+  cancel: (id) => api.post(`/reservations/${id}/cancel`),
+  // 预约取书：馆员为读者办理借出并兑现预约
+  fulfill: (id) => api.post(`/reservations/${id}/fulfill`)
 }
 
 // Announcements API
@@ -142,6 +144,8 @@ export const announcementsApi = {
 
 // System API（管理员）
 export const systemApi = {
+  // 公开配置（馆名 + 业务规则），无需登录
+  getConfig: () => api.get('/system/config'),
   getInfo: () => api.get('/system/info'),
   getSettings: () => api.get('/settings'),
   updateSetting: (key, value) => api.put(`/settings/${key}`, { setting_value: value }),

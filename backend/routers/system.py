@@ -12,9 +12,27 @@ from config import settings
 from database import get_db
 from models import AuditLog, SystemSetting, User
 from schemas import AuditLogResponse, SettingResponse, SettingUpdate
-from services.audit import get_rules, record_audit
+from services.audit import get_rules, get_setting_val, record_audit
 
 router = APIRouter(tags=["系统管理"])
+
+
+@router.get("/api/system/config", summary="公开系统配置（馆名与业务规则，无需登录）")
+def public_system_config(db: Session = Depends(get_db)):
+    """前端品牌名与业务规则提示统一从这里读取，避免各处写死。"""
+    rules = get_rules(db)
+    return {
+        "library_name": get_setting_val(db, "library_name", settings.library_name),
+        "rules": {
+            "borrow_days": rules["borrow_days"],
+            "max_renew_times": rules["max_renew_times"],
+            "renew_days": rules["renew_days"],
+            "daily_fine_rate": str(rules["fine_rate"]),
+            "max_borrow_books": rules["max_borrow_books"],
+            "reservation_expire_days": rules["reservation_expire_days"],
+            "due_reminder_days": rules["due_reminder_days"],
+        },
+    }
 
 
 @router.get("/api/settings", response_model=List[SettingResponse], summary="系统设置列表")
@@ -55,6 +73,14 @@ def update_system_setting(
         db.add(s)
     else:
         s.setting_value = val_in.setting_value
+
+    # 「普通读者最大借阅本数」：借阅限额校验读的是每读者字段，
+    # 因此改全局设置时同步下发到现有普通读者，保证设置立即生效且档案显示一致。
+    if setting_key == "max_borrow_books":
+        db.query(User).filter(User.role == "reader").update(
+            {User.max_borrow_limit: int(parsed)}, synchronize_session=False
+        )
+
     db.commit()
     db.refresh(s)
     record_audit(db, current_user, "UPDATE_SETTING", "SETTINGS", setting_key,

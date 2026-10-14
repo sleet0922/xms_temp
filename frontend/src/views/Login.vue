@@ -6,7 +6,7 @@
           <div class="neo-brand-mark inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-3 group transition-all duration-200 ease-out hover:scale-105">
             <BuildingLibraryIcon class="w-8 h-8 text-[#2f6f68] transition-colors duration-200" aria-hidden="true" />
           </div>
-          <h1 class="text-2xl font-semibold tracking-tight text-gray-900">智慧云图书馆</h1>
+          <h1 class="text-2xl font-semibold tracking-tight text-gray-900">{{ systemStore.libraryName }}</h1>
           <p class="text-sm text-gray-500 mt-1">登录以使用馆藏检索与借阅服务</p>
         </div>
 
@@ -70,6 +70,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
+import { useSystemStore } from '@/stores/system'
 import {
   BuildingLibraryIcon,
   EyeIcon,
@@ -84,6 +85,7 @@ import Alert from '@/components/ui/Alert.vue'
 
 const router = useRouter()
 const userStore = useUserStore()
+const systemStore = useSystemStore()
 
 const username = ref('')
 const password = ref('')

@@ -92,7 +92,8 @@
                   size="small"
                   variant="outline"
                   :loading="renewingId === record.id"
-                  :disabled="record.renew_count >= 2"
+                  :disabled="record.renew_count >= systemStore.maxRenewTimes"
+                  :title="record.renew_count >= systemStore.maxRenewTimes ? `已达最大续借次数（${systemStore.maxRenewTimes} 次）` : ''"
                   @click="renew(record)"
                 >
                   续借
@@ -125,6 +126,7 @@ import {
   MagnifyingGlassIcon
 } from '@heroicons/vue/24/outline'
 import { useUserStore } from '@/stores/user'
+import { useSystemStore } from '@/stores/system'
 import { borrowsApi, readersApi, statsApi } from '@/api'
 import PageHeader from '@/components/ui/PageHeader.vue'
 import StatCard from '@/components/ui/StatCard.vue'
@@ -138,6 +140,7 @@ import EmptyState from '@/components/ui/EmptyState.vue'
 
 const router = useRouter()
 const userStore = useUserStore()
+const systemStore = useSystemStore()
 
 const statusTabs = ['全部', '在借', '逾期', '已还']
 // Tabs 索引与后端 status_filter 的映射

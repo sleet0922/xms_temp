@@ -21,7 +21,7 @@
             <component :is="getIconComponent('mdi-library')" class="w-5 h-5 text-[#2f6f68] transition-colors duration-200" />
           </div>
           <div class="min-w-0">
-            <div class="text-gray-900 font-semibold tracking-tight leading-tight truncate">智慧云图书馆</div>
+            <div class="text-gray-900 font-semibold tracking-tight leading-tight truncate">{{ systemStore.libraryName }}</div>
             <div class="text-gray-500 text-xs">Library Management</div>
           </div>
         </RouterLink>
@@ -143,12 +143,14 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
+import { useSystemStore } from '@/stores/system'
 import { getIconComponent } from '@/utils/iconMap'
 import { notificationsApi } from '@/api'
 
 const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
+const systemStore = useSystemStore()
 const sidebarOpen = ref(false)
 const unreadCount = ref(0)
 let timer = null
@@ -164,7 +166,7 @@ const menuItems = [
   { group: '馆员工作台', role: 'librarian' },
   { path: '/circulation', label: '借还服务台', icon: 'mdi-barcode-scan', role: 'librarian' },
   { path: '/readers', label: '读者档案', icon: 'mdi-account-group', role: 'librarian' },
-  { path: '/analytics', label: '统计报表', icon: 'mdi-chart-box-outline' },
+  { path: '/analytics', label: '统计报表', icon: 'mdi-chart-box-outline', role: 'librarian' },
   { group: '系统管理', role: 'admin' },
   { path: '/settings', label: '系统设置', icon: 'mdi-cog-outline', role: 'admin' }
 ]

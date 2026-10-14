@@ -6,15 +6,30 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import Toast from '@/components/ui/Toast.vue'
 import { useToast } from '@/composables/useToast'
+import { useSystemStore } from '@/stores/system'
 
 const toastRef = ref(null)
 const toast = useToast()
+const systemStore = useSystemStore()
+const route = useRoute()
+
+// 馆名改动后保持浏览器标题同步（路由切换时由路由守卫写入）
+watch(
+  () => [route.meta?.title, systemStore.libraryName],
+  ([pageTitle, libraryName]) => {
+    if (pageTitle) document.title = `${pageTitle} - ${libraryName}`
+  }
+)
 
 onMounted(() => {
   toast.setInstance(toastRef.value)
+
+  // 馆名与业务规则统一从后端公开配置读取（系统设置里改了立刻生效）
+  systemStore.load()
 
   // Make toast globally available
   window.$toast = {

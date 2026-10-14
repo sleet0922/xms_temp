@@ -13,7 +13,7 @@ from schemas import (
     BorrowRecordResponse, QuickCirculationBorrow, QuickCirculationReturn,
     ReservationCreate, ReservationResponse, SelfBorrowRequest,
 )
-from services.audit import get_rules
+from services.audit import get_rules, record_audit
 from services import notify
 from services.circulation import (
     borrow_by_card, borrow_self, enrich_borrow_record, renew_record, return_by_barcode_or_record,
@@ -105,7 +105,17 @@ def list_borrow_records(
 
     if search:
         s = f"%{search}%"
-        query = query.join(Book).filter(or_(Book.title.like(s), Book.isbn.like(s)))
+        query = (
+            query.outerjoin(Book, BorrowRecord.book_id == Book.id)
+            .outerjoin(User, BorrowRecord.user_id == User.id)
+            .filter(or_(
+                Book.title.like(s),
+                Book.isbn.like(s),
+                User.full_name.like(s),
+                User.username.like(s),
+                User.card_number.like(s),
+            ))
+        )
 
     records = query.order_by(desc(BorrowRecord.borrow_date)).offset(skip).limit(limit).all()
 
@@ -179,13 +189,74 @@ def cancel_reservation(
     res_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
+    request: Request = None,
 ):
     res = db.query(Reservation).filter(Reservation.id == res_id).first()
     if not res:
         raise HTTPException(status_code=404, detail="预约记录不存在")
     if current_user.role == "reader" and res.user_id != current_user.id:
         raise HTTPException(status_code=403, detail="无权操作他人预约")
+    if res.status in ("cancelled", "fulfilled"):
+        raise HTTPException(status_code=400, detail="该预约已结束，无需再次取消")
 
+    was_notified = res.status == "notified"
+    book = db.query(Book).filter(Book.id == res.book_id).first()
     res.status = "cancelled"
     db.commit()
+
+    # 「已到馆」预约被取消后，释放出来的这册应顺延给队列下一位读者
+    if was_notified and book:
+        notify.notify_reservation_ready(db, book)
+
+    record_audit(db, current_user, "RESERVATION_CANCEL", "RESERVATION", str(res.id),
+                 f"取消预约《{book.title if book else res.book_id}》", request)
     return {"message": "预约已成功取消"}
+
+
+@router.post(
+    "/api/reservations/{res_id}/fulfill",
+    response_model=BorrowRecordResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="预约取书：为读者办理借出并兑现预约",
+)
+def fulfill_reservation(
+    res_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_librarian),
+    request: Request = None,
+):
+    notify.expire_reservations(db)
+    res = db.query(Reservation).filter(Reservation.id == res_id).first()
+    if not res:
+        raise HTTPException(status_code=404, detail="预约记录不存在")
+    if res.status not in ("waiting", "notified"):
+        raise HTTPException(status_code=400, detail="该预约已结束，无法办理取书")
+
+    book = db.query(Book).filter(Book.id == res.book_id).first()
+    if not book:
+        raise HTTPException(status_code=404, detail="预约的图书不存在")
+    if book.available_copies <= 0:
+        raise HTTPException(status_code=400, detail="该书目暂无可借的在架复本，无法办理取书")
+
+    reader = db.query(User).filter(User.id == res.user_id).first()
+    if not reader:
+        raise HTTPException(status_code=404, detail="预约读者不存在")
+
+    record = borrow_by_card(db, reader.card_number, None, current_user, request, book.id)
+    res.status = "fulfilled"
+    db.commit()
+    db.refresh(res)
+
+    notify.create_notification(
+        db,
+        res.user_id,
+        "reservation_fulfilled",
+        f"预约已兑现：{book.title}",
+        f"您预约的《{book.title}》已办理借出，应还日期 {record.due_date:%Y-%m-%d}，请按期归还。",
+        f"/borrows?record={record.id}",
+    )
+    record_audit(db, current_user, "RESERVATION_FULFILL", "RESERVATION", str(res.id),
+                 f"为读者 {reader.full_name} 办理预约取书《{book.title}》(借阅记录 #{record.id})", request)
+
+    enrich_borrow_record(record, get_rules(db)["fine_rate"])
+    return record

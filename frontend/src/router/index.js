@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useUserStore } from '@/stores/user'
+import { useSystemStore } from '@/stores/system'
 import DefaultLayout from '@/layouts/DefaultLayout.vue'
 
 const routes = [
@@ -7,7 +8,7 @@ const routes = [
     path: '/login',
     name: 'Login',
     component: () => import('@/views/Login.vue'),
-    meta: { requiresAuth: false, title: '登录 - 智慧云图书馆' }
+    meta: { requiresAuth: false, title: '登录' }
   },
   {
     path: '/register',
@@ -84,7 +85,7 @@ const routes = [
         path: 'analytics',
         name: 'Analytics',
         component: () => import('@/views/Analytics.vue'),
-        meta: { requiresAuth: true, title: '流通统计报表' }
+        meta: { requiresAuth: true, role: 'librarian', title: '流通统计报表' }
       },
       {
         path: 'settings',
@@ -109,10 +110,16 @@ const router = createRouter({
 
 router.beforeEach(async (to, from, next) => {
   const userStore = useUserStore()
+  const systemStore = useSystemStore()
   const requiresAuth = to.meta.requiresAuth !== false
 
+  // 首次进入时先取回馆名等公开配置，保证标题与品牌名使用系统设置中的值
+  if (!systemStore.loaded) {
+    await systemStore.load()
+  }
+
   if (to.meta.title) {
-    document.title = to.meta.title
+    document.title = `${to.meta.title} - ${systemStore.libraryName}`
   }
 
   if (requiresAuth && !userStore.isAuthenticated) {

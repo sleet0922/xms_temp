@@ -345,6 +345,7 @@ import BookCover from '@/components/ui/BookCover.vue'
 import RatingStars from '@/components/ui/RatingStars.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
 import { statsApi, recommendApi, announcementsApi } from '@/api'
+import { languageLabel } from '@/utils/labels'
 
 const router = useRouter()
 
@@ -559,18 +560,7 @@ const categoryStats = computed(() => withPercent(categories.value, 'count'))
 const formatStats = computed(() => withPercent(formats.value, 'count'))
 const languageStats = computed(() => withPercent(languages.value, 'count'))
 
-const languageNames = {
-  zh: '中文',
-  en: '英文',
-  ja: '日文',
-  ko: '韩文',
-  fr: '法文',
-  de: '德文',
-  ru: '俄文',
-  es: '西班牙文'
-}
-
-const languageLabel = (code) => languageNames[code] || code
+// 语种展示统一走 @/utils/labels，避免各页面各写一套映射
 
 const priorityMeta = {
   urgent: { label: '紧急', variant: 'danger' },

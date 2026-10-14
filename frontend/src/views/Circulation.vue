@@ -597,13 +597,21 @@ function clearSelectedBook() {
   router.replace({ path: '/circulation' })
 }
 
-// 在借图书下拉：拉取全部未归还记录（含逾期），前端按书名/读者/卡号/条码过滤
-async function loadReturnable() {
+// 在借图书下拉：首屏预取最近若干条，输入关键字时改为服务端检索，
+// 后端 /api/borrows?search= 已支持按书名 / 读者姓名 / 用户名 / 借书卡号匹配，
+// 因此不再受固定条数限制、也不会漏掉较早的未归还记录。
+const RETURN_PAGE_SIZE = 50
+let returnSearchTimer = null
+
+async function loadReturnable(keyword = '') {
   returnsLoading.value = true
   try {
-    const { data } = await borrowsApi.getList({ status_filter: 'unreturned', limit: 100 })
+    const params = { status_filter: 'unreturned', limit: RETURN_PAGE_SIZE }
+    const kw = keyword.trim()
+    if (kw) params.search = kw
+    const { data } = await borrowsApi.getList(params)
     returnableAll.value = data
-    applyReturnFilter()
+    returnOptions.value = data
   } catch (err) {
     returnableAll.value = []
     returnOptions.value = []
@@ -612,29 +620,15 @@ async function loadReturnable() {
   }
 }
 
-function applyReturnFilter() {
-  const keyword = returnQuery.value.trim().toLowerCase()
-  if (!keyword) {
-    returnOptions.value = returnableAll.value
-    return
-  }
-  returnOptions.value = returnableAll.value.filter((record) =>
-    [record.book?.title, record.user?.full_name, record.user?.card_number, record.copy?.barcode].some(
-      (value) => (value || '').toLowerCase().includes(keyword)
-    )
-  )
-}
-
 function openReturnOptions() {
   returnOptionsOpen.value = true
-  if (returnableAll.value.length) applyReturnFilter()
-  else loadReturnable()
+  if (!returnableAll.value.length) loadReturnable(returnQuery.value)
 }
 
 function onReturnSearch() {
   returnOptionsOpen.value = true
-  if (returnableAll.value.length) applyReturnFilter()
-  else loadReturnable()
+  if (returnSearchTimer) clearTimeout(returnSearchTimer)
+  returnSearchTimer = setTimeout(() => loadReturnable(returnQuery.value), 250)
 }
 
 function selectReturn(record) {
@@ -713,7 +707,7 @@ async function handleReturn() {
   try {
     const payload = selectedReturn.value ? { record_id: selectedReturn.value.id } : { barcode }
     const { data } = await circulationApi.return(payload)
-    // 接口回传记录不含罚金金额，逾期时按记录反查自动生成的罚金单
+    // 归还接口已回填最终罚金与逾期天数，直接采用；仅在历史数据缺失时回退反查罚金单
     let fineAmount = Number(data.calculated_fine || 0)
     const overdue = data.return_date && data.due_date && new Date(data.return_date) > new Date(data.due_date)
     if (overdue && !fineAmount) {

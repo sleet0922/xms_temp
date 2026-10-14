@@ -14,7 +14,7 @@ from models import User
 from schemas import (
     ChangePasswordRequest, LoginRequest, TokenResponse, UserCreate, UserResponse, UserUpdate,
 )
-from services.audit import record_audit
+from services.audit import get_rules, record_audit
 from config import settings
 
 router = APIRouter(prefix="/api/auth", tags=["认证与个人中心"])
@@ -60,7 +60,8 @@ def register(user_data: UserCreate, request: Request, db: Session = Depends(get_
         hashed_password=get_password_hash(user_data.password),
         role="reader",
         card_number=card_number,
-        max_borrow_limit=settings.max_borrow_books,
+        # 取系统设置中的「普通读者最大借阅本数」，管理员改设置后新注册读者立即生效
+        max_borrow_limit=get_rules(db)["max_borrow_books"],
         balance=Decimal("0.00"),
         status="active",
     )

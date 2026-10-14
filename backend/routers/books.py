@@ -186,8 +186,6 @@ def get_book_detail(book_id: int, db: Session = Depends(get_db)):
     b = db.query(Book).filter(Book.id == book_id).first()
     if not b:
         raise HTTPException(status_code=404, detail="图书不存在")
-    if copy_in.book_id != book_id:
-        raise HTTPException(status_code=400, detail="请求体中的书目 ID 与路径不一致")
     return b
 
 
@@ -302,6 +300,7 @@ def add_book_copy(
     copy_in: BookCopyCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_librarian),
+    request: Request = None,
 ):
     b = db.query(Book).filter(Book.id == book_id).first()
     if not b:
@@ -324,4 +323,6 @@ def add_book_copy(
     ).count()
     db.commit()
     db.refresh(copy)
+    record_audit(db, current_user, "ADD_BOOK_COPY", "BOOK", str(book_id),
+                 f"为《{b.title}》补录单册 (条码: {copy.barcode})", request)
     return copy

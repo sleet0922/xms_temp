@@ -191,20 +191,20 @@ import Dialog from '@/components/ui/Dialog.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
 import Pagination from '@/components/ui/Pagination.vue'
 import { systemApi, announcementsApi } from '@/api'
+import { useSystemStore } from '@/stores/system'
+
+const systemStore = useSystemStore()
 
 const PAGE_SIZE = 20
 const tabNames = ['系统设置', '公告管理', '审计日志', '系统信息']
 
-// 设置项显示名称与说明，未识别的 key 直接展示原始 key
+// 设置项显示名称与说明，键必须与 system_settings 表中的真实键一致
 const settingMeta = {
   library_name: { label: '图书馆名称', desc: '全馆展示使用的名称' },
-  borrow_limit: { label: '借阅上限', desc: '单张借阅证可同时借阅的图书册数' },
   max_borrow_books: { label: '借阅上限', desc: '普通读者可同时借阅的图书册数' },
-  loan_days: { label: '借期天数', desc: '新借图书的默认借阅天数' },
   default_borrow_days: { label: '借期天数', desc: '新借图书的默认借阅天数' },
   renew_days: { label: '续借天数', desc: '每次续借延长的天数' },
   max_renew_times: { label: '最大续借次数', desc: '同一本书允许续借的次数上限' },
-  fine_rate: { label: '日罚金', desc: '逾期每天产生的罚金（元）' },
   daily_fine_rate: { label: '日罚金', desc: '逾期每天产生的罚金（元）' },
   reservation_expire_days: { label: '预约保留天数', desc: '预约到书后为读者保留的天数' },
   due_reminder_days: { label: '到期提醒提前天数', desc: '到期前多少天推送归还提醒' }
@@ -335,6 +335,8 @@ const persistSetting = async (item, value) => {
   try {
     await systemApi.updateSetting(item.key, value)
     window.$toast?.success('设置已更新')
+    // 立刻重取公开配置：馆名、续借次数阈值等改动无需刷新页面即可全站生效
+    await systemStore.load(true)
     await loadSettings()
   } catch (err) {
     window.$toast?.error(err.response?.data?.detail || '设置更新失败')

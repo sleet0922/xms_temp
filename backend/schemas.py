@@ -100,7 +100,8 @@ class BookCopyBase(BaseModel):
     location_note: Optional[str] = None
 
 class BookCopyCreate(BookCopyBase):
-    book_id: int
+    # 书目 ID 以路径参数为准，body 中可选（兼容旧调用方）
+    book_id: Optional[int] = None
 
 class BookCopyResponse(BookCopyBase):
     id: int

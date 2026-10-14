@@ -110,17 +110,9 @@ import Tabs from '@/components/ui/Tabs.vue'
 import Dialog from '@/components/ui/Dialog.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
 import { notificationsApi } from '@/api'
+import { notificationCategoryMeta } from '@/utils/labels'
 
 const router = useRouter()
-
-// 通知分类 → 中文标签与语义色
-const CATEGORY_META = {
-  due: { label: '到期提醒', variant: 'primary' },
-  overdue: { label: '逾期预警', variant: 'warning' },
-  reservation: { label: '预约到书', variant: 'success' },
-  fine: { label: '罚金通知', variant: 'danger' },
-  system: { label: '系统消息', variant: 'default' }
-}
 
 const allNotifications = ref([])
 const unreadNotifications = ref([])
@@ -139,7 +131,7 @@ const unreadCount = computed(() => unreadNotifications.value.length)
 const totalCount = computed(() => allNotifications.value.length)
 const todayCount = computed(() => allNotifications.value.filter((n) => isToday(n.created_at)).length)
 
-const categoryMeta = (category) => CATEGORY_META[category] || { label: category || '通知', variant: 'default' }
+const categoryMeta = notificationCategoryMeta
 
 const isToday = (dateStr) => {
   if (!dateStr) return false

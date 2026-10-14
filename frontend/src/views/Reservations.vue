@@ -55,14 +55,27 @@
                 </Badge>
               </td>
               <td class="px-4 py-3 text-right">
-                <Button
-                  v-if="reservation.status === 'waiting'"
-                  size="small"
-                  variant="outline"
-                  @click="openCancelDialog(reservation)"
-                >
-                  取消
-                </Button>
+                <div class="flex items-center justify-end gap-2">
+                  <Button
+                    v-if="canFulfill(reservation)"
+                    size="small"
+                    variant="primary"
+                    :loading="fulfillingId === reservation.id"
+                    @click="openFulfillDialog(reservation)"
+                  >
+                    办理借出
+                  </Button>
+                  <Button
+                    v-if="canCancel(reservation)"
+                    size="small"
+                    variant="outline"
+                    :loading="cancellingId === reservation.id"
+                    @click="openCancelDialog(reservation)"
+                  >
+                    取消
+                  </Button>
+                  <span v-if="!canCancel(reservation) && !canFulfill(reservation)" class="text-xs text-gray-400">已结束</span>
+                </div>
               </td>
             </tr>
           </tbody>
@@ -86,6 +99,20 @@
         <Button variant="danger" :loading="cancelling" @click="confirmCancel">确认取消</Button>
       </template>
     </Dialog>
+
+    <!-- 预约取书：为读者办理借出，闭环兑现预约 -->
+    <Dialog v-model="showFulfillDialog" title="预约取书" max-width="sm">
+      <p class="text-sm text-gray-600">
+        确认为
+        <span class="font-medium text-gray-900">{{ fulfillTarget?.user?.full_name || '该读者' }}</span>
+        办理《{{ fulfillTarget?.book?.title || '该图书' }}》的借出？
+        办理后将生成借阅记录，应还日期按系统借期自动计算。
+      </p>
+      <template #footer>
+        <Button variant="outline" @click="showFulfillDialog = false">取消</Button>
+        <Button variant="primary" :loading="fulfilling" @click="confirmFulfill">确认办理</Button>
+      </template>
+    </Dialog>
   </div>
 </template>
 
@@ -101,6 +128,11 @@ import {
 } from '@heroicons/vue/24/outline'
 import { useUserStore } from '@/stores/user'
 import { reservationsApi } from '@/api'
+import {
+  isActiveReservation,
+  reservationStatusLabel,
+  reservationStatusVariant
+} from '@/utils/labels'
 import PageHeader from '@/components/ui/PageHeader.vue'
 import StatCard from '@/components/ui/StatCard.vue'
 import Card from '@/components/ui/Card.vue'
@@ -115,8 +147,13 @@ const userStore = useUserStore()
 const reservations = ref([])
 const loading = ref(false)
 const cancelling = ref(false)
+const cancellingId = ref(null)
 const showCancelDialog = ref(false)
 const cancelTarget = ref(null)
+const fulfilling = ref(false)
+const fulfillingId = ref(null)
+const showFulfillDialog = ref(false)
+const fulfillTarget = ref(null)
 
 const columnCount = computed(() => (userStore.isLibrarian ? 6 : 5))
 
@@ -142,7 +179,16 @@ const daysLeft = (dateStr) => {
   return Math.ceil((new Date(dateStr) - Date.now()) / 86400000)
 }
 
-const isActive = (reservation) => ['waiting', 'notified'].includes(reservation.status)
+const isActive = (reservation) => isActiveReservation(reservation.status)
+
+// 只要预约仍在进行且馆内有在架复本，馆员即可为读者办理取书
+const canFulfill = (reservation) =>
+  userStore.isLibrarian &&
+  isActiveReservation(reservation.status) &&
+  (reservation.book?.available_copies ?? 0) > 0
+
+// 「已到馆」预约同样允许取消（读者放弃取书），后端会顺延给队列下一位
+const canCancel = (reservation) => isActiveReservation(reservation.status)
 
 const expireClass = (reservation) => {
   if (!isActive(reservation)) return 'text-gray-600'
@@ -162,15 +208,8 @@ const expireHint = (reservation) => {
   return ''
 }
 
-const statusLabel = (status) => {
-  const labels = { waiting: '等待中', notified: '已到馆', fulfilled: '已兑现', cancelled: '已取消' }
-  return labels[status] || status
-}
-
-const statusVariant = (status) => {
-  const variants = { waiting: 'warning', notified: 'primary', fulfilled: 'success', cancelled: 'default' }
-  return variants[status] || 'default'
-}
+const statusLabel = reservationStatusLabel
+const statusVariant = reservationStatusVariant
 
 const goBook = (bookId) => {
   if (bookId) router.push(`/books/${bookId}`)
@@ -196,6 +235,7 @@ function openCancelDialog(reservation) {
 async function confirmCancel() {
   if (!cancelTarget.value) return
   cancelling.value = true
+  cancellingId.value = cancelTarget.value.id
   try {
     await reservationsApi.cancel(cancelTarget.value.id)
     window.$toast?.success('已取消预约')
@@ -206,6 +246,31 @@ async function confirmCancel() {
     window.$toast?.error(err.response?.data?.detail || '取消失败')
   } finally {
     cancelling.value = false
+    cancellingId.value = null
+  }
+}
+
+function openFulfillDialog(reservation) {
+  fulfillTarget.value = reservation
+  showFulfillDialog.value = true
+}
+
+async function confirmFulfill() {
+  if (!fulfillTarget.value) return
+  fulfilling.value = true
+  fulfillingId.value = fulfillTarget.value.id
+  try {
+    const { data } = await reservationsApi.fulfill(fulfillTarget.value.id)
+    const due = data?.due_date ? new Date(data.due_date).toLocaleDateString('zh-CN') : ''
+    window.$toast?.success(due ? `已办理借出，应还日期 ${due}` : '已办理借出')
+    showFulfillDialog.value = false
+    fulfillTarget.value = null
+    await loadReservations()
+  } catch (err) {
+    window.$toast?.error(err.response?.data?.detail || '办理取书失败')
+  } finally {
+    fulfilling.value = false
+    fulfillingId.value = null
   }
 }
 
