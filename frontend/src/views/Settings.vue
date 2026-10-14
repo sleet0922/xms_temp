@@ -22,10 +22,6 @@
             >
               <div class="min-w-0">
                 <div class="text-sm font-medium text-gray-900">{{ metaOf(item.key).label }}</div>
-                <div class="text-xs text-gray-500 mt-1">
-                  {{ item.description || metaOf(item.key).desc }}
-                  <span class="font-mono text-gray-400">（{{ item.key }}）</span>
-                </div>
               </div>
 
               <div class="flex items-center gap-3 flex-shrink-0">
@@ -198,16 +194,16 @@ const systemStore = useSystemStore()
 const PAGE_SIZE = 20
 const tabNames = ['系统设置', '公告管理', '审计日志', '系统信息']
 
-// 设置项显示名称与说明，键必须与 system_settings 表中的真实键一致
+// 设置项显示名称，键必须与 system_settings 表中的真实键一致
 const settingMeta = {
-  library_name: { label: '图书馆名称', desc: '全馆展示使用的名称' },
-  max_borrow_books: { label: '借阅上限', desc: '普通读者可同时借阅的图书册数' },
-  default_borrow_days: { label: '借期天数', desc: '新借图书的默认借阅天数' },
-  renew_days: { label: '续借天数', desc: '每次续借延长的天数' },
-  max_renew_times: { label: '最大续借次数', desc: '同一本书允许续借的次数上限' },
-  daily_fine_rate: { label: '日罚金', desc: '逾期每天产生的罚金（元）' },
-  reservation_expire_days: { label: '预约保留天数', desc: '预约到书后为读者保留的天数' },
-  due_reminder_days: { label: '到期提醒提前天数', desc: '到期前多少天推送归还提醒' }
+  library_name: { label: '图书馆名称' },
+  max_borrow_books: { label: '借阅上限' },
+  default_borrow_days: { label: '借期天数' },
+  renew_days: { label: '续借天数' },
+  max_renew_times: { label: '最大续借次数' },
+  daily_fine_rate: { label: '日罚金' },
+  reservation_expire_days: { label: '预约保留天数' },
+  due_reminder_days: { label: '到期提醒提前天数' }
 }
 
 const activeTab = ref(0)
