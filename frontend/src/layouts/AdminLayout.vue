@@ -8,7 +8,7 @@
 
     <aside
       :class="[
-        'admin-sidebar fixed inset-y-0 left-0 z-40 w-[220px] transform lg:translate-x-0',
+        'admin-sidebar fixed inset-y-0 left-0 z-40 w-[244px] transform lg:translate-x-0',
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       ]"
     >
@@ -32,7 +32,7 @@
       </div>
     </aside>
 
-    <div class="min-h-[100dvh] lg:pl-[220px]">
+    <div class="min-h-[100dvh] lg:pl-[244px]">
       <header class="admin-header sticky top-0 z-20 flex items-center gap-3 px-4 sm:px-5">
         <button
           type="button"
