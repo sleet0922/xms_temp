@@ -1,62 +1,60 @@
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
+# Python environments and caches
 .venv/
 venv/
 env/
 ENV/
+__pycache__/
+*.py[cod]
+*.so
 *.egg-info/
-
-# Python test, coverage and tool caches
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
-.eslintcache/
+.tox/
+.nox/
+.hypothesis/
 .coverage
 htmlcov/
 
-# Node and Vue
+# Node/Vite dependencies and outputs
 node_modules/
 dist/
 .vite/
+.pnpm-store/
+.yarn/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Build and packaging output
+# Build and packaging outputs
 build/
 build-exe/
 dist-exe/
 *.spec
 
-# Runtime data and local configuration
+# Local runtime data and secrets
 .env
-.env.local
+.env.*
+!.env.example
 *.db
-*.db-journal
-*.db-wal
-*.db-shm
+*.db-*
 *.sqlite
 *.sqlite3
 *.sql.backup
 *.log
 
-# Generated media and imported assets
+# Generated/imported assets
 backend/static/
 resources/covers/
 resources/_probe/
 
-# Editors and OS files
+# Editors, OS files, and local tooling
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
 .DS_Store
-
-# Local browser automation
+Thumbs.db
 .pwtools/
 .playwright-cli/
