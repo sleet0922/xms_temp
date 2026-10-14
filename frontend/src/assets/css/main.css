@@ -62,7 +62,7 @@
 
 /* Surfaces */
 .neo-card { position: relative; isolation: isolate; overflow: hidden; background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--radius-lg); box-shadow: 2px 2px 0 rgb(66 53 41 / 0.035), -2px -2px 0 rgb(255 255 255 / 0.7); }
-.neo-card.overflow-visible { overflow: visible; z-index: 20; }
+.neo-card.overflow-visible { overflow: visible; z-index: 10; }
 .neo-card::before { content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none; opacity: 0; background: linear-gradient(115deg, transparent 22%, rgb(255 255 255 / 0.52) 46%, transparent 68%); transform: translateX(-110%); transition: opacity 180ms var(--ease-out), transform 650ms var(--ease-out); }
 .neo-card.neo-card-hover { transition: transform 220ms var(--ease-out), border-color 220ms var(--ease-out), background-color 220ms var(--ease-out); }
 @media (hover: hover) and (pointer: fine) {
@@ -140,7 +140,7 @@
 .admin-nav-item:hover { color: #fff; background: rgb(255 255 255 / 0.08); transform: translateX(2px); }
 .admin-nav-item.is-active { color: #fff; background: var(--c-brand); }
 .admin-nav-item svg, .admin-nav-item.is-active svg { color: currentColor; }
-.admin-header { height: var(--header-h); background: #faf9f6; border-bottom: 1px solid var(--c-border); }
+.admin-header { position: sticky; top: 0; z-index: 30; height: var(--header-h); background: #faf9f6; border-bottom: 1px solid var(--c-border); }
 .admin-header-btn { transition: color 160ms var(--ease-out), background-color 160ms var(--ease-out); }
 .admin-header-btn:hover { color: var(--c-brand); background: var(--c-brand-light); }
 .admin-breadcrumb { color: var(--c-text-3); }
