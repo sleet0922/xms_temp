@@ -1,16 +1,16 @@
 <template>
-  <div class="neo-page p-6 lg:p-8 max-w-7xl mx-auto">
-    <PageHeader title="书目大厅" subtitle="电子馆藏检索、筛选与编目管理">
+  <div class="neo-page">
+    <PageHeader :title="isAdminRoute ? '馆藏与书目' : '馆藏检索'" :subtitle="isAdminRoute ? '书目、实体复本与馆藏检索管理' : '检索馆藏、查看详情并开始借阅'">
       <template #actions>
         <Button variant="outline" :prepend-icon="DocumentArrowDownIcon" @click="exportBooks">导出</Button>
-        <Button v-if="userStore.isLibrarian" variant="primary" :prepend-icon="PlusIcon" @click="showAddDialog = true">
+        <Button v-if="isAdminRoute && userStore.isLibrarian" variant="primary" :prepend-icon="PlusIcon" @click="showAddDialog = true">
           新增图书
         </Button>
       </template>
     </PageHeader>
 
     <!-- 馆藏概览 -->
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6">
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
       <StatCard label="馆藏总量" :value="facets.total || 0" hint="当前检索库全部书目" :icon="BookOpenIcon" tone="primary" />
       <StatCard label="语种分布" :value="facets.languages?.length || 0" :hint="languageHint" :icon="LanguageIcon" tone="neutral" />
       <StatCard label="电子资源格式" :value="facets.formats?.length || 0" :hint="formatHint" :icon="DocumentIcon" tone="success" />
@@ -29,7 +29,7 @@
         <Select v-model="language" :options="languageOptions" label="语种" placeholder="全部语种" item-title="label" item-value="value" />
         <Select v-model="format" :options="formatOptions" label="格式" placeholder="全部格式" item-title="label" item-value="value" />
         <Select v-model="sortBy" :options="sortOptions" label="排序" item-title="label" item-value="value" />
-        <div class="flex items-end gap-6">
+        <div class="flex items-end gap-4">
           <label class="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer">
             <Switch v-model="inStockOnly" label="仅看有库存" />
             仅看有库存
@@ -48,7 +48,7 @@
           v-for="chip in formatChips"
           :key="`fmt-${chip.value}`"
           class="px-3 py-1 rounded-lg text-xs font-medium transition-all duration-150 ease-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 active:scale-[0.98]"
-          :class="format === chip.value ? 'bg-blue-600 text-white shadow-sm' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+          :class="format === chip.value ? 'bg-[#e8f3ff] text-[#165dff]' : 'bg-[#f2f3f5] text-gray-600 hover:bg-[#e5e6eb]'"
           @click="format = format === chip.value ? null : chip.value"
         >
           {{ chip.value }} · {{ chip.count }}
@@ -58,7 +58,7 @@
           v-for="chip in languageChips"
           :key="`lang-${chip.value}`"
           class="px-3 py-1 rounded-lg text-xs font-medium transition-all duration-150 ease-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 active:scale-[0.98]"
-          :class="language === chip.value ? 'bg-blue-600 text-white shadow-sm' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+          :class="language === chip.value ? 'bg-[#e8f3ff] text-[#165dff]' : 'bg-[#f2f3f5] text-gray-600 hover:bg-[#e5e6eb]'"
           @click="language = language === chip.value ? null : chip.value"
         >
           {{ chip.value }} · {{ chip.count }}
@@ -77,7 +77,7 @@
           <button
             type="button"
             class="px-3 py-1.5 text-sm font-medium transition-all duration-150 ease-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 active:scale-[0.98]"
-            :class="viewMode === 'grid' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'"
+            :class="viewMode === 'grid' ? 'bg-[#e8f3ff] text-[#165dff]' : 'bg-white text-gray-600 hover:bg-gray-50'"
             @click="viewMode = 'grid'"
           >
             网格
@@ -85,7 +85,7 @@
           <button
             type="button"
             class="px-3 py-1.5 text-sm font-medium transition-all duration-150 ease-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 active:scale-[0.98]"
-            :class="viewMode === 'table' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'"
+            :class="viewMode === 'table' ? 'bg-[#e8f3ff] text-[#165dff]' : 'bg-white text-gray-600 hover:bg-gray-50'"
             @click="viewMode = 'table'"
           >
             表格
@@ -95,7 +95,7 @@
     </div>
 
     <!-- 网格视图 -->
-    <div v-if="viewMode === 'grid'" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div v-if="viewMode === 'grid'" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-3">
       <Card
         v-for="book in books"
         :key="book.id"
@@ -105,10 +105,10 @@
         class="overflow-hidden"
         @click="goDetail(book)"
       >
-        <BookCover :book="book" ratio="3/4" />
-        <div class="p-6">
-          <h3 class="font-semibold tracking-tight text-gray-900 truncate">{{ book.title }}</h3>
-          <p class="text-sm text-gray-600 truncate mt-0.5">{{ book.author }}</p>
+        <div class="px-3 pt-3"><BookCover :book="book" ratio="3/4" /></div>
+        <div class="p-3">
+          <h3 class="text-sm font-medium text-gray-900 truncate">{{ book.title }}</h3>
+          <p class="text-xs text-gray-500 truncate mt-0.5">{{ book.author }}</p>
 
           <div class="flex items-center gap-2 mt-3 flex-wrap">
             <Badge v-if="book.format" variant="primary" size="small">{{ book.format }}</Badge>
@@ -119,7 +119,7 @@
             <RatingStars :model-value="Number(book.rating || 0)" :count="book.rating_count || 0" size="small" />
           </div>
 
-          <div class="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
+          <div class="flex items-center justify-between mt-3 pt-3 border-t border-gray-200">
             <Badge :variant="book.available_copies > 0 ? 'success' : 'default'" size="small">
               {{ book.available_copies > 0 ? `${book.available_copies}/${book.total_copies} 在架` : '暂无可借' }}
             </Badge>
@@ -171,7 +171,7 @@
     </Card>
 
     <!-- 分页（后端逐页取数，按是否有下一页控制） -->
-    <div v-if="books.length || page > 1" class="flex items-center justify-between gap-4 mt-6">
+    <div v-if="books.length || page > 1" class="flex items-center justify-between gap-4 mt-4">
       <div class="text-sm text-gray-500">第 {{ page }} 页</div>
       <div class="flex items-center gap-2">
         <Button size="small" variant="outline" :disabled="page <= 1 || loading" @click="page--">上一页</Button>
@@ -205,7 +205,7 @@
 
 <script setup>
 import { computed, onMounted, reactive, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import {
   ArrowPathIcon,
   BookOpenIcon,
@@ -232,7 +232,9 @@ import RatingStars from '@/components/ui/RatingStars.vue'
 import BookCover from '@/components/ui/BookCover.vue'
 
 const router = useRouter()
+const route = useRoute()
 const userStore = useUserStore()
+const isAdminRoute = computed(() => route.path.startsWith('/admin'))
 
 const PAGE_SIZE = 24
 
@@ -322,7 +324,7 @@ function resetFilters() {
 }
 
 function goDetail(book) {
-  router.push(`/books/${book.id}`)
+  router.push(`${isAdminRoute.value ? '/admin/books' : '/books'}/${book.id}`)
 }
 
 async function exportBooks() {

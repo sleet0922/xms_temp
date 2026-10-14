@@ -1,7 +1,7 @@
 <template>
   <div v-if="modelValue" :class="alertClasses" role="alert">
     <div class="flex items-start gap-3">
-      <component :is="getIcon()" class="w-5 h-5 flex-shrink-0 mt-0.5" />
+      <component :is="getIcon()" class="w-4 h-4 flex-shrink-0 mt-0.5" />
       <div class="flex-1 min-w-0">
         <p v-if="title" class="font-medium mb-1">{{ title }}</p>
         <p class="text-sm">
@@ -49,13 +49,13 @@ const props = defineProps({
 defineEmits(['update:modelValue'])
 
 const alertClasses = computed(() => {
-  const base = 'rounded-xl border p-4 shadow-sm'
+  const base = 'rounded border px-4 py-3'
 
   const variants = {
-    success: 'bg-[#f0f8f4] border-[#cfe4dd] text-[#24564f]',
-    error: 'bg-[#fdf1f1] border-[#efd1d1] text-[#8d3f41]',
-    warning: 'bg-[#fff8ec] border-[#eeddbf] text-[#7d5a27]',
-    info: 'bg-[#f1f6fa] border-[#d1dfeb] text-[#3f617f]'
+    success: 'bg-[#e8ffea] border-[#aff0b5] text-[#1d2129] [&>div>svg]:text-[#00b42a]',
+    error: 'bg-[#ffece8] border-[#fdcdc5] text-[#1d2129] [&>div>svg]:text-[#f53f3f]',
+    warning: 'bg-[#fff7e8] border-[#ffe4ba] text-[#1d2129] [&>div>svg]:text-[#ff7d00]',
+    info: 'bg-[#e8f3ff] border-[#bedaff] text-[#1d2129] [&>div>svg]:text-[#165dff]'
   }
 
   return [base, variants[props.variant]].join(' ')

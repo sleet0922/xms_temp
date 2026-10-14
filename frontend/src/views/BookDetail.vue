@@ -1,9 +1,9 @@
 <template>
-  <div class="neo-page p-6 lg:p-8 max-w-7xl mx-auto">
+  <div class="neo-page">
     <div class="mb-6 flex items-center gap-3">
       <Button variant="ghost" size="small" :prepend-icon="ArrowLeftIcon" @click="router.back()">返回</Button>
       <nav class="text-sm text-gray-500">
-        <RouterLink to="/books" class="hover:text-blue-600 transition-colors duration-150">书目大厅</RouterLink>
+        <RouterLink :to="booksPath" class="hover:text-blue-600 transition-colors duration-150">{{ isAdminRoute ? '馆藏与书目' : '书目大厅' }}</RouterLink>
         <span class="mx-1.5">/</span>
         <span class="text-gray-900 font-medium truncate">{{ book?.title || '图书详情' }}</span>
       </nav>
@@ -20,12 +20,12 @@
       <template #action>
         <div class="flex flex-wrap items-center justify-center gap-3">
           <Button v-if="loadError.status !== 404" variant="outline" @click="loadBook">重试</Button>
-          <Button variant="primary" @click="router.push('/books')">返回书目大厅</Button>
+          <Button variant="primary" @click="router.push(booksPath)">返回{{ isAdminRoute ? '馆藏与书目' : '书目大厅' }}</Button>
         </div>
       </template>
     </EmptyState>
 
-    <div v-else class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div v-else class="grid grid-cols-1 lg:grid-cols-3 gap-4">
       <!-- 左栏：封面与馆藏信息 -->
       <div class="space-y-6">
         <Card padding="none" class="overflow-hidden">
@@ -40,7 +40,7 @@
 
             <div class="flex flex-col gap-3">
               <Button
-                v-if="book.available_copies > 0 && userStore.isLibrarian"
+                v-if="book.available_copies > 0 && isAdminRoute && userStore.isLibrarian"
                 variant="primary"
                 block
                 :prepend-icon="BookOpenIcon"
@@ -69,7 +69,7 @@
                 预约排队
               </Button>
               <Button
-                v-if="userStore.isLibrarian"
+                v-if="isAdminRoute && userStore.isLibrarian"
                 variant="outline"
                 block
                 :prepend-icon="PlusIcon"
@@ -92,7 +92,7 @@
         </Card>
 
         <Card>
-          <h2 class="text-lg font-semibold tracking-tight text-gray-900 mb-4">资源属性</h2>
+          <h2 class="text-base font-medium text-gray-900 mb-4">资源属性</h2>
           <dl class="space-y-3 text-sm">
             <div v-for="meta in metaList" :key="meta.label" class="flex items-start justify-between gap-3">
               <dt class="text-gray-500 flex-shrink-0">{{ meta.label }}</dt>
@@ -124,26 +124,26 @@
         </Card>
 
         <Card v-if="book.description">
-          <h2 class="text-lg font-semibold tracking-tight text-gray-900 mb-3">内容简介</h2>
+          <h2 class="text-base font-medium text-gray-900 mb-3">内容简介</h2>
           <p class="text-sm text-gray-600 leading-relaxed whitespace-pre-line">{{ book.description }}</p>
         </Card>
 
         <Card v-if="book.toc">
-          <h2 class="text-lg font-semibold tracking-tight text-gray-900 mb-3">目录</h2>
+          <h2 class="text-base font-medium text-gray-900 mb-3">目录</h2>
           <div class="max-h-80 overflow-y-auto scrollbar-thin rounded-lg bg-gray-50 border border-gray-200 p-4">
             <p class="text-sm text-gray-600 leading-relaxed whitespace-pre-line font-mono">{{ book.toc }}</p>
           </div>
         </Card>
 
         <Card v-if="book.author_bio">
-          <h2 class="text-lg font-semibold tracking-tight text-gray-900 mb-3">作者简介</h2>
+          <h2 class="text-base font-medium text-gray-900 mb-3">作者简介</h2>
           <p class="text-sm text-gray-600 leading-relaxed whitespace-pre-line">{{ book.author_bio }}</p>
         </Card>
 
         <!-- 单册清册 -->
         <Card padding="none">
           <div class="p-6 pb-4">
-            <h2 class="text-lg font-semibold tracking-tight text-gray-900">馆藏单册（{{ book.copies?.length || 0 }}）</h2>
+            <h2 class="text-base font-medium text-gray-900">馆藏单册（{{ book.copies?.length || 0 }}）</h2>
           </div>
           <div class="overflow-x-auto scrollbar-thin">
             <table class="w-full">
@@ -170,13 +170,13 @@
           <EmptyState
             v-if="!book.copies?.length"
             title="暂无单册记录"
-            :description="userStore.isLibrarian ? '可点击左侧「补录单册」为该书目新增实体复本' : '该书目暂无可借实体册'"
+            :description="isAdminRoute ? '可点击左侧「补录单册」为该书目新增实体复本' : '该书目暂无可借实体册'"
           />
         </Card>
 
         <!-- 书评 -->
         <Card>
-          <h2 class="text-lg font-semibold tracking-tight text-gray-900 mb-4">读者书评（{{ reviews.length }}）</h2>
+          <h2 class="text-base font-medium text-gray-900 mb-4">读者书评（{{ reviews.length }}）</h2>
 
           <div class="rounded-lg bg-gray-50 border border-gray-200 p-4 mb-6">
             <div class="flex flex-wrap items-center justify-between gap-3">
@@ -224,8 +224,8 @@
 
         <!-- 相似推荐 -->
         <Card v-if="similar.length">
-          <h2 class="text-lg font-semibold tracking-tight text-gray-900 mb-4">同类高分推荐</h2>
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <h2 class="text-base font-medium text-gray-900 mb-4">同类高分推荐</h2>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <Card
               v-for="item in similar"
               :key="item.book.id"
@@ -233,7 +233,7 @@
               hover
               clickable
               class="overflow-hidden"
-              @click="router.push(`/books/${item.book.id}`)"
+              @click="router.push(`${booksPath}/${item.book.id}`)"
             >
               <BookCover :book="item.book" ratio="3/4" />
               <div class="p-4">
@@ -310,6 +310,8 @@ import BookCover from '@/components/ui/BookCover.vue'
 const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
+const isAdminRoute = computed(() => route.path.startsWith('/admin'))
+const booksPath = computed(() => (isAdminRoute.value ? '/admin/books' : '/books'))
 
 const book = ref(null)
 const reviews = ref([])
@@ -509,7 +511,7 @@ async function handleDeleteMyReview() {
 
 // 馆员办理：带着当前书目跳转服务台，落地后无需再扫条码
 function goToCirculation() {
-  router.push({ path: '/circulation', query: { bookId: book.value.id } })
+  router.push({ path: isAdminRoute.value ? '/admin/circulation' : '/circulation', query: { bookId: book.value.id } })
 }
 
 async function handleSelfBorrow() {

@@ -1,6 +1,6 @@
 <template>
-  <div class="neo-page p-6 lg:p-8 max-w-7xl mx-auto">
-    <PageHeader title="消息通知中心" subtitle="到期提醒、逾期预警、预约到书与罚金通知的统一入口">
+  <div class="neo-page">
+    <PageHeader title="消息通知" subtitle="到期提醒、预约到书与罚金通知">
       <template #actions>
         <Button
           variant="primary"
@@ -15,7 +15,7 @@
     </PageHeader>
 
     <!-- 概览 -->
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6">
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
       <StatCard label="未读通知" :value="unreadCount" hint="建议优先处理" :icon="BellAlertIcon" tone="danger" />
       <StatCard label="今日新增" :value="todayCount" hint="今天收到的消息" :icon="SparklesIcon" tone="primary" />
       <StatCard label="通知总数" :value="totalCount" hint="最近 100 条记录" :icon="InboxStackIcon" tone="neutral" />

@@ -1,17 +1,17 @@
 <template>
-  <div class="neo-page p-6 lg:p-8 max-w-7xl mx-auto">
-    <PageHeader title="个人中心与借书卡" subtitle="借书卡信息、个人资料维护、密码修改与我的书评" />
+  <div class="neo-page">
+    <PageHeader title="个人中心" subtitle="借书卡、个人资料与账号安全" />
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
       <!-- 左列：借书卡 + 借阅摘要 -->
       <div class="space-y-6">
         <Card padding="normal">
           <div class="flex items-center gap-4">
-            <div class="neo-user-orb w-16 h-16 rounded-2xl text-2xl font-semibold flex items-center justify-center flex-shrink-0">
+            <div class="site-avatar !w-16 !h-16 !text-2xl flex items-center justify-center flex-shrink-0">
               {{ initial }}
             </div>
             <div class="min-w-0">
-              <h2 class="text-lg font-semibold tracking-tight text-gray-900 truncate">
+              <h2 class="text-base font-medium text-gray-900 truncate">
                 {{ user?.full_name || user?.username || '未登录' }}
               </h2>
               <p class="text-sm text-gray-600 truncate">@{{ user?.username || '-' }}</p>
@@ -19,7 +19,7 @@
             </div>
           </div>
 
-          <dl class="mt-6 pt-6 border-t border-gray-200 space-y-3">
+          <dl class="mt-4 pt-6 border-t border-gray-200 space-y-3">
             <div class="flex items-center justify-between gap-4">
               <dt class="text-sm text-gray-500">借书卡号</dt>
               <dd class="text-sm font-medium text-gray-900 font-mono">{{ user?.card_number || '—' }}</dd>
@@ -40,7 +40,7 @@
         </Card>
 
         <Card padding="normal">
-          <h3 class="text-lg font-semibold tracking-tight text-gray-900">借阅摘要</h3>
+          <h3 class="text-base font-medium text-gray-900">借阅摘要</h3>
           <p class="text-sm text-gray-600 mt-1">实时统计我的借阅与费用状态</p>
 
           <div class="mt-5 space-y-4">
@@ -264,33 +264,33 @@ const summaryItems = computed(() => [
     label: '在借图书',
     value: `${overview.value.user_borrowed || 0} 本`,
     icon: BookOpenIcon,
-    bg: 'bg-[#edf5f2]',
-    hover: 'group-hover:bg-[#e2efeb]',
-    color: 'text-[#2f6f68]'
+    bg: 'bg-[#e8f3ff]',
+    hover: 'group-hover:bg-[#e8f3ff]',
+    color: 'text-[#165dff]'
   },
   {
     label: '逾期未还',
     value: `${overview.value.user_overdue || 0} 本`,
     icon: ExclamationTriangleIcon,
-    bg: 'bg-[#fbefef]',
-    hover: 'group-hover:bg-[#f8e6e6]',
-    color: 'text-[#bd5b58]'
+    bg: 'bg-[#ffece8]',
+    hover: 'group-hover:bg-[#ffece8]',
+    color: 'text-[#f53f3f]'
   },
   {
     label: '未缴罚金',
     value: `¥${money(overview.value.user_fines)}`,
     icon: BanknotesIcon,
-    bg: 'bg-[#fbf4e8]',
-    hover: 'group-hover:bg-[#f7eddc]',
-    color: 'text-[#a87532]'
+    bg: 'bg-[#fff7e8]',
+    hover: 'group-hover:bg-[#fff7e8]',
+    color: 'text-[#ff7d00]'
   },
   {
     label: '预约中',
     value: `${reservationCount.value} 本`,
     icon: ClockIcon,
-    bg: 'bg-[#eef6f1]',
-    hover: 'group-hover:bg-[#e4f1e9]',
-    color: 'text-[#34745c]'
+    bg: 'bg-[#e8ffea]',
+    hover: 'group-hover:bg-[#e8ffea]',
+    color: 'text-[#00b42a]'
   }
 ])
 

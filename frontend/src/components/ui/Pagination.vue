@@ -4,7 +4,7 @@
       共 {{ total }} 条 · 第 {{ page }}/{{ totalPages }} 页
     </div>
 
-    <div class="flex items-center gap-2">
+    <div class="flex items-center gap-1">
       <Button size="small" variant="outline" :disabled="page <= 1" @click="go(page - 1)">上一页</Button>
 
       <button
@@ -14,12 +14,12 @@
         :disabled="p === '...'"
         @click="p !== '...' && go(p)"
         :class="[
-          'neo-button min-w-[2.25rem] h-9 px-2 rounded-xl text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2',
+          'min-w-[2rem] h-8 px-2 rounded text-sm transition-colors',
           p === page
-            ? 'neo-button-primary text-white'
+            ? 'bg-[#e8f3ff] text-[#165dff] font-medium'
             : p === '...'
               ? 'text-gray-400 cursor-default'
-              : 'neo-button-outline text-gray-700'
+              : 'text-gray-700 hover:bg-gray-100'
         ]"
       >
         {{ p }}

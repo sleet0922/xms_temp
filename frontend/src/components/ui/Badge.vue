@@ -21,20 +21,20 @@ const props = defineProps({
 })
 
 const badgeClasses = computed(() => {
-  const base = 'neo-badge inline-flex items-center font-medium rounded-lg'
+  const base = 'neo-badge inline-flex items-center whitespace-nowrap'
 
   const sizes = {
-    small: 'px-2 py-0.5 text-xs',
-    medium: 'px-2.5 py-1 text-sm'
+    small: 'px-1.5 text-xs',
+    medium: 'px-2 text-xs !leading-6'
   }
 
   const variants = {
-    default: 'bg-gray-100 text-gray-700',
-    primary: 'bg-blue-50 text-blue-700',
-    secondary: 'bg-gray-100 text-gray-700',
-    success: 'bg-green-50 text-green-700',
-    danger: 'bg-red-50 text-red-700',
-    warning: 'bg-yellow-50 text-yellow-700'
+    default: 'bg-[#f2f3f5] text-[#4e5969]',
+    primary: 'bg-[#e8f3ff] text-[#165dff]',
+    secondary: 'bg-[#f2f3f5] text-[#4e5969]',
+    success: 'bg-[#e8ffea] text-[#00b42a]',
+    danger: 'bg-[#ffece8] text-[#f53f3f]',
+    warning: 'bg-[#fff7e8] text-[#ff7d00]'
   }
 
   return [base, sizes[props.size], variants[props.variant]].join(' ')

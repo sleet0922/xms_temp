@@ -3,10 +3,10 @@
     <HeadlessDialog @close="handleClose" class="relative z-50">
       <TransitionChild
         as="template"
-        enter="duration-200 ease-out"
+        enter="neo-dialog-motion"
         enter-from="opacity-0"
         enter-to="opacity-100"
-        leave="duration-150 ease-out"
+        leave="neo-dialog-motion"
         leave-from="opacity-100"
         leave-to="opacity-0"
       >
@@ -17,16 +17,16 @@
         <div class="flex min-h-full items-center justify-center p-4">
           <TransitionChild
             as="template"
-            enter="duration-200 ease-out"
+            enter="neo-dialog-motion"
             enter-from="opacity-0 scale-95"
             enter-to="opacity-100 scale-100"
-            leave="duration-150 ease-out"
+            leave="neo-dialog-motion"
             leave-from="opacity-100 scale-100"
             leave-to="opacity-0 scale-95"
           >
             <DialogPanel :class="dialogClasses">
-              <div v-if="title" class="flex items-center justify-between mb-5">
-                <DialogTitle class="text-xl font-semibold tracking-tight text-gray-900">
+              <div v-if="title" class="flex items-center justify-between -mx-5 px-5 pb-3 mb-5 border-b border-gray-200">
+                <DialogTitle class="text-base font-medium text-gray-900">
                   {{ title }}
                 </DialogTitle>
                 <button
@@ -34,9 +34,9 @@
                   type="button"
                   @click="handleClose"
                   aria-label="关闭对话框"
-                  class="p-2 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#2f6f68] focus:ring-offset-2 transition-colors duration-150 active:scale-[0.98]"
+                  class="p-1 -mr-1 rounded text-gray-500 hover:bg-gray-100 hover:text-gray-900 transition-colors"
                 >
-                  <XMarkIcon class="w-6 h-6" />
+                  <XMarkIcon class="w-4 h-4" />
                 </button>
               </div>
 
@@ -44,7 +44,7 @@
                 <slot />
               </div>
 
-              <div v-if="$slots.footer" class="mt-6 flex justify-end gap-3">
+              <div v-if="$slots.footer" class="mt-6 flex justify-end gap-2">
                 <slot name="footer" />
               </div>
             </DialogPanel>
@@ -95,7 +95,7 @@ const dialogClasses = computed(() => {
   }
 
   return [
-    'neo-dialog relative rounded-xl p-6 w-full',
+    'neo-dialog relative w-full px-5 pt-4 pb-5',
     maxWidths[props.maxWidth]
   ].join(' ')
 })

@@ -1,5 +1,5 @@
 <template>
-  <div :class="['neo-stat-icon relative overflow-hidden flex items-center justify-center rounded-2xl', ratioClass]">
+  <div :class="['relative overflow-hidden flex items-center justify-center rounded-sm bg-[#f2f3f5]', ratioClass]">
     <img
       v-if="src && !failed"
       :src="src"
@@ -9,7 +9,7 @@
       @error="failed = true"
     />
     <div v-else class="flex flex-col items-center justify-center gap-1 px-2 text-center">
-      <BookOpenIcon class="w-8 h-8 text-gray-300" />
+      <BookOpenIcon class="w-6 h-6 text-gray-300" stroke-width="1.2" />
       <span class="text-xs text-gray-400 line-clamp-2">{{ book?.title || '暂无封面' }}</span>
     </div>
   </div>

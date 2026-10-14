@@ -1,6 +1,6 @@
 <template>
-  <div class="neo-page p-6 lg:p-8 max-w-7xl mx-auto">
-    <PageHeader title="智慧借还服务台" subtitle="扫码即借、即还，逾期自动核算罚金">
+  <div class="neo-page">
+    <PageHeader title="借还工作台" subtitle="扫码办理借书、还书与续借">
       <template #actions>
         <Button variant="outline" :prepend-icon="ArrowPathIcon" :loading="refreshing" @click="refreshAll">
           刷新数据
@@ -9,7 +9,7 @@
     </PageHeader>
 
     <!-- 今日流通概览 -->
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6">
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
       <StatCard
         label="今日借出"
         :value="overview.today_borrows ?? 0"
@@ -34,7 +34,7 @@
     </div>
 
     <!-- 借书 / 还书操作台 -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
       <Card class="group" hover>
         <div class="flex items-start gap-4 mb-5">
           <div
@@ -43,7 +43,7 @@
             <ArrowUpTrayIcon class="w-6 h-6" />
           </div>
           <div class="min-w-0">
-            <h2 class="text-lg font-semibold tracking-tight text-gray-900">借书办理</h2>
+            <h2 class="text-base font-medium text-gray-900">借书办理</h2>
             <p class="text-sm text-gray-600 mt-1">选择读者与图书即可办理，也可直接扫码</p>
           </div>
         </div>
@@ -159,7 +159,7 @@
             <ArrowDownTrayIcon class="w-6 h-6" />
           </div>
           <div class="min-w-0">
-            <h2 class="text-lg font-semibold tracking-tight text-gray-900">还书办理</h2>
+            <h2 class="text-base font-medium text-gray-900">还书办理</h2>
             <p class="text-sm text-gray-600 mt-1">选择在借图书即可归还，逾期将自动生成罚金单</p>
           </div>
         </div>
@@ -287,7 +287,7 @@
     <Card v-if="lastResult" class="mb-6">
       <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
         <div>
-          <h2 class="text-lg font-semibold tracking-tight text-gray-900">本次操作结果</h2>
+          <h2 class="text-base font-medium text-gray-900">本次操作结果</h2>
           <p class="text-sm text-gray-600 mt-1">
             {{ lastResult.kind === 'borrow' ? '借出手续已办理完成' : '归还手续已办理完成' }}
           </p>
@@ -321,7 +321,7 @@
     <!-- 最近流通流水 -->
     <Card padding="none">
       <div class="flex flex-wrap items-center justify-between gap-3 px-6 py-4 border-b border-gray-200">
-        <h2 class="text-lg font-semibold tracking-tight text-gray-900">最近流通流水</h2>
+        <h2 class="text-base font-medium text-gray-900">最近流通流水</h2>
         <span class="text-xs text-gray-500">
           {{ recordsLoading ? '加载中…' : `最近 ${records.length} 条借阅记录` }}
         </span>
@@ -594,7 +594,7 @@ async function loadSelectedBook() {
 
 function clearSelectedBook() {
   selectedBook.value = null
-  router.replace({ path: '/circulation' })
+  router.replace({ path: '/admin/circulation' })
 }
 
 // 在借图书下拉：首屏预取最近若干条，输入关键字时改为服务端检索，

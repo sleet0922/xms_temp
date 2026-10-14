@@ -2,27 +2,30 @@
 @tailwind components;
 @tailwind utilities;
 
+/* 企业控制台设计规范（参考 Arco Design / 阿里云控制台）
+   中性灰底、白色内容面、单一品牌蓝；用 1px 描边区分层级而非阴影。 */
 :root {
   color-scheme: light;
-  /* Neutral paper and ink keep the information-first layout calm. */
-  --neo-bg: #f6f8f7;
-  --neo-surface: #fffefd;
-  --neo-ink: #1d2b35;
-  --neo-muted: #687780;
-  --neo-line: #dfe6e5;
-  --neo-dark-shadow: rgba(15, 23, 42, 0.09);
-  --neo-light-shadow: rgba(255, 255, 255, 0.92);
-  --neo-raised: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.055);
-  --neo-raised-small: 0 1px 2px rgba(15, 23, 42, 0.06), 0 3px 10px rgba(15, 23, 42, 0.045);
-  --neo-inset: inset 0 1px 2px rgba(15, 23, 42, 0.05);
-  --neo-teal: #2f6f68;
-  --neo-teal-dark: #24564f;
-  --neo-coral: #bd5b58;
-  --neo-amber: #a87532;
-  --neo-green: #34745c;
-  --neo-red: #b74f58;
-  --neo-radius: 12px;
-  --neo-ease: cubic-bezier(0.23, 1, 0.32, 1);
+  --c-brand: #165dff;
+  --c-brand-hover: #4080ff;
+  --c-brand-active: #0e42d2;
+  --c-brand-light: #e8f3ff;
+  --c-bg: #f2f3f5;
+  --c-surface: #ffffff;
+  --c-fill: #f7f8fa;
+  --c-fill-2: #f2f3f5;
+  --c-text-1: #1d2129;
+  --c-text-2: #4e5969;
+  --c-text-3: #86909c;
+  --c-text-4: #c9cdd4;
+  --c-border: #e5e6eb;
+  --c-border-2: #c9cdd4;
+  --c-success: #00b42a;
+  --c-warning: #ff7d00;
+  --c-danger: #f53f3f;
+  --radius: 4px;
+  --ease: cubic-bezier(0.34, 0.69, 0.1, 1);
+  --header-h: 56px;
 }
 
 @layer base {
@@ -30,203 +33,257 @@
 
   body {
     @apply antialiased;
-    background: var(--neo-bg);
-    color: var(--neo-ink);
-    font-family: 'Inter var', 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+    background: var(--c-bg);
+    color: var(--c-text-1);
+    font-size: 14px;
+    line-height: 1.5715;
     overflow-x: hidden;
   }
 
-  button, a, input, textarea, select { -webkit-tap-highlight-color: transparent; }
-
   input[type='number']::-webkit-outer-spin-button,
-  input[type='number']::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-  }
-
+  input[type='number']::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
   input[type='number'] { -moz-appearance: textfield; }
 
-  ::selection { background: #cce8e8; color: #104f53; }
+  ::selection { background: var(--c-brand-light); color: var(--c-brand-active); }
 }
 
 @layer utilities {
-  .scrollbar-thin::-webkit-scrollbar { width: 8px; height: 8px; }
-  .scrollbar-thin::-webkit-scrollbar-thumb {
-    border: 2px solid transparent;
-    border-radius: 999px;
-    background: #cbd5e1;
-    background-clip: padding-box;
-  }
-  .scrollbar-thin::-webkit-scrollbar-thumb:hover { background: #94a3b8; background-clip: padding-box; }
+  .scrollbar-thin::-webkit-scrollbar { width: 6px; height: 6px; }
+  .scrollbar-thin::-webkit-scrollbar-thumb { border-radius: 3px; background: #c9cdd4; }
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover { background: #a9aeb8; }
   .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
 }
 
-/* Tailwind's transition-all is used by a few legacy views. Keep the class
-   predictable and compositor-friendly instead of transitioning layout. */
 .transition-all {
-  transition-property: transform, opacity, background-color, border-color, box-shadow, color, fill, stroke !important;
+  transition-property: opacity, background-color, border-color, box-shadow, color, fill, stroke !important;
 }
 
-/* Shared material layer. The old clean layout remains the foundation; the
-   tactile treatment is deliberately limited to edge, focus and press states. */
-.neo-page { min-height: calc(100vh - 76px); }
-.neo-auth, .neo-shell { background: var(--neo-bg); }
-.neo-sidebar {
-  background: #ffffff;
-  border-color: var(--neo-line) !important;
-  box-shadow: 4px 0 16px rgba(15, 23, 42, 0.035);
-}
-.neo-brand-mark {
-  background: #edf5f2;
-  border: 1px solid #d6e7e2;
-  box-shadow: var(--neo-raised-small);
-}
-.neo-header {
-  background: rgba(255, 255, 255, 0.96);
-  border-color: var(--neo-line);
-  box-shadow: 0 1px 5px rgba(15, 23, 42, 0.045);
-}
-.neo-nav-item {
-  position: relative;
-  color: #52657d;
-  border: 1px solid transparent;
-  transition: color 160ms var(--neo-ease), background 160ms var(--neo-ease), border-color 160ms var(--neo-ease), transform 160ms var(--neo-ease);
-}
-.neo-nav-item:hover {
-  color: var(--neo-ink);
-  background: #f1f6f4;
-  border-color: #e0ebe8;
-}
-.neo-nav-item.is-active {
-  color: var(--neo-teal-dark);
-  background: #eaf3f0;
-  border-color: #cce1da;
-  box-shadow: none;
-}
-.neo-nav-item.is-active::before {
-  content: '';
-  position: absolute;
-  left: -1px;
-  top: 6px;
-  bottom: 6px;
-  width: 3px;
-  border-radius: 0 3px 3px 0;
-  background: var(--neo-teal);
-  transform: scaleY(0.88);
-  transform-origin: center;
-  transition: transform 160ms var(--neo-ease), opacity 160ms var(--neo-ease);
-}
-.neo-user-orb {
-  color: #ffffff;
-  background: var(--neo-teal);
-  box-shadow: 0 2px 6px rgba(20, 125, 130, 0.25);
-}
-.neo-role-badge { border: 1px solid transparent; }
-.neo-role-badge.role-admin { color: #8d4846; background: #faeceb; border-color: #efd1cf; }
-.neo-role-badge.role-librarian { color: #24564f; background: #eaf3f0; border-color: #cce1da; }
-.neo-role-badge.role-reader { color: #356047; background: #edf5ee; border-color: #d5e6d7; }
-.neo-role-badge.role-default { color: #53636b; background: #f0f3f4; border-color: #dfe6e5; }
-.neo-card {
-  background: var(--neo-surface);
-  border: 1px solid var(--neo-line);
-  border-radius: var(--neo-radius);
-  box-shadow: var(--neo-raised);
-}
-.neo-card.neo-card-hover:hover {
-  box-shadow: 0 2px 4px rgba(15, 23, 42, 0.06), 0 12px 28px rgba(15, 23, 42, 0.09);
-}
-.neo-page-title { color: var(--neo-ink); letter-spacing: -0.015em; }
-.neo-page-subtitle, .neo-muted { color: var(--neo-muted); }
-.neo-control, .neo-textarea, .neo-select-button {
-  color: var(--neo-ink);
-  background: #ffffff;
-  border: 1px solid #cbd5e1;
-  box-shadow: var(--neo-inset);
-}
-.neo-control::placeholder, .neo-textarea::placeholder { color: #94a3b8; }
-.neo-control:hover, .neo-textarea:hover, .neo-select-button:hover { border-color: #94a3b8; }
-.neo-control:focus, .neo-textarea:focus, .neo-select-button:focus {
-  border-color: var(--neo-teal);
-  box-shadow: 0 0 0 3px rgba(20, 125, 130, 0.14), var(--neo-inset);
-}
-.neo-button {
-  border: 1px solid transparent;
-  border-radius: 9px;
-  transition: transform 140ms var(--neo-ease), box-shadow 140ms var(--neo-ease), background 140ms var(--neo-ease), color 140ms var(--neo-ease), border-color 140ms var(--neo-ease);
-}
-.neo-button:active { transform: scale(0.98) translateY(1px); }
-.neo-button-primary { color: #ffffff; background: var(--neo-teal); box-shadow: 0 1px 2px rgba(15, 96, 101, 0.2); }
-.neo-button-primary:hover { background: var(--neo-teal-dark); box-shadow: 0 3px 8px rgba(15, 96, 101, 0.2); }
-.neo-button-danger { color: #ffffff; background: var(--neo-coral); box-shadow: 0 1px 2px rgba(135, 50, 50, 0.18); }
-.neo-button-danger:hover { background: #ad4141; }
-.neo-button-outline, .neo-button-secondary { color: #334155; background: #ffffff; border-color: #cbd5e1; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04); }
-.neo-button-outline:hover, .neo-button-secondary:hover { color: var(--neo-teal-dark); background: #f8fafc; border-color: #8ac7c9; }
-.neo-button-ghost { color: var(--neo-muted); background: transparent; }
-.neo-button-ghost:hover { color: var(--neo-ink); background: #f1f5f9; }
-.neo-badge { border: 1px solid transparent; box-shadow: none; }
-.neo-stat-icon { background: #f0f6f3; border: 1px solid #d9e8e2; box-shadow: var(--neo-inset); }
-.neo-action-icon {
-  width: 3rem;
-  height: 3rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  border-radius: 0.5rem;
-  transition: background 160ms var(--neo-ease), transform 160ms var(--neo-ease);
-}
-.neo-action-icon-primary { color: #2f6f68; background: #edf5f2; }
-.neo-action-icon-success { color: #34745c; background: #eef6f1; }
-.neo-dialog-backdrop { background: rgba(15, 23, 42, 0.42); }
-.neo-dialog { background: #ffffff; border: 1px solid var(--neo-line); box-shadow: 0 18px 45px rgba(15, 23, 42, 0.18); }
-.neo-table-head { color: var(--neo-muted); background: #f8fafc; }
-.neo-table-row { border-color: var(--neo-line); }
-.neo-table-row:hover { background: #f8fafc; }
-.neo-page table thead.bg-gray-50 { background: #f8fafc !important; border-color: var(--neo-line) !important; }
-.neo-page table tbody tr:hover { background: #f8fafc !important; }
-.neo-page table tbody.divide-y { --tw-divide-opacity: 1; border-color: var(--neo-line); }
-.neo-tab-list { border-color: var(--neo-line); }
-.neo-tab-active { color: var(--neo-teal-dark); border-color: var(--neo-teal); background: #f0f6f3; }
-.neo-tab-idle { color: var(--neo-muted); }
-.neo-tab-idle:hover { color: var(--neo-ink); background: #f8fafc; }
+/* 控制台里的按压缩放和悬浮上浮显得廉价，统一关闭 */
+[class*='active:scale-'] { --tw-scale-x: 1 !important; --tw-scale-y: 1 !important; }
+.focus\:ring-offset-2:focus { --tw-ring-offset-width: 0px !important; }
+.focus\:ring-2:focus { --tw-ring-shadow: 0 0 0 2px rgb(22 93 255 / 0.2) !important; }
 
-/* Route changes bridge the old and new screen without shifting content. */
-.page-transition-enter-active,
-.page-transition-leave-active {
-  transition: opacity 180ms var(--neo-ease), transform 180ms var(--neo-ease);
+/* ---------- 页面容器 ---------- */
+.neo-page {
+  width: 100%;
+  max-width: 1280px;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 20px 24px 40px !important;
 }
-.page-transition-enter-from { opacity: 0; transform: translateY(6px); }
-.page-transition-leave-to { opacity: 0; transform: translateY(-3px); }
-
-/* Keep legacy utility classes readable in the dense data views. */
-.neo-page .bg-white, .neo-auth .bg-white { background: #ffffff !important; }
-.neo-page .bg-gray-50, .neo-auth .bg-gray-50 { background: #f8fafc !important; }
-.neo-page .bg-gray-100, .neo-auth .bg-gray-100 { background: #f1f5f9 !important; }
-.neo-page .border-gray-200, .neo-auth .border-gray-200 { border-color: var(--neo-line) !important; }
-.neo-page .shadow-sm, .neo-auth .shadow-sm { box-shadow: var(--neo-raised-small) !important; }
-.neo-page .text-gray-900, .neo-auth .text-gray-900 { color: var(--neo-ink) !important; }
-.neo-page .text-gray-700, .neo-page .text-gray-600, .neo-auth .text-gray-700, .neo-auth .text-gray-600 { color: #475569 !important; }
-.neo-page .text-blue-600, .neo-page .text-blue-700, .neo-auth .text-blue-600, .neo-auth .text-blue-700 { color: var(--neo-teal) !important; }
-.neo-page .bg-blue-600, .neo-page .bg-blue-500, .neo-auth .bg-blue-600, .neo-auth .bg-blue-500 { background: var(--neo-teal) !important; }
-.neo-page .bg-blue-50, .neo-auth .bg-blue-50 { background: #eaf3f0 !important; }
-.neo-page .bg-green-600, .neo-page .bg-green-500 { background: var(--neo-green) !important; }
-.neo-page .bg-red-600, .neo-page .bg-red-500 { background: var(--neo-coral) !important; }
-.neo-page .bg-amber-600, .neo-page .bg-amber-500 { background: var(--neo-amber) !important; }
-
+.admin-shell .neo-page { max-width: none; padding: 20px !important; }
 @media (max-width: 1023px) {
-  .neo-sidebar { box-shadow: 10px 0 24px rgba(15, 23, 42, 0.14); }
+  .neo-page, .admin-shell .neo-page { padding: 16px !important; }
 }
 
-@media (hover: hover) and (pointer: fine) {
-  .neo-card.neo-card-hover:hover { transform: translateY(-2px); }
-  .neo-nav-item:hover { transform: translateX(1px); }
-  .group:hover .neo-action-icon { transform: scale(1.03); }
+/* ---------- 卡片 ---------- */
+.neo-card {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+}
+.neo-card.neo-card-hover { transition: border-color 160ms var(--ease), box-shadow 160ms var(--ease); }
+.neo-card.neo-card-hover:hover { border-color: var(--c-border-2); box-shadow: 0 4px 10px rgb(0 0 0 / 0.06); }
+
+/* 卡片内的标题（h2）统一做成控制台卡片头样式 */
+.neo-page .neo-card h2 { font-size: 16px; font-weight: 500; color: var(--c-text-1); letter-spacing: 0; }
+.neo-page h2 { letter-spacing: 0 !important; }
+
+/* ---------- 页头 ---------- */
+.neo-page-title { color: var(--c-text-1); font-size: 20px !important; font-weight: 500 !important; letter-spacing: 0 !important; line-height: 28px; }
+.neo-page-subtitle, .neo-muted { color: var(--c-text-3); }
+
+/* ---------- 表单控件 ---------- */
+.neo-control, .neo-textarea, .neo-select-button {
+  color: var(--c-text-1);
+  background: var(--c-fill-2);
+  border: 1px solid transparent;
+  border-radius: var(--radius) !important;
+  transition: background-color 120ms var(--ease), border-color 120ms var(--ease), box-shadow 120ms var(--ease);
+}
+.neo-control, .neo-select-button { height: 32px; padding-top: 0 !important; padding-bottom: 0 !important; }
+.neo-select-button { line-height: 30px; }
+.neo-control::placeholder, .neo-textarea::placeholder { color: var(--c-text-3); }
+.neo-control:hover, .neo-textarea:hover, .neo-select-button:hover { background: #e5e6eb; }
+.neo-control:focus, .neo-textarea:focus, .neo-select-button:focus {
+  background: #fff;
+  border-color: var(--c-brand);
+  box-shadow: 0 0 0 2px rgb(22 93 255 / 0.12);
+}
+.neo-control.border-red-300, .neo-textarea.border-red-300, .neo-select-button.border-red-300 { background: #ffece8; border-color: transparent; }
+.neo-control:disabled, .neo-textarea:disabled { background: var(--c-fill-2); color: var(--c-text-4); }
+
+/* ---------- 按钮 ---------- */
+.neo-button {
+  height: 32px;
+  border: 1px solid transparent;
+  border-radius: var(--radius) !important;
+  font-weight: 400 !important;
+  transition: background-color 120ms var(--ease), border-color 120ms var(--ease), color 120ms var(--ease);
+}
+.neo-button-primary { color: #fff; background: var(--c-brand); }
+.neo-button-primary:hover { background: var(--c-brand-hover); }
+.neo-button-primary:active { background: var(--c-brand-active); }
+.neo-button-danger { color: #fff; background: var(--c-danger); }
+.neo-button-danger:hover { background: #f76560; }
+.neo-button-outline, .neo-button-secondary { color: var(--c-text-2); background: #fff; border-color: var(--c-border-2); }
+.neo-button-outline:hover, .neo-button-secondary:hover { color: var(--c-brand); border-color: var(--c-brand); }
+.neo-button-ghost { color: var(--c-text-2); background: transparent; }
+.neo-button-ghost:hover { background: var(--c-fill-2); }
+.neo-button:disabled { opacity: 1 !important; color: var(--c-text-4) !important; background: var(--c-fill) !important; border-color: var(--c-border) !important; }
+
+/* ---------- 标签 / 徽标 ---------- */
+.neo-badge { border-radius: 2px !important; font-weight: 400 !important; line-height: 20px; }
+
+/* ---------- 统计、图标块 ---------- */
+.neo-stat-icon { background: var(--c-fill); border: 0; }
+
+/* ---------- 标签页 ---------- */
+.neo-tab-list { border-color: var(--c-border); gap: 0 !important; }
+.neo-tab-list button { border-radius: 0 !important; padding: 10px 16px !important; }
+.neo-tab-active { color: var(--c-brand); border-color: var(--c-brand); font-weight: 500; }
+.neo-tab-idle { color: var(--c-text-2); }
+.neo-tab-idle:hover { color: var(--c-brand); }
+
+/* ---------- 弹窗 ---------- */
+.neo-dialog-backdrop { background: rgb(29 33 41 / 0.6); }
+.neo-dialog { background: #fff; border-radius: var(--radius) !important; box-shadow: 0 8px 24px rgb(0 0 0 / 0.12); }
+.neo-dialog-motion { transition: opacity 200ms var(--ease), transform 200ms var(--ease); }
+
+/* ---------- 表格 ---------- */
+.neo-page table { font-size: 14px; }
+.neo-page table thead, .neo-page table thead.bg-gray-50 { background: var(--c-fill-2) !important; }
+.neo-page table thead th { color: var(--c-text-1) !important; font-weight: 500 !important; text-transform: none !important; letter-spacing: 0 !important; font-size: 14px !important; }
+.neo-page table tbody tr { transition: background-color 120ms; }
+.neo-page table tbody tr:hover { background: var(--c-fill) !important; }
+.neo-page table tbody.divide-y > * + * { border-color: var(--c-border) !important; }
+.neo-table-head { color: var(--c-text-1); background: var(--c-fill-2); }
+.neo-table-row { border-color: var(--c-border); }
+.neo-table-row:hover { background: var(--c-fill); }
+
+/* ---------- 动效：只保留克制的淡入 ---------- */
+.page-transition-enter-active, .page-transition-leave-active { transition: opacity 150ms var(--ease); }
+.page-transition-enter-from, .page-transition-leave-to { opacity: 0; }
+.neo-toast-enter, .neo-toast-leave { transition: opacity 180ms var(--ease), transform 180ms var(--ease); }
+.neo-toast-move { transition: transform 180ms var(--ease); }
+.neo-select-options-motion { transform-origin: top center; transition: opacity 120ms var(--ease), transform 120ms var(--ease); }
+.neo-action-icon {
+  width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center;
+  flex-shrink: 0; border-radius: var(--radius);
+}
+.neo-action-icon-primary { color: var(--c-brand); background: var(--c-brand-light); }
+.neo-action-icon-success { color: var(--c-success); background: #e8ffea; }
+
+/* ---------- 用户端：顶部导航布局 ---------- */
+.site-header {
+  position: sticky; top: 0; z-index: 30;
+  height: var(--header-h);
+  background: #fff;
+  border-bottom: 1px solid var(--c-border);
+}
+.site-header-inner { height: 100%; max-width: 1280px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; gap: 32px; }
+.site-logo { display: flex; align-items: center; gap: 10px; color: var(--c-text-1); font-size: 16px; font-weight: 600; white-space: nowrap; }
+.site-logo-mark { width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; border-radius: var(--radius); color: #fff; background: var(--c-brand); }
+.site-nav { display: flex; align-items: stretch; height: 100%; gap: 4px; }
+.site-nav-item {
+  position: relative; display: flex; align-items: center; gap: 6px; padding: 0 12px;
+  color: var(--c-text-2); font-size: 14px; white-space: nowrap;
+  transition: color 120ms var(--ease);
+}
+.site-nav-item:hover { color: var(--c-brand); }
+.site-nav-item.is-active { color: var(--c-brand); font-weight: 500; }
+.site-nav-item.is-active::after {
+  content: ''; position: absolute; left: 12px; right: 12px; bottom: -1px; height: 2px; background: var(--c-brand);
+}
+.site-icon-btn {
+  position: relative; display: inline-flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; border-radius: var(--radius); color: var(--c-text-2);
+  transition: background-color 120ms, color 120ms;
+}
+.site-icon-btn:hover { background: var(--c-fill-2); color: var(--c-text-1); }
+.site-dot {
+  position: absolute; top: 2px; right: 0; min-width: 16px; height: 16px; padding: 0 4px;
+  border-radius: 8px; border: 1px solid #fff; background: var(--c-danger); color: #fff;
+  font-size: 11px; line-height: 14px; text-align: center;
+}
+.site-avatar {
+  width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center;
+  flex-shrink: 0; border-radius: 50%; color: #fff; background: #4080ff; font-size: 13px; font-weight: 500;
+}
+.site-user-menu {
+  position: absolute; right: 0; top: calc(100% + 8px); z-index: 40; width: 200px; padding: 4px 0;
+  background: #fff; border: 1px solid var(--c-border); border-radius: var(--radius);
+  box-shadow: 0 4px 10px rgb(0 0 0 / 0.1);
+}
+.site-user-menu a, .site-user-menu button {
+  display: flex; width: 100%; align-items: center; gap: 8px; padding: 0 12px; height: 36px;
+  color: var(--c-text-1); font-size: 14px; text-align: left;
+}
+.site-user-menu a:hover, .site-user-menu button:hover { background: var(--c-fill-2); }
+.site-footer { border-top: 1px solid var(--c-border); background: #fff; color: var(--c-text-3); font-size: 12px; }
+.site-mobile-nav { border-bottom: 1px solid var(--c-border); background: #fff; }
+.site-mobile-nav a { display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 20px; color: var(--c-text-2); }
+.site-mobile-nav a.is-active { color: var(--c-brand); background: var(--c-brand-light); }
+
+/* ---------- 管理端：深色侧栏 + 白色顶栏 ---------- */
+.admin-shell { background: var(--c-bg); color: var(--c-text-1); }
+.admin-sidebar { color: rgba(255, 255, 255, 0.65); background: #001529; transition: transform 200ms var(--ease); }
+.admin-backdrop { background: rgb(29 33 41 / 0.6); }
+.admin-brand { display: flex; align-items: center; gap: 10px; height: var(--header-h); padding: 0 20px; color: #fff; }
+.admin-brand-mark {
+  display: inline-flex; width: 28px; height: 28px; align-items: center; justify-content: center;
+  border-radius: var(--radius); color: #fff; background: var(--c-brand);
+}
+.admin-nav-group { padding: 16px 24px 6px; color: rgba(255, 255, 255, 0.35); font-size: 12px; }
+.admin-nav-item {
+  display: flex; align-items: center; gap: 10px; height: 40px; margin: 2px 8px; padding: 0 16px;
+  border-radius: var(--radius); color: rgba(255, 255, 255, 0.65); font-size: 14px;
+  transition: color 120ms var(--ease), background-color 120ms var(--ease);
+}
+.admin-nav-item:hover { color: #fff; }
+.admin-nav-item.is-active { color: #fff; background: var(--c-brand); }
+.admin-header { height: var(--header-h); background: #fff; border-bottom: 1px solid var(--c-border); }
+.admin-breadcrumb { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--c-text-3); }
+.admin-breadcrumb strong { color: var(--c-text-1); font-weight: 500; }
+.admin-header-btn {
+  display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 10px;
+  border-radius: var(--radius); color: var(--c-text-2); font-size: 14px;
+  transition: background-color 120ms, color 120ms;
+}
+.admin-header-btn:hover { background: var(--c-fill-2); color: var(--c-text-1); }
+
+.admin-action-card {
+  display: flex; align-items: center; gap: 12px; padding: 16px;
+  border: 1px solid var(--c-border); border-radius: var(--radius); background: #fff;
+  transition: border-color 120ms var(--ease), box-shadow 120ms var(--ease);
+}
+.admin-action-card:hover { border-color: var(--c-brand); box-shadow: 0 4px 10px rgb(22 93 255 / 0.08); }
+.admin-action-icon {
+  display: inline-flex; width: 36px; height: 36px; align-items: center; justify-content: center;
+  flex-shrink: 0; border-radius: var(--radius); color: var(--c-brand); background: var(--c-brand-light);
 }
 
-@media (hover: none) {
-  .neo-card.neo-card-hover:active { transform: scale(0.995); }
+/* ---------- 登录 / 注册 ---------- */
+.neo-auth { background: var(--c-bg); }
+.auth-layout { min-height: 100vh; display: grid; grid-template-columns: 1fr; background: #fff; }
+@media (min-width: 1024px) { .auth-layout { grid-template-columns: minmax(420px, 44%) 1fr; } }
+.auth-aside {
+  position: relative; overflow: hidden; display: none; flex-direction: column; justify-content: space-between;
+  padding: 40px 56px; color: #fff; background: #0b1e3f;
 }
+@media (min-width: 1024px) { .auth-aside { display: flex; } }
+.auth-aside::before {
+  /* 用细网格做底纹，替代渐变光斑 */
+  content: ''; position: absolute; inset: 0; opacity: 0.08;
+  background-image: linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+.auth-aside > * { position: relative; }
+.auth-main { display: flex; align-items: center; justify-content: center; padding: 48px 24px; }
+.auth-form { width: 100%; max-width: 360px; }
+.auth-form .neo-control { height: 40px; }
+.auth-form .neo-button { height: 40px; font-size: 14px !important; }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
+  *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
 }

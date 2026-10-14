@@ -1,18 +1,11 @@
 <template>
-  <div class="neo-card neo-card-hover group p-6 transition-all duration-200">
-    <div class="flex items-start justify-between gap-4">
-      <div class="min-w-0">
-        <div class="text-sm text-gray-500">{{ label }}</div>
-        <div class="text-2xl font-semibold tracking-tight text-gray-900 mt-1">{{ value }}</div>
-        <div v-if="hint" class="text-xs text-gray-500 mt-1 truncate">{{ hint }}</div>
-      </div>
-      <div
-        v-if="icon"
-        :class="['neo-stat-icon w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 transition-all duration-200 ease-out group-hover:scale-[1.03]', tone.bg, tone.hover]"
-      >
-        <component :is="icon" :class="['w-6 h-6', tone.icon]" />
-      </div>
+  <div class="neo-card px-5 py-4">
+    <div class="flex items-center justify-between gap-4">
+      <div class="text-sm text-gray-600">{{ label }}</div>
+      <component v-if="icon" :is="icon" :class="['w-5 h-5 flex-shrink-0', tone.icon]" />
     </div>
+    <div class="mt-2 text-[28px] leading-9 font-semibold text-gray-900 tabular-nums">{{ value }}</div>
+    <div v-if="hint" class="mt-1 text-xs text-gray-500 truncate">{{ hint }}</div>
     <slot />
   </div>
 </template>
@@ -32,12 +25,13 @@ const props = defineProps({
   }
 })
 
+// 图标只做小面积色彩提示，数字本身保持中性
 const tones = {
-  primary: { bg: 'bg-[#edf5f2]', icon: 'text-[#2f6f68]', hover: 'group-hover:bg-[#e2efeb]' },
-  success: { bg: 'bg-[#eef6f1]', icon: 'text-[#34745c]', hover: 'group-hover:bg-[#e4f1e9]' },
-  warning: { bg: 'bg-[#fbf4e8]', icon: 'text-[#a87532]', hover: 'group-hover:bg-[#f7eddc]' },
-  danger: { bg: 'bg-[#fbefef]', icon: 'text-[#bd5b58]', hover: 'group-hover:bg-[#f8e6e6]' },
-  neutral: { bg: 'bg-[#f1f4f5]', icon: 'text-[#687780]', hover: 'group-hover:bg-[#e9eef0]' }
+  primary: { icon: 'text-[#165dff]' },
+  success: { icon: 'text-[#00b42a]' },
+  warning: { icon: 'text-[#ff7d00]' },
+  danger: { icon: 'text-[#f53f3f]' },
+  neutral: { icon: 'text-[#86909c]' }
 }
 
 const tone = computed(() => tones[props.tone] || tones.primary)

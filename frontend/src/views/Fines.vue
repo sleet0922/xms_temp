@@ -1,8 +1,8 @@
 <template>
-  <div class="neo-page p-6 lg:p-8 max-w-7xl mx-auto">
+  <div class="neo-page">
     <PageHeader
-      title="罚金账务中心"
-      subtitle="逾期滞纳、损坏赔偿的账单结算与催缴管理"
+      :title="canManage ? '罚金处理' : '罚金中心'"
+      :subtitle="canManage ? '账单结算、减免与读者催缴' : '查看我的逾期滞纳与赔偿账单'"
     >
       <template #actions>
         <Button variant="outline" :prepend-icon="ArrowPathIcon" :loading="loading" @click="loadData">
@@ -12,7 +12,7 @@
     </PageHeader>
 
     <!-- 账务概览 -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
       <StatCard
         label="未缴总额"
         :value="`¥${money(summary.amount.unpaid)}`"
@@ -35,9 +35,9 @@
         tone="warning"
       />
       <StatCard
-        label="我的未缴"
-        :value="`¥${money(overview.user_fines)}`"
-        hint="仅统计本人名下账单"
+        :label="canManage ? '待处理总额' : '我的未缴'"
+        :value="`¥${money(canManage ? summary.amount.unpaid : overview.user_fines)}`"
+        :hint="canManage ? '全馆尚未结清的账单' : '仅统计本人名下账单'"
         :icon="UserCircleIcon"
         tone="primary"
       />
@@ -54,18 +54,18 @@
         <table class="w-full">
           <thead class="bg-gray-50 border-b border-gray-200">
             <tr>
-              <th v-if="userStore.isLibrarian" class="px-4 py-3 text-left text-xs font-semibold text-gray-600">读者</th>
+              <th v-if="canManage" class="px-4 py-3 text-left text-xs font-semibold text-gray-600">读者</th>
               <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600">事由</th>
               <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600">金额</th>
               <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600">状态</th>
               <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600">产生日期</th>
-              <th v-if="userStore.isLibrarian" class="px-4 py-3 text-left text-xs font-semibold text-gray-600">处理备注</th>
-              <th v-if="userStore.isLibrarian" class="px-4 py-3 text-right text-xs font-semibold text-gray-600">操作</th>
+              <th v-if="canManage" class="px-4 py-3 text-left text-xs font-semibold text-gray-600">处理备注</th>
+              <th v-if="canManage" class="px-4 py-3 text-right text-xs font-semibold text-gray-600">操作</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-200">
             <tr v-for="fine in fines" :key="fine.id" class="hover:bg-gray-50 transition-colors">
-              <td v-if="userStore.isLibrarian" class="px-4 py-3 text-sm">
+              <td v-if="canManage" class="px-4 py-3 text-sm">
                 <div class="font-medium text-gray-900">{{ fine.user?.full_name || fine.user?.username || '-' }}</div>
                 <div class="text-xs text-gray-500 font-mono">{{ fine.user?.card_number || '—' }}</div>
               </td>
@@ -78,8 +78,8 @@
                 <Badge :variant="statusVariant(fine.status)" size="small">{{ statusLabel(fine.status) }}</Badge>
               </td>
               <td class="px-4 py-3 text-sm text-gray-600">{{ formatDate(fine.created_at) }}</td>
-              <td v-if="userStore.isLibrarian" class="px-4 py-3 text-sm text-gray-600 max-w-xs truncate">{{ fine.notes || '—' }}</td>
-              <td v-if="userStore.isLibrarian" class="px-4 py-3">
+              <td v-if="canManage" class="px-4 py-3 text-sm text-gray-600 max-w-xs truncate">{{ fine.notes || '—' }}</td>
+              <td v-if="canManage" class="px-4 py-3">
                 <div class="flex items-center justify-end gap-2">
                   <template v-if="fine.status === 'unpaid'">
                     <Button size="small" variant="primary" @click="openSettleDialog(fine)">结清/减免</Button>
@@ -158,7 +158,8 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, watch } from 'vue'
+import { computed, ref, reactive, onMounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import {
   ArrowPathIcon,
@@ -180,6 +181,8 @@ import EmptyState from '@/components/ui/EmptyState.vue'
 import { finesApi, statsApi } from '@/api'
 
 const userStore = useUserStore()
+const route = useRoute()
+const canManage = computed(() => route.path.startsWith('/admin') && userStore.isLibrarian)
 
 // Tabs 索引 → 后端 status_filter 参数
 const STATUS_PARAMS = [null, 'unpaid', 'paid', 'waived']

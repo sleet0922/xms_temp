@@ -18,13 +18,13 @@ const props = defineProps({
 })
 
 const cardClasses = computed(() => {
-  const base = 'neo-card transition-all duration-200'
+  const base = 'neo-card'
 
   const paddings = {
     none: '',
     small: 'p-4',
-    normal: 'p-6',
-    large: 'p-8'
+    normal: 'p-5',
+    large: 'p-6'
   }
 
   const interactive = props.hover || props.clickable

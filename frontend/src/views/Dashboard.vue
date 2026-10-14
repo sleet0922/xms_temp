@@ -1,9 +1,9 @@
 <template>
-  <div class="neo-page p-6 lg:p-8 max-w-7xl mx-auto">
-    <PageHeader title="全馆仪表盘" subtitle="馆藏、流通、读者互动与数字资源的实时总览">
+  <div class="neo-page">
+    <PageHeader title="首页" subtitle="馆藏动态与我的借阅概况">
       <template #actions>
-        <Button variant="outline" :prepend-icon="ChartBarIcon" @click="router.push('/analytics')">
-          查看统计报表
+        <Button variant="outline" :prepend-icon="BookOpenIcon" @click="router.push('/books')">
+          浏览全部馆藏
         </Button>
       </template>
     </PageHeader>
@@ -22,14 +22,14 @@
     </div>
 
     <!-- 我的阅读 -->
-    <div class="mt-6">
+    <div class="mt-4">
       <Card>
-        <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-6">
+        <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
           <div class="flex-1 min-w-0">
-            <h2 class="text-lg font-semibold tracking-tight text-gray-900">我的阅读</h2>
+            <h2 class="text-base font-medium text-gray-900">我的阅读</h2>
             <p class="text-xs text-gray-500 mt-1">与你账号关联的在借、逾期、罚金与通知概览</p>
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
-              <div v-for="item in myReading" :key="item.label" class="neo-stat-icon rounded-2xl p-4">
+              <div v-for="item in myReading" :key="item.label" class="rounded bg-[#f7f8fa] px-4 py-3">
                 <div class="text-xs text-gray-500">{{ item.label }}</div>
                 <div class="text-2xl font-semibold tracking-tight mt-1" :class="item.tone">
                   {{ item.value }}
@@ -47,12 +47,12 @@
       </Card>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
       <!-- 借还趋势 -->
       <Card>
         <div class="flex items-start justify-between gap-4">
           <div class="min-w-0">
-            <h2 class="text-lg font-semibold tracking-tight text-gray-900">借还趋势（近 15 天）</h2>
+            <h2 class="text-base font-medium text-gray-900">借还趋势（近 15 天）</h2>
             <p class="text-xs text-gray-500 mt-1">按日期统计的借出与归还册次</p>
           </div>
           <div class="flex items-center gap-4 flex-shrink-0">
@@ -60,7 +60,7 @@
               <span class="inline-block w-4 h-0.5 rounded-full bg-blue-600"></span>借出
             </span>
             <span class="flex items-center gap-2 text-xs text-gray-500">
-              <span class="inline-block w-4 h-0.5 rounded-full bg-green-600"></span>归还
+              <span class="inline-block w-4 h-0.5 rounded-full bg-[#14c9c9]"></span>归还
             </span>
           </div>
         </div>
@@ -74,14 +74,14 @@
               :x2="400"
               :y1="y"
               :y2="y"
-              stroke="#e5e7eb"
+              stroke="#e5e6eb"
               stroke-width="1"
             />
-            <polygon :points="borrowArea" fill="rgb(219 234 254)" />
+            <polygon :points="borrowArea" fill="#e8f3ff" />
             <polyline
               :points="borrowPoints"
               fill="none"
-              stroke="rgb(37 99 235)"
+              stroke="#165dff"
               stroke-width="2"
               stroke-linejoin="round"
               stroke-linecap="round"
@@ -89,7 +89,7 @@
             <polyline
               :points="returnPoints"
               fill="none"
-              stroke="rgb(16 185 129)"
+              stroke="#14c9c9"
               stroke-width="2"
               stroke-dasharray="4"
               stroke-linejoin="round"
@@ -102,7 +102,7 @@
               :y="194"
               :text-anchor="label.anchor"
               font-size="10"
-              fill="#9ca3af"
+              fill="#86909c"
             >
               {{ label.text }}
             </text>
@@ -118,7 +118,7 @@
 
       <!-- 热门图书 -->
       <Card>
-        <h2 class="text-lg font-semibold tracking-tight text-gray-900">热门图书 Top6</h2>
+        <h2 class="text-base font-medium text-gray-900">热门图书 Top6</h2>
         <p class="text-xs text-gray-500 mt-1">按累计借阅次数排序</p>
 
         <div v-if="popularBooks.length" class="mt-4 space-y-2">
@@ -131,7 +131,7 @@
           >
             <span
               class="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-semibold flex-shrink-0"
-              :class="index < 3 ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600'"
+              :class="index < 3 ? 'text-[#165dff] bg-[#e8f3ff]' : 'text-gray-500 bg-[#f2f3f5]'"
             >
               {{ index + 1 }}
             </span>
@@ -150,11 +150,11 @@
     </div>
 
     <!-- 个性化推荐 -->
-    <div class="mt-6">
-      <h2 class="text-lg font-semibold tracking-tight text-gray-900">为你推荐</h2>
+    <div class="mt-4">
+      <h2 class="text-base font-medium text-gray-900">为你推荐</h2>
       <p class="text-xs text-gray-500 mt-1">依据你的借阅历史与馆藏热度生成</p>
 
-      <div v-if="recommendations.length" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
+      <div v-if="recommendations.length" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
         <button
           v-for="item in recommendations"
           :key="item.book.id"
@@ -178,10 +178,10 @@
       />
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
       <!-- 高分榜 -->
       <Card>
-        <h2 class="text-lg font-semibold tracking-tight text-gray-900">读者高分榜 Top6</h2>
+        <h2 class="text-base font-medium text-gray-900">读者高分榜 Top6</h2>
         <p class="text-xs text-gray-500 mt-1">按平均评分与评分人数排序</p>
 
         <div v-if="topRatedBooks.length" class="mt-4 space-y-2">
@@ -193,7 +193,7 @@
           >
             <span
               class="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-semibold flex-shrink-0"
-              :class="index < 3 ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600'"
+              :class="index < 3 ? 'text-[#165dff] bg-[#e8f3ff]' : 'text-gray-500 bg-[#f2f3f5]'"
             >
               {{ index + 1 }}
             </span>
@@ -224,7 +224,7 @@
 
       <!-- 馆内公告 -->
       <Card>
-        <h2 class="text-lg font-semibold tracking-tight text-gray-900">馆内公告</h2>
+        <h2 class="text-base font-medium text-gray-900">馆内公告</h2>
         <p class="text-xs text-gray-500 mt-1">最新发布的生效公告</p>
 
         <div v-if="announcements.length" class="mt-4 space-y-3 max-h-96 overflow-y-auto">
@@ -248,12 +248,12 @@
     </div>
 
     <!-- 馆藏结构 -->
-    <div class="mt-6">
+    <div class="mt-4">
       <Card>
-        <h2 class="text-lg font-semibold tracking-tight text-gray-900">馆藏结构</h2>
+        <h2 class="text-base font-medium text-gray-900">馆藏结构</h2>
         <p class="text-xs text-gray-500 mt-1">按分类、资源格式与语种统计的藏书分布</p>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-4">
           <!-- 分类分布 -->
           <div>
             <h3 class="text-sm font-semibold text-gray-900">分类分布</h3>

@@ -1,6 +1,6 @@
 <template>
-  <div class="neo-page p-6 lg:p-8 max-w-7xl mx-auto">
-    <PageHeader title="流通统计报表" subtitle="借还趋势、馆藏结构与读者活跃度分析">
+  <div class="neo-page">
+    <PageHeader title="统计报表" subtitle="借还趋势、馆藏结构与读者活跃度">
       <template #actions>
         <Button variant="outline" :prepend-icon="ArrowPathIcon" :loading="loading" @click="loadAll">
           刷新数据
@@ -9,7 +9,7 @@
     </PageHeader>
 
     <!-- 概览指标 -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 lg:gap-6 mb-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 lg:gap-4 mb-6">
       <StatCard
         label="馆藏图书"
         :value="overview.total_books || 0"
@@ -58,7 +58,7 @@
           <div v-else>
             <div class="flex items-start justify-between gap-4 mb-4">
               <div>
-                <h3 class="text-lg font-semibold tracking-tight text-gray-900">近 {{ trends.length }} 天借还走势</h3>
+                <h3 class="text-base font-medium text-gray-900">近 {{ trends.length }} 天借还走势</h3>
                 <p class="text-sm text-gray-600 mt-1">
                   峰值日期 {{ peakDay.date }} · 当日借出 {{ peakDay.borrows }} 册、归还 {{ peakDay.returns }} 册
                 </p>
@@ -102,21 +102,21 @@
                       x2="600"
                       :y1="line.y"
                       :y2="line.y"
-                      stroke="#e5e7eb"
+                      stroke="#e5e6eb"
                       stroke-width="1"
                       vector-effect="non-scaling-stroke"
                     />
                     <polyline
                       :points="chart.borrowPoints"
                       fill="none"
-                      stroke="rgb(37 99 235)"
+                      stroke="#165dff"
                       stroke-width="2"
                       vector-effect="non-scaling-stroke"
                     />
                     <polyline
                       :points="chart.returnPoints"
                       fill="none"
-                      stroke="rgb(16 185 129)"
+                      stroke="#14c9c9"
                       stroke-width="2"
                       stroke-dasharray="4"
                       vector-effect="non-scaling-stroke"
@@ -129,7 +129,7 @@
               </div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6 pt-6 border-t border-gray-200">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4 pt-6 border-t border-gray-200">
               <div>
                 <div class="text-sm text-gray-500">总借出</div>
                 <div class="text-2xl font-semibold tracking-tight text-blue-600 mt-1">{{ trendSummary.borrows }}</div>
@@ -149,9 +149,9 @@
         <!-- 2. 馆藏结构 -->
         <template #panel-1>
           <div v-if="loading" class="py-12 text-center text-sm text-gray-500">馆藏数据加载中…</div>
-          <div v-else class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div v-else class="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div>
-              <h3 class="text-lg font-semibold tracking-tight text-gray-900 mb-4">分类藏书榜</h3>
+              <h3 class="text-base font-medium text-gray-900 mb-4">分类藏书榜</h3>
               <EmptyState v-if="!categoryRows.length" title="暂无分类数据" />
               <div v-else class="space-y-4">
                 <div v-for="cat in categoryRows" :key="cat.id">
@@ -167,7 +167,7 @@
             </div>
 
             <div>
-              <h3 class="text-lg font-semibold tracking-tight text-gray-900 mb-4">语种分布</h3>
+              <h3 class="text-base font-medium text-gray-900 mb-4">语种分布</h3>
               <EmptyState v-if="!languageRows.length" title="暂无语种数据" />
               <div v-else class="space-y-4">
                 <div v-for="lang in languageRows" :key="lang.language">
@@ -187,15 +187,15 @@
         <!-- 3. 读者榜单 -->
         <template #panel-2>
           <div v-if="loading" class="py-12 text-center text-sm text-gray-500">榜单数据加载中…</div>
-          <div v-else class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div v-else class="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div>
-              <h3 class="text-lg font-semibold tracking-tight text-gray-900 mb-4">借阅热度榜</h3>
+              <h3 class="text-base font-medium text-gray-900 mb-4">借阅热度榜</h3>
               <EmptyState v-if="!popularBooks.length" title="暂无借阅记录" description="还没有图书产生借阅" />
               <div v-else class="-mx-2">
                 <RouterLink
                   v-for="(book, index) in popularBooks"
                   :key="book.id"
-                  :to="`/books/${book.id}`"
+                  :to="`/admin/books/${book.id}`"
                   class="flex items-center gap-3 px-2 py-2 rounded-lg transition-all duration-150 ease-out hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 active:scale-[0.98]"
                 >
                   <span class="w-6 text-center text-sm font-semibold text-gray-400 flex-shrink-0">{{ index + 1 }}</span>
@@ -212,13 +212,13 @@
             </div>
 
             <div>
-              <h3 class="text-lg font-semibold tracking-tight text-gray-900 mb-4">读者高分榜</h3>
+              <h3 class="text-base font-medium text-gray-900 mb-4">读者高分榜</h3>
               <EmptyState v-if="!topRated.length" title="暂无评分数据" description="还没有读者对图书评分" />
               <div v-else class="-mx-2">
                 <RouterLink
                   v-for="(book, index) in topRated"
                   :key="book.id"
-                  :to="`/books/${book.id}`"
+                  :to="`/admin/books/${book.id}`"
                   class="flex items-center gap-3 px-2 py-2 rounded-lg transition-all duration-150 ease-out hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 active:scale-[0.98]"
                 >
                   <span class="w-6 text-center text-sm font-semibold text-gray-400 flex-shrink-0">{{ index + 1 }}</span>
@@ -241,7 +241,7 @@
             </div>
 
             <div class="lg:col-span-2">
-              <h3 class="text-lg font-semibold tracking-tight text-gray-900 mb-4">活跃读者榜</h3>
+              <h3 class="text-base font-medium text-gray-900 mb-4">活跃读者榜</h3>
               <div v-if="!activeReaders.length">
                 <EmptyState title="暂无读者借阅数据" />
               </div>
@@ -283,7 +283,7 @@
         <template #panel-3>
           <div v-if="loading" class="py-12 text-center text-sm text-gray-500">资源数据加载中…</div>
           <div v-else>
-            <h3 class="text-lg font-semibold tracking-tight text-gray-900 mb-4">电子资源格式分布</h3>
+            <h3 class="text-base font-medium text-gray-900 mb-4">电子资源格式分布</h3>
             <EmptyState v-if="!formatRows.length" title="暂无格式数据" description="书目尚未标注资源格式" />
             <div v-else class="space-y-4">
               <div v-for="item in formatRows" :key="item.format">

@@ -1,12 +1,12 @@
 <template>
-  <div class="neo-page p-6 lg:p-8 max-w-7xl mx-auto">
-    <PageHeader title="预约排队" subtitle="缺货图书的预约队列与到馆提醒">
+  <div class="neo-page">
+    <PageHeader :title="canManage ? '预约管理' : '预约排队'" :subtitle="canManage ? '查看队列并为到馆读者办理借出' : '缺货图书的预约队列与到馆提醒'">
       <template #actions>
         <Button variant="outline" :prepend-icon="ArrowPathIcon" :loading="loading" @click="loadReservations">刷新</Button>
       </template>
     </PageHeader>
 
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6">
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
       <StatCard label="等待中" :value="summary.waiting" hint="排队等待图书到馆" :icon="ClockIcon" tone="warning" />
       <StatCard label="已到馆" :value="summary.notified" hint="请尽快到馆取书" :icon="BellAlertIcon" tone="primary" />
       <StatCard label="即将过期" :value="summary.expiring" hint="到期日在 3 天以内" :icon="ExclamationCircleIcon" tone="danger" />
@@ -18,7 +18,7 @@
           <thead class="bg-gray-50 border-b border-gray-200">
             <tr>
               <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600">图书</th>
-              <th v-if="userStore.isLibrarian" class="px-4 py-3 text-left text-xs font-semibold text-gray-600">读者</th>
+              <th v-if="canManage" class="px-4 py-3 text-left text-xs font-semibold text-gray-600">读者</th>
               <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600">预约日期</th>
               <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600">到期日期</th>
               <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600">状态</th>
@@ -40,7 +40,7 @@
                 </button>
                 <div class="text-xs text-gray-500">{{ reservation.book?.author || '-' }}</div>
               </td>
-              <td v-if="userStore.isLibrarian" class="px-4 py-3 text-sm text-gray-600">
+              <td v-if="canManage" class="px-4 py-3 text-sm text-gray-600">
                 {{ reservation.user?.full_name || '-' }}
                 <div class="text-xs text-gray-500">{{ reservation.user?.card_number || '-' }}</div>
               </td>
@@ -118,7 +118,7 @@
 
 <script setup>
 import { computed, onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import {
   ArrowPathIcon,
   BellAlertIcon,
@@ -142,7 +142,9 @@ import Dialog from '@/components/ui/Dialog.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
 
 const router = useRouter()
+const route = useRoute()
 const userStore = useUserStore()
+const canManage = computed(() => route.path.startsWith('/admin') && userStore.isLibrarian)
 
 const reservations = ref([])
 const loading = ref(false)
@@ -155,7 +157,7 @@ const fulfillingId = ref(null)
 const showFulfillDialog = ref(false)
 const fulfillTarget = ref(null)
 
-const columnCount = computed(() => (userStore.isLibrarian ? 6 : 5))
+const columnCount = computed(() => (canManage.value ? 6 : 5))
 
 const summary = computed(() => {
   const active = reservations.value.filter(r => ['waiting', 'notified'].includes(r.status))
@@ -183,7 +185,7 @@ const isActive = (reservation) => isActiveReservation(reservation.status)
 
 // 只要预约仍在进行且馆内有在架复本，馆员即可为读者办理取书
 const canFulfill = (reservation) =>
-  userStore.isLibrarian &&
+  canManage.value &&
   isActiveReservation(reservation.status) &&
   (reservation.book?.available_copies ?? 0) > 0
 
@@ -212,7 +214,7 @@ const statusLabel = reservationStatusLabel
 const statusVariant = reservationStatusVariant
 
 const goBook = (bookId) => {
-  if (bookId) router.push(`/books/${bookId}`)
+  if (bookId) router.push(`${canManage.value ? '/admin/books' : '/books'}/${bookId}`)
 }
 
 async function loadReservations() {

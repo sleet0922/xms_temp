@@ -1,13 +1,13 @@
 <template>
   <div class="w-full">
-    <label v-if="label" :for="inputId" class="block text-sm font-medium text-gray-700 mb-1">
+    <label v-if="label" :for="inputId" class="block text-sm text-gray-600 mb-1.5">
       {{ label }}
       <span v-if="required" class="text-red-500">*</span>
     </label>
 
     <div class="relative">
       <div v-if="prependIcon" class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-        <component :is="prependIcon" class="h-5 w-5 text-gray-400" aria-hidden="true" />
+        <component :is="prependIcon" class="h-4 w-4 text-gray-400" aria-hidden="true" />
       </div>
 
       <input
@@ -28,16 +28,16 @@
       <button
         v-if="appendIcon"
         type="button"
-        class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-700 focus:outline-none focus:text-[#24564f]"
+        class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-700 focus:outline-none focus:text-primary-600"
         :aria-label="appendLabel"
         @click="$emit('append-click')"
       >
-        <component :is="appendIcon" class="h-5 w-5" aria-hidden="true" />
+        <component :is="appendIcon" class="h-4 w-4" aria-hidden="true" />
       </button>
     </div>
 
-    <p v-if="error" class="mt-1 text-sm text-red-600">{{ error }}</p>
-    <p v-else-if="hint" class="mt-1 text-sm text-gray-500">{{ hint }}</p>
+    <p v-if="error" class="mt-1 text-xs text-[#f53f3f]">{{ error }}</p>
+    <p v-else-if="hint" class="mt-1 text-xs text-gray-500">{{ hint }}</p>
   </div>
 </template>
 
@@ -71,10 +71,10 @@ defineEmits(['update:modelValue', 'blur', 'focus', 'append-click'])
 const inputId = computed(() => `input-${Math.random().toString(36).substr(2, 9)}`)
 
 const inputClasses = computed(() => {
-  const base = 'neo-control block w-full px-3 py-2 rounded-xl transition-all duration-200 focus:outline-none disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed'
+  const base = 'neo-control block w-full px-3 py-2 text-sm focus:outline-none disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed'
 
   const padding = {
-    left: props.prependIcon ? 'pl-10' : '',
+    left: props.prependIcon ? 'pl-9' : '',
     right: props.appendIcon ? 'pr-10' : ''
   }
 

@@ -1,7 +1,7 @@
 <template>
   <HeadlessListbox v-model="selected" :disabled="disabled">
     <div class="relative">
-      <HeadlessListboxLabel v-if="label" class="block text-sm font-medium text-gray-700 mb-1">
+      <HeadlessListboxLabel v-if="label" class="block text-sm text-gray-600 mb-1.5">
         {{ label }}
         <span v-if="required" class="text-red-500">*</span>
       </HeadlessListboxLabel>
@@ -10,7 +10,7 @@
         <span v-if="!selected" class="block truncate text-gray-400">{{ placeholder }}</span>
         <span v-else class="block truncate">{{ getDisplayValue(selected) }}</span>
         <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-          <ChevronDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true" />
+          <ChevronDownIcon class="h-4 w-4 text-gray-400" aria-hidden="true" />
         </span>
       </HeadlessListboxButton>
       <button
@@ -24,9 +24,12 @@
       </button>
 
       <transition
-        leave-active-class="transition duration-100 ease-out"
-        leave-from-class="opacity-100"
-        leave-to-class="opacity-0"
+        enter-active-class="neo-select-options-motion"
+        enter-from-class="opacity-0 scale-[0.98] -translate-y-1"
+        enter-to-class="opacity-100 scale-100 translate-y-0"
+        leave-active-class="neo-select-options-motion"
+        leave-from-class="opacity-100 scale-100 translate-y-0"
+        leave-to-class="opacity-0 scale-[0.98] -translate-y-1"
       >
         <HeadlessListboxOptions :class="optionsClasses">
           <HeadlessListboxOption
@@ -37,22 +40,22 @@
             as="template"
           >
             <li :class="[
-              active ? 'bg-[#edf5f2] text-[#24564f]' : 'text-gray-900',
-              'relative cursor-pointer select-none py-2 pl-10 pr-4 transition-colors duration-150'
+              active ? 'bg-[#f2f3f5] text-gray-900' : 'text-gray-900', isSelected ? '!text-[#165dff] !bg-[#e8f3ff]' : '',
+              'relative cursor-pointer select-none h-9 leading-9 pl-3 pr-8 text-sm transition-colors duration-150'
             ]">
               <span :class="[isSelected ? 'font-medium' : 'font-normal', 'block truncate']">
                 {{ getDisplayValue(option) }}
               </span>
-              <span v-if="isSelected" class="absolute inset-y-0 left-0 flex items-center pl-3 text-[#2f6f68]">
-                <CheckIcon class="h-5 w-5" aria-hidden="true" />
+              <span v-if="isSelected" class="absolute inset-y-0 right-0 flex items-center pr-3 text-[#165dff]">
+                <CheckIcon class="h-4 w-4" aria-hidden="true" />
               </span>
             </li>
           </HeadlessListboxOption>
         </HeadlessListboxOptions>
       </transition>
 
-      <p v-if="error" class="mt-1 text-sm text-red-600">{{ error }}</p>
-      <p v-else-if="hint" class="mt-1 text-sm text-gray-500">{{ hint }}</p>
+      <p v-if="error" class="mt-1 text-xs text-[#f53f3f]">{{ error }}</p>
+      <p v-else-if="hint" class="mt-1 text-xs text-gray-500">{{ hint }}</p>
     </div>
   </HeadlessListbox>
 </template>
@@ -107,7 +110,7 @@ const selected = computed({
 })
 
 const buttonClasses = computed(() => {
-  const base = 'neo-select-button relative w-full cursor-pointer rounded-xl py-2 pl-3 pr-10 text-left transition-all duration-200 focus:outline-none disabled:bg-gray-50 disabled:cursor-not-allowed'
+  const base = 'neo-select-button relative w-full cursor-pointer pl-3 pr-10 text-left text-sm focus:outline-none disabled:bg-gray-50 disabled:cursor-not-allowed'
 
   const borderColor = props.error
     ? 'border-red-300'
@@ -116,7 +119,7 @@ const buttonClasses = computed(() => {
   return [base, borderColor].join(' ')
 })
 
-const optionsClasses = 'absolute z-30 mt-2 max-h-60 w-full overflow-auto scrollbar-thin rounded-xl bg-white py-1 shadow-lg border border-gray-200 focus:outline-none'
+const optionsClasses = 'absolute z-30 mt-1 max-h-60 w-full overflow-auto scrollbar-thin rounded bg-white py-1 shadow-md border border-gray-200 focus:outline-none'
 
 const getDisplayValue = (option) => {
   if (!option) return ''

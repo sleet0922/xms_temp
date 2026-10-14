@@ -1,6 +1,6 @@
 <template>
-  <div class="neo-page p-6 lg:p-8 max-w-7xl mx-auto">
-    <PageHeader title="读者档案管理" subtitle="借书卡发放、读者信息维护与借阅画像">
+  <div class="neo-page">
+    <PageHeader title="用户管理" subtitle="读者档案、借书卡与借阅情况">
       <template #actions>
         <Button variant="outline" :prepend-icon="ArrowPathIcon" :loading="loading" @click="loadReaders">
           刷新列表
@@ -12,7 +12,7 @@
     </PageHeader>
 
     <!-- 读者概览 -->
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6">
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
       <StatCard
         label="注册读者总数"
         :value="overview.total_readers ?? 0"
@@ -53,7 +53,7 @@
     <!-- 读者列表 -->
     <Card padding="none">
       <div class="flex flex-wrap items-center justify-between gap-3 px-6 py-4 border-b border-gray-200">
-        <h2 class="text-lg font-semibold tracking-tight text-gray-900">读者列表</h2>
+        <h2 class="text-base font-medium text-gray-900">读者列表</h2>
         <span class="text-xs text-gray-500">{{ loading ? '加载中…' : `共 ${readers.length} 位读者` }}</span>
       </div>
 
@@ -113,7 +113,7 @@
 
       <div v-else-if="profile" class="space-y-6">
         <section>
-          <h3 class="text-lg font-semibold tracking-tight text-gray-900 mb-3">基本信息</h3>
+          <h3 class="text-base font-medium text-gray-900 mb-3">基本信息</h3>
           <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
             <div v-for="item in profileBasic" :key="item.label" class="flex items-center justify-between gap-4">
               <dt class="text-sm text-gray-500">{{ item.label }}</dt>
@@ -123,15 +123,15 @@
         </section>
 
         <section class="pt-5 border-t border-gray-200">
-          <h3 class="text-lg font-semibold tracking-tight text-gray-900 mb-3">借阅统计</h3>
+          <h3 class="text-base font-medium text-gray-900 mb-3">借阅统计</h3>
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <div class="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
               <div class="text-xs text-gray-500">累计借阅</div>
-              <div class="text-xl font-semibold tracking-tight text-gray-900 mt-1">{{ profile.total_borrows }}</div>
+              <div class="text-base font-medium text-gray-900 mt-1">{{ profile.total_borrows }}</div>
             </div>
             <div class="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
               <div class="text-xs text-gray-500">当前在借</div>
-              <div class="text-xl font-semibold tracking-tight text-gray-900 mt-1">{{ profile.active_borrows }}</div>
+              <div class="text-base font-medium text-gray-900 mt-1">{{ profile.active_borrows }}</div>
             </div>
             <div class="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
               <div class="text-xs text-gray-500">逾期未还</div>
@@ -156,7 +156,7 @@
         </section>
 
         <section class="pt-5 border-t border-gray-200">
-          <h3 class="text-lg font-semibold tracking-tight text-gray-900 mb-3">偏好分类 Top5</h3>
+          <h3 class="text-base font-medium text-gray-900 mb-3">偏好分类 Top5</h3>
           <div v-if="favoriteCategories.length" class="space-y-3">
             <div v-for="category in favoriteCategories" :key="category.name">
               <div class="flex items-center justify-between text-sm">
@@ -175,7 +175,7 @@
         </section>
 
         <section class="pt-5 border-t border-gray-200">
-          <h3 class="text-lg font-semibold tracking-tight text-gray-900 mb-3">在借明细</h3>
+          <h3 class="text-base font-medium text-gray-900 mb-3">在借明细</h3>
           <div v-if="currentBorrows.length" class="overflow-x-auto scrollbar-thin rounded-lg border border-gray-200">
             <table class="w-full">
               <thead class="bg-gray-50 border-b border-gray-200">

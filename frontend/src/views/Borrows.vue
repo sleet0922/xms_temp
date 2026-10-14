@@ -1,12 +1,12 @@
 <template>
-  <div class="neo-page p-6 lg:p-8 max-w-7xl mx-auto">
-    <PageHeader title="借阅流转中心" subtitle="在借、逾期与历史借阅记录的统一查询">
+  <div class="neo-page">
+    <PageHeader :title="canManage ? '借阅记录' : '借阅中心'" :subtitle="canManage ? '全馆借阅、逾期与续借记录' : '查看我的在借、逾期与历史借阅记录'">
       <template #actions>
         <Button variant="outline" :prepend-icon="ArrowPathIcon" :loading="loading" @click="loadBorrows">刷新</Button>
       </template>
     </PageHeader>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
       <StatCard
         v-for="card in statCards"
         :key="card.label"
@@ -29,7 +29,7 @@
           :prepend-icon="MagnifyingGlassIcon"
         />
         <Select
-          v-if="userStore.isLibrarian"
+          v-if="canManage"
           v-model="readerId"
           :options="readerOptions"
           label="读者"
@@ -47,7 +47,7 @@
           <thead class="bg-gray-50 border-b border-gray-200">
             <tr>
               <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600">图书</th>
-              <th v-if="userStore.isLibrarian" class="px-4 py-3 text-left text-xs font-semibold text-gray-600">读者</th>
+              <th v-if="canManage" class="px-4 py-3 text-left text-xs font-semibold text-gray-600">读者</th>
               <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600">借出日期</th>
               <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600">应还日期</th>
               <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600">归还日期</th>
@@ -70,7 +70,7 @@
                 </button>
                 <div class="text-xs text-gray-500">{{ record.book?.author || '-' }}</div>
               </td>
-              <td v-if="userStore.isLibrarian" class="px-4 py-3 text-sm text-gray-600">
+              <td v-if="canManage" class="px-4 py-3 text-sm text-gray-600">
                 {{ record.user?.full_name || '-' }}
                 <div class="text-xs text-gray-500">{{ record.user?.card_number || '-' }}</div>
               </td>
@@ -116,7 +116,7 @@
 
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import {
   ArrowDownTrayIcon,
   ArrowPathIcon,
@@ -139,8 +139,10 @@ import Badge from '@/components/ui/Badge.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
 
 const router = useRouter()
+const route = useRoute()
 const userStore = useUserStore()
 const systemStore = useSystemStore()
+const canManage = computed(() => route.path.startsWith('/admin') && userStore.isLibrarian)
 
 const statusTabs = ['全部', '在借', '逾期', '已还']
 // Tabs 索引与后端 status_filter 的映射
@@ -156,7 +158,7 @@ const readerId = ref(null)
 const loading = ref(false)
 const renewingId = ref(null)
 
-const columnCount = computed(() => (userStore.isLibrarian ? 7 : 6))
+const columnCount = computed(() => (canManage.value ? 7 : 6))
 
 // 0 表示不限定读者（user_id 为 0 时按未筛选处理）
 const readerOptions = computed(() => [
@@ -166,7 +168,7 @@ const readerOptions = computed(() => [
 
 const statCards = computed(() => {
   const s = stats.value
-  if (userStore.isReader) {
+  if (!canManage.value) {
     return [
       { label: '我的在借', value: s.user_borrowed || 0, hint: '尚未归还的图书', icon: BookOpenIcon, tone: 'primary' },
       { label: '我的逾期', value: s.user_overdue || 0, hint: '请尽快归还以免产生罚金', icon: ExclamationCircleIcon, tone: 'danger' },
@@ -217,7 +219,7 @@ const statusVariant = (record) => {
 }
 
 const goBook = (bookId) => {
-  if (bookId) router.push(`/books/${bookId}`)
+  if (bookId) router.push(`${canManage.value ? '/admin/books' : '/books'}/${bookId}`)
 }
 
 async function loadBorrows() {
@@ -247,7 +249,7 @@ async function loadOverview() {
 }
 
 async function loadReaders() {
-  if (!userStore.isLibrarian) return
+  if (!canManage.value) return
   try {
     const { data } = await readersApi.getList({ role_filter: 'reader', limit: 100 })
     readers.value = data

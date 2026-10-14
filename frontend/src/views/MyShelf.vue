@@ -1,12 +1,12 @@
 <template>
-  <div class="neo-page p-6 lg:p-8 max-w-7xl mx-auto">
+  <div class="neo-page">
     <PageHeader title="我的书架" subtitle="在借图书、借阅时间线、预约排队与我的书评">
       <template #actions>
         <Button variant="outline" :prepend-icon="ArrowPathIcon" :loading="loading" @click="loadAll">刷新</Button>
       </template>
     </PageHeader>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
       <StatCard
         label="在借图书"
         :value="overview.user_borrowed || 0"
@@ -42,7 +42,7 @@
     <Tabs v-model="activeTab" :tabs="tabs">
       <!-- 在借图书 -->
       <template #panel-0>
-        <div v-if="activeBorrows.length" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div v-if="activeBorrows.length" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <Card v-for="record in activeBorrows" :key="record.id" padding="none" hover class="overflow-hidden flex flex-col">
             <BookCover :book="record.book || {}" ratio="3/4" />
             <div class="p-6 flex flex-col flex-1">

@@ -1,12 +1,13 @@
 <template>
-  <div v-if="toasts.length" class="fixed top-4 right-4 z-50 w-[min(24rem,calc(100vw-2rem))]" aria-live="polite" aria-atomic="false">
+  <div v-if="toasts.length" class="fixed top-16 left-1/2 -translate-x-1/2 z-50 w-[min(24rem,calc(100vw-2rem))]" aria-live="polite" aria-atomic="false">
     <TransitionGroup
-      enter-active-class="transition-all duration-200 ease-out"
-      enter-from-class="opacity-0 translate-x-8"
-      enter-to-class="opacity-100 translate-x-0"
-      leave-active-class="transition-all duration-150 ease-out"
-      leave-from-class="opacity-100 translate-x-0"
-      leave-to-class="opacity-0 translate-x-8"
+      enter-active-class="neo-toast-enter"
+      enter-from-class="opacity-0 -translate-y-2"
+      enter-to-class="opacity-100 translate-y-0"
+      leave-active-class="neo-toast-leave"
+      leave-from-class="opacity-100 translate-y-0"
+      leave-to-class="opacity-0 -translate-y-2"
+      move-class="neo-toast-move"
     >
       <div
         v-for="toast in toasts"
@@ -16,17 +17,17 @@
         role="status"
       >
         <div class="flex items-start gap-3">
-          <component :is="getIcon(toast.type)" class="w-5 h-5 flex-shrink-0 mt-0.5" />
+          <component :is="getIcon(toast.type)" class="w-4 h-4 flex-shrink-0 mt-0.5" />
           <div class="flex-1 min-w-0">
-            <p class="text-sm font-medium">{{ toast.message }}</p>
+            <p class="text-sm">{{ toast.message }}</p>
           </div>
           <button
             type="button"
             @click="remove(toast.id)"
             aria-label="关闭提示"
-            class="p-1 rounded-lg text-gray-400 hover:bg-black/5 hover:text-gray-700 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-[#2f6f68] focus:ring-offset-2 active:scale-[0.98] flex-shrink-0"
+            class="p-0.5 rounded text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition-colors flex-shrink-0"
           >
-            <XMarkIcon class="w-5 h-5" />
+            <XMarkIcon class="w-4 h-4" />
           </button>
         </div>
       </div>
@@ -48,13 +49,13 @@ const toasts = ref([])
 let nextId = 0
 
 const toastClasses = (type) => {
-  const base = 'bg-white border rounded-xl shadow-lg p-4 transition-all duration-150'
+  const base = 'bg-white border border-[#e5e6eb] rounded shadow-lg px-4 py-3 text-[#1d2129]'
 
   const types = {
-    success: 'border-[#cfe4dd] text-[#24564f]',
-    error: 'border-[#efd1d1] text-[#8d3f41]',
-    warning: 'border-[#eeddbf] text-[#7d5a27]',
-    info: 'border-[#d1dfeb] text-[#3f617f]'
+    success: '[&_svg:first-child]:text-[#00b42a]',
+    error: '[&_svg:first-child]:text-[#f53f3f]',
+    warning: '[&_svg:first-child]:text-[#ff7d00]',
+    info: '[&_svg:first-child]:text-[#165dff]'
   }
 
   return [base, types[type] || types.info].join(' ')

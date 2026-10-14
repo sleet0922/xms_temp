@@ -1,6 +1,6 @@
 <template>
-  <div class="neo-page p-6 lg:p-8 max-w-7xl mx-auto">
-    <PageHeader title="系统设置与审计" subtitle="借阅规则配置、公告发布与操作留痕">
+  <div class="neo-page">
+    <PageHeader title="系统设置" subtitle="借阅规则、公告与操作日志">
       <template #actions>
         <Button variant="outline" :prepend-icon="ArrowPathIcon" :loading="refreshing" @click="loadAll">
           刷新
@@ -54,7 +54,7 @@
         <template #panel-1>
           <div class="flex items-center justify-between gap-4 mb-4">
             <div>
-              <h3 class="text-lg font-semibold tracking-tight text-gray-900">馆内公告</h3>
+              <h3 class="text-base font-medium text-gray-900">馆内公告</h3>
               <p class="text-sm text-gray-600 mt-1">当前生效中的公告，共 {{ announcements.length }} 条</p>
             </div>
             <Button variant="primary" :prepend-icon="PlusIcon" @click="openAnnDialog">发布公告</Button>
@@ -80,7 +80,7 @@
         <!-- 3. 审计日志 -->
         <template #panel-2>
           <div class="flex items-center justify-between gap-4 mb-4">
-            <h3 class="text-lg font-semibold tracking-tight text-gray-900">操作审计日志</h3>
+            <h3 class="text-base font-medium text-gray-900">操作审计日志</h3>
             <div class="w-56 flex-shrink-0">
               <Select v-model="actionSelected" :options="actionOptions" placeholder="全部动作" return-object />
             </div>
@@ -132,7 +132,7 @@
 
         <!-- 4. 系统信息 -->
         <template #panel-3>
-          <h3 class="text-lg font-semibold tracking-tight text-gray-900 mb-4">系统运行信息</h3>
+          <h3 class="text-base font-medium text-gray-900 mb-4">系统运行信息</h3>
           <div v-if="infoLoading" class="py-12 text-center text-sm text-gray-500">系统信息加载中…</div>
           <EmptyState v-else-if="!infoRows.length" title="暂无系统信息" />
           <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

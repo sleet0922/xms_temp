@@ -25,6 +25,9 @@ import {
   EyeSlashIcon,
   BookOpenIcon,
   ArrowPathIcon,
+  ArrowLeftIcon,
+  HomeIcon,
+  ShieldCheckIcon,
   PencilIcon,
   DocumentTextIcon,
   UsersIcon,
@@ -38,6 +41,11 @@ import {
 
 export const iconMap = {
   'mdi-library': BuildingLibraryIcon,
+  'mdi-shield-crown-outline': ShieldCheckIcon,
+  'mdi-bookshelf': BookOpenIcon,
+  'mdi-account-group-outline': UsersIcon,
+  'mdi-home-variant-outline': HomeIcon,
+  'mdi-arrow-left': ArrowLeftIcon,
   'mdi-view-dashboard-outline': Squares2X2Icon,
   'mdi-book-search-outline': MagnifyingGlassIcon,
   'mdi-barcode-scan': QrCodeIcon,
