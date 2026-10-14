@@ -77,7 +77,7 @@
 .notification-link { color: #2f5b4e !important; }
 .neo-card h2 { color: var(--c-text-1) !important; letter-spacing: -0.02em; font-weight: 600 !important; }
 .neo-toast-surface { border-color: var(--c-border) !important; box-shadow: 0 14px 34px rgb(66 53 41 / 0.14); }
-.neo-dialog { border: 1px solid var(--c-border); box-shadow: 0 18px 48px rgb(66 53 41 / 0.18); }
+.neo-dialog { color: var(--c-text-1); background: var(--c-surface); border: 1px solid var(--c-border); box-shadow: 0 18px 48px rgb(66 53 41 / 0.18); }
 .neo-dialog-backdrop { background: rgb(42 45 42 / 0.58); }
 
 /* Controls */
