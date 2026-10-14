@@ -1,5 +1,5 @@
 """数据库引擎与会话管理：连接串来自集中配置（config.py / .env）"""
-from sqlalchemy import create_engine, event
+from sqlalchemy import create_engine, event, inspect, text
 from sqlalchemy.orm import declarative_base, sessionmaker
 
 from config import DATABASE_URL, IS_SQLITE
@@ -31,3 +31,11 @@ def get_db():
 
 def init_db():
     Base.metadata.create_all(bind=engine)
+    # create_all 不会为已有数据库补列；这些轻量字段用于读者发起还书申请。
+    inspector = inspect(engine)
+    columns = {column["name"] for column in inspector.get_columns("borrow_records")}
+    with engine.begin() as connection:
+        if "return_request_status" not in columns:
+            connection.execute(text("ALTER TABLE borrow_records ADD COLUMN return_request_status VARCHAR(20) NOT NULL DEFAULT 'none'"))
+        if "return_requested_at" not in columns:
+            connection.execute(text("ALTER TABLE borrow_records ADD COLUMN return_requested_at DATETIME"))

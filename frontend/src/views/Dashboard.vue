@@ -1,122 +1,18 @@
 <template>
   <div class="neo-page">
-    <PageHeader title="首页" subtitle="馆藏动态与我的借阅概况">
-      <template #actions>
-        <Button variant="outline" :prepend-icon="BookOpenIcon" @click="router.push('/books')">
-          浏览全部馆藏
-        </Button>
-      </template>
-    </PageHeader>
-
     <!-- 全馆核心指标 -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
       <StatCard
         v-for="stat in kpiStats"
         :key="stat.label"
         :label="stat.label"
         :value="stat.value"
-        :hint="stat.hint"
         :icon="stat.icon"
         :tone="stat.tone"
       />
     </div>
 
-    <!-- 我的阅读 -->
     <div class="mt-4">
-      <Card>
-        <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
-          <div class="flex-1 min-w-0">
-            <h2 class="text-base font-medium text-gray-900">我的阅读</h2>
-            <p class="text-xs text-gray-500 mt-1">与你账号关联的在借、逾期、罚金与通知概览</p>
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
-              <div v-for="item in myReading" :key="item.label" class="rounded bg-[#f7f8fa] px-4 py-3">
-                <div class="text-xs text-gray-500">{{ item.label }}</div>
-                <div class="text-2xl font-semibold tracking-tight mt-1" :class="item.tone">
-                  {{ item.value }}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="flex flex-wrap items-center gap-3">
-            <Button variant="primary" :prepend-icon="BookOpenIcon" @click="router.push('/shelf')">我的书架</Button>
-            <Button variant="outline" @click="router.push('/borrows')">借阅中心</Button>
-            <Button variant="ghost" @click="router.push('/notifications')">消息通知</Button>
-          </div>
-        </div>
-      </Card>
-    </div>
-
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
-      <!-- 借还趋势 -->
-      <Card>
-        <div class="flex items-start justify-between gap-4">
-          <div class="min-w-0">
-            <h2 class="text-base font-medium text-gray-900">借还趋势（近 15 天）</h2>
-            <p class="text-xs text-gray-500 mt-1">按日期统计的借出与归还册次</p>
-          </div>
-          <div class="flex items-center gap-4 flex-shrink-0">
-            <span class="flex items-center gap-2 text-xs text-gray-500">
-              <span class="inline-block w-4 h-0.5 rounded-full bg-blue-600"></span>借出
-            </span>
-            <span class="flex items-center gap-2 text-xs text-gray-500">
-              <span class="inline-block w-4 h-0.5 rounded-full bg-[#14c9c9]"></span>归还
-            </span>
-          </div>
-        </div>
-
-        <div v-if="trends.length">
-          <svg viewBox="0 0 400 200" class="w-full h-auto mt-4" role="img" aria-label="近 15 天借出与归还趋势折线图">
-            <line
-              v-for="(y, index) in gridLines"
-              :key="`grid-${index}`"
-              :x1="0"
-              :x2="400"
-              :y1="y"
-              :y2="y"
-              stroke="#e5e6eb"
-              stroke-width="1"
-            />
-            <polygon :points="borrowArea" fill="#e8f3ff" />
-            <polyline
-              :points="borrowPoints"
-              fill="none"
-              stroke="#165dff"
-              stroke-width="2"
-              stroke-linejoin="round"
-              stroke-linecap="round"
-            />
-            <polyline
-              :points="returnPoints"
-              fill="none"
-              stroke="#14c9c9"
-              stroke-width="2"
-              stroke-dasharray="4"
-              stroke-linejoin="round"
-              stroke-linecap="round"
-            />
-            <text
-              v-for="label in axisLabels"
-              :key="`axis-${label.text}-${label.x}`"
-              :x="label.x"
-              :y="194"
-              :text-anchor="label.anchor"
-              font-size="10"
-              fill="#86909c"
-            >
-              {{ label.text }}
-            </text>
-          </svg>
-          <p class="text-xs text-gray-500 mt-3">
-            峰值 {{ peakDay.date }}（借出 {{ peakDay.borrows }} 册）· 区间合计借出
-            <span class="text-blue-600 font-medium">{{ totalBorrows }}</span> 册 / 归还
-            <span class="text-green-600 font-medium">{{ totalReturns }}</span> 册
-          </p>
-        </div>
-        <EmptyState v-else title="暂无流通数据" description="近 15 天还没有借还记录" :icon="ChartBarIcon" />
-      </Card>
-
-      <!-- 热门图书 -->
       <Card>
         <h2 class="text-base font-medium text-gray-900">热门图书 Top6</h2>
         <p class="text-xs text-gray-500 mt-1">按累计借阅次数排序</p>
@@ -126,12 +22,12 @@
             v-for="(book, index) in popularBooks"
             :key="book.id"
             type="button"
-            class="w-full flex items-center gap-3 p-2 rounded-lg text-left transition-all duration-200 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 active:scale-[0.98]"
+            class="w-full flex items-center gap-3 p-2 rounded-lg text-left transition-colors duration-200 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 active:scale-[0.98]"
             @click="router.push(`/books/${book.id}`)"
           >
             <span
               class="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-semibold flex-shrink-0"
-              :class="index < 3 ? 'text-[#165dff] bg-[#e8f3ff]' : 'text-gray-500 bg-[#f2f3f5]'"
+              :class="index < 3 ? 'text-[#2f5b4e] bg-[#e8f0eb]' : 'text-gray-500 bg-[#f2f3f5]'"
             >
               {{ index + 1 }}
             </span>
@@ -150,24 +46,31 @@
     </div>
 
     <!-- 个性化推荐 -->
-    <div class="mt-4">
-      <h2 class="text-base font-medium text-gray-900">为你推荐</h2>
-      <p class="text-xs text-gray-500 mt-1">依据你的借阅历史与馆藏热度生成</p>
+    <Card class="mt-4">
+      <div class="flex items-end justify-between gap-4">
+        <div>
+          <h2 class="flex items-center gap-2 text-base font-medium text-gray-900">
+            <SparklesIcon class="w-5 h-5 text-[#2f5b4e]" />为你推荐
+          </h2>
+          <p class="text-xs text-gray-500 mt-1">依据你的借阅历史与馆藏热度生成</p>
+        </div>
+        <RouterLink to="/books" class="text-sm text-[#2f5b4e] hover:text-[#487a69]">查看更多</RouterLink>
+      </div>
 
-      <div v-if="recommendations.length" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+      <div v-if="recommendations.length" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-5 mt-5">
         <button
           v-for="item in recommendations"
           :key="item.book.id"
           type="button"
-          class="neo-card neo-card-hover text-left overflow-hidden transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 active:scale-[0.98]"
+          class="group text-left focus:outline-none"
           @click="router.push(`/books/${item.book.id}`)"
         >
-          <BookCover :book="item.book" ratio="3/4" />
-          <span class="block p-6">
-            <span class="block text-sm font-semibold tracking-tight text-gray-900 truncate">{{ item.book.title }}</span>
-            <span class="block text-xs text-gray-500 mt-1 truncate">{{ item.book.author }}</span>
-            <span class="block text-xs text-blue-600 mt-2 line-clamp-2">{{ item.reason }}</span>
-          </span>
+          <div class="transition-transform duration-200 group-hover:-translate-y-1">
+            <BookCover :book="item.book" ratio="3/4" />
+          </div>
+          <span class="block mt-3 text-sm font-medium text-gray-900 truncate group-hover:text-[#2f5b4e]">{{ item.book.title }}</span>
+          <span class="block text-xs text-gray-500 mt-0.5 truncate">{{ item.book.author }}</span>
+          <span class="mt-2 inline-block max-w-full truncate rounded bg-[#e8f0eb] px-1.5 py-0.5 text-[11px] text-[#2f5b4e]">{{ item.reason }}</span>
         </button>
       </div>
       <EmptyState
@@ -176,7 +79,7 @@
         description="多借阅几本书，推荐会更贴合你的口味"
         :icon="SparklesIcon"
       />
-    </div>
+    </Card>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
       <!-- 高分榜 -->
@@ -189,17 +92,17 @@
           <div
             v-for="(book, index) in topRatedBooks"
             :key="book.id"
-            class="flex items-center gap-3 p-2 rounded-lg transition-all duration-200 hover:bg-gray-50"
+            class="flex items-center gap-3 p-2 rounded-lg transition-colors duration-200 hover:bg-gray-50"
           >
             <span
               class="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-semibold flex-shrink-0"
-              :class="index < 3 ? 'text-[#165dff] bg-[#e8f3ff]' : 'text-gray-500 bg-[#f2f3f5]'"
+              :class="index < 3 ? 'text-[#2f5b4e] bg-[#e8f0eb]' : 'text-gray-500 bg-[#f2f3f5]'"
             >
               {{ index + 1 }}
             </span>
             <button
               type="button"
-              class="flex items-center gap-3 flex-1 min-w-0 text-left rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 active:scale-[0.98]"
+              class="flex items-center gap-3 flex-1 min-w-0 text-left rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 active:scale-[0.98]"
               @click="router.push(`/books/${book.id}`)"
             >
               <span class="w-12 flex-shrink-0">
@@ -231,7 +134,7 @@
           <div
             v-for="ann in announcements"
             :key="ann.id"
-            class="p-4 rounded-lg border border-gray-200 transition-all duration-200 hover:border-blue-300"
+            class="p-4 rounded-lg border border-gray-200 transition-colors duration-200 hover:border-blue-300"
           >
             <div class="flex items-start justify-between gap-3">
               <Badge :variant="priorityOf(ann.priority).variant" size="small">
@@ -265,7 +168,7 @@
                 </div>
                 <div class="w-full bg-gray-200 rounded-full h-2">
                   <div
-                    class="bg-blue-600 h-2 rounded-full transition-all duration-200"
+                    class="bg-blue-600 h-2 rounded-full transition-colors duration-200"
                     :style="{ width: `${cat.percent}%` }"
                   ></div>
                 </div>
@@ -285,7 +188,7 @@
                 </div>
                 <div class="w-full bg-gray-200 rounded-full h-2">
                   <div
-                    class="bg-blue-600 h-2 rounded-full transition-all duration-200"
+                    class="bg-blue-600 h-2 rounded-full transition-colors duration-200"
                     :style="{ width: `${fmt.percent}%` }"
                   ></div>
                 </div>
@@ -305,7 +208,7 @@
                 </div>
                 <div class="w-full bg-gray-200 rounded-full h-2">
                   <div
-                    class="bg-blue-600 h-2 rounded-full transition-all duration-200"
+                    class="bg-blue-600 h-2 rounded-full transition-colors duration-200"
                     :style="{ width: `${lang.percent}%` }"
                   ></div>
                 </div>
@@ -325,7 +228,6 @@ import { useRouter } from 'vue-router'
 import {
   ArrowPathIcon,
   BookOpenIcon,
-  ChartBarIcon,
   ChatBubbleLeftRightIcon,
   DocumentIcon,
   ExclamationTriangleIcon,
@@ -336,10 +238,8 @@ import {
   StarIcon,
   UsersIcon
 } from '@heroicons/vue/24/outline'
-import PageHeader from '@/components/ui/PageHeader.vue'
 import Card from '@/components/ui/Card.vue'
 import StatCard from '@/components/ui/StatCard.vue'
-import Button from '@/components/ui/Button.vue'
 import Badge from '@/components/ui/Badge.vue'
 import BookCover from '@/components/ui/BookCover.vue'
 import RatingStars from '@/components/ui/RatingStars.vue'
@@ -348,9 +248,7 @@ import { statsApi, recommendApi, announcementsApi } from '@/api'
 import { languageLabel } from '@/utils/labels'
 
 const router = useRouter()
-
 const overview = ref({})
-const trends = ref([])
 const recommendations = ref([])
 const popularBooks = ref([])
 const topRatedBooks = ref([])
@@ -365,14 +263,6 @@ const loadOverview = async () => {
     overview.value = (await statsApi.getOverview()).data || {}
   } catch (err) {
     console.error('仪表盘：全馆概览加载失败', err)
-  }
-}
-
-const loadTrends = async () => {
-  try {
-    trends.value = (await statsApi.getTrends(15)).data || []
-  } catch (err) {
-    console.error('仪表盘：借还趋势加载失败', err)
   }
 }
 
@@ -480,74 +370,6 @@ const kpiStats = computed(() => {
   ]
 })
 
-const myReading = computed(() => {
-  const data = overview.value
-  const fines = Number(data.user_fines ?? 0)
-  const overdue = data.user_overdue ?? 0
-  const unread = data.unread_notifications ?? 0
-  return [
-    { label: '在借图书', value: data.user_borrowed ?? 0, tone: 'text-gray-900' },
-    { label: '逾期未还', value: overdue, tone: overdue > 0 ? 'text-red-600' : 'text-gray-900' },
-    { label: '未缴罚金', value: `¥${fines.toFixed(2)}`, tone: fines > 0 ? 'text-amber-600' : 'text-gray-900' },
-    { label: '未读通知', value: unread, tone: unread > 0 ? 'text-blue-600' : 'text-gray-900' }
-  ]
-})
-
-// 折线图绘图区（viewBox 400×200）
-const CHART = { left: 10, top: 16, width: 380, height: 156 }
-
-const trendMax = computed(() => {
-  const values = trends.value.flatMap((item) => [Number(item.borrows) || 0, Number(item.returns) || 0])
-  return Math.max(1, ...values)
-})
-
-const pointFor = (index, value) => {
-  const count = trends.value.length
-  const x = CHART.left + (count > 1 ? (index / (count - 1)) * CHART.width : CHART.width / 2)
-  const y = CHART.top + CHART.height - ((Number(value) || 0) / trendMax.value) * CHART.height
-  return `${x.toFixed(1)},${y.toFixed(1)}`
-}
-
-const borrowPoints = computed(() => trends.value.map((item, index) => pointFor(index, item.borrows)).join(' '))
-
-const returnPoints = computed(() => trends.value.map((item, index) => pointFor(index, item.returns)).join(' '))
-
-const borrowArea = computed(() => {
-  if (!borrowPoints.value) return ''
-  const baseline = CHART.top + CHART.height
-  return `${CHART.left},${baseline} ${borrowPoints.value} ${CHART.left + CHART.width},${baseline}`
-})
-
-const gridLines = computed(() =>
-  Array.from({ length: 5 }, (_, index) => CHART.top + (index / 4) * CHART.height)
-)
-
-const axisLabels = computed(() => {
-  const count = trends.value.length
-  if (!count) return []
-  const indexes = count > 2 ? [...new Set([0, Math.floor((count - 1) / 2), count - 1])] : trends.value.map((_, i) => i)
-  return indexes.map((index) => ({
-    x: CHART.left + (count > 1 ? (index / (count - 1)) * CHART.width : CHART.width / 2),
-    text: trends.value[index].date,
-    anchor: index === 0 ? 'start' : index === count - 1 ? 'end' : 'middle'
-  }))
-})
-
-const peakDay = computed(() => {
-  if (!trends.value.length) return { date: '-', borrows: 0 }
-  return trends.value.reduce(
-    (best, item) => {
-      const borrows = Number(item.borrows) || 0
-      return borrows > best.borrows ? { date: item.date, borrows } : best
-    },
-    { date: trends.value[0].date, borrows: Number(trends.value[0].borrows) || 0 }
-  )
-})
-
-const totalBorrows = computed(() => trends.value.reduce((sum, item) => sum + (Number(item.borrows) || 0), 0))
-
-const totalReturns = computed(() => trends.value.reduce((sum, item) => sum + (Number(item.returns) || 0), 0))
-
 const withPercent = (rows, key) => {
   const total = rows.reduce((sum, row) => sum + (Number(row[key]) || 0), 0)
   return rows.map((row) => ({
@@ -575,7 +397,6 @@ const formatDate = (value) => (value ? new Date(value).toLocaleDateString('zh-CN
 onMounted(() => {
   Promise.all([
     loadOverview(),
-    loadTrends(),
     loadRecommendations(),
     loadPopularBooks(),
     loadTopRatedBooks(),

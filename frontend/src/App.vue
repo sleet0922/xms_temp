@@ -49,8 +49,8 @@ onMounted(() => {
 }
 
 #app {
-  min-height: 100vh;
-  font-family: 'Inter var', system-ui, -apple-system, sans-serif;
+  min-height: 100dvh;
+  font-family: 'Avenir Next', 'Segoe UI Variable', 'Helvetica Neue', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

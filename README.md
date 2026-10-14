@@ -18,6 +18,16 @@ Linux/macOS：
 ./run.sh
 ```
 
+也可以分步执行：
+
+```bash
+./vue-build.sh        # 只构建 Vue 前端
+./run-python.sh       # 启动已构建的 FastAPI 服务
+./build-exe.sh        # 构建单目录可执行程序到 dist-exe/
+```
+
+`build-exe.sh` 使用 PyInstaller 打包当前平台的程序；在 Linux/macOS 上运行会生成对应平台的可执行文件，要生成 Windows `.exe`，请在 Windows 或 Windows CI 环境中运行该脚本。程序默认把数据库写入可执行文件同目录，封面写入同目录的 `library-data/covers`，不会修改项目源目录数据库。
+
 Windows：
 
 ```bat

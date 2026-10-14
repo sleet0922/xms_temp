@@ -58,7 +58,7 @@ const props = defineProps({
 const emit = defineEmits(['click'])
 
 const buttonClasses = computed(() => {
-  const base = 'neo-button inline-flex items-center justify-center font-medium transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-200 disabled:cursor-not-allowed whitespace-nowrap'
+  const base = 'neo-button inline-flex items-center justify-center font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-200 disabled:cursor-not-allowed whitespace-nowrap'
 
   const sizes = {
     small: 'px-3 text-sm !h-7',

@@ -109,14 +109,14 @@
                     <polyline
                       :points="chart.borrowPoints"
                       fill="none"
-                      stroke="#165dff"
+                      stroke="#2f5b4e"
                       stroke-width="2"
                       vector-effect="non-scaling-stroke"
                     />
                     <polyline
                       :points="chart.returnPoints"
                       fill="none"
-                      stroke="#14c9c9"
+                      stroke="#6a9584"
                       stroke-width="2"
                       stroke-dasharray="4"
                       vector-effect="non-scaling-stroke"
@@ -196,7 +196,7 @@
                   v-for="(book, index) in popularBooks"
                   :key="book.id"
                   :to="`/admin/books/${book.id}`"
-                  class="flex items-center gap-3 px-2 py-2 rounded-lg transition-all duration-150 ease-out hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 active:scale-[0.98]"
+                  class="flex items-center gap-3 px-2 py-2 rounded-lg transition-colors duration-150 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 active:scale-[0.98]"
                 >
                   <span class="w-6 text-center text-sm font-semibold text-gray-400 flex-shrink-0">{{ index + 1 }}</span>
                   <div class="w-10 flex-shrink-0 rounded-lg overflow-hidden">
@@ -219,7 +219,7 @@
                   v-for="(book, index) in topRated"
                   :key="book.id"
                   :to="`/admin/books/${book.id}`"
-                  class="flex items-center gap-3 px-2 py-2 rounded-lg transition-all duration-150 ease-out hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 active:scale-[0.98]"
+                  class="flex items-center gap-3 px-2 py-2 rounded-lg transition-colors duration-150 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 active:scale-[0.98]"
                 >
                   <span class="w-6 text-center text-sm font-semibold text-gray-400 flex-shrink-0">{{ index + 1 }}</span>
                   <div class="w-10 flex-shrink-0 rounded-lg overflow-hidden">

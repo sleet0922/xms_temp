@@ -49,13 +49,13 @@ const props = defineProps({
 defineEmits(['update:modelValue'])
 
 const alertClasses = computed(() => {
-  const base = 'rounded border px-4 py-3'
+  const base = 'rounded-lg border px-4 py-3'
 
   const variants = {
-    success: 'bg-[#e8ffea] border-[#aff0b5] text-[#1d2129] [&>div>svg]:text-[#00b42a]',
-    error: 'bg-[#ffece8] border-[#fdcdc5] text-[#1d2129] [&>div>svg]:text-[#f53f3f]',
-    warning: 'bg-[#fff7e8] border-[#ffe4ba] text-[#1d2129] [&>div>svg]:text-[#ff7d00]',
-    info: 'bg-[#e8f3ff] border-[#bedaff] text-[#1d2129] [&>div>svg]:text-[#165dff]'
+    success: 'bg-[#e8ffea] border-[#aff0b5] text-[#252522] [&>div>svg]:text-[#00b42a]',
+    error: 'bg-[#ffece8] border-[#fdcdc5] text-[#252522] [&>div>svg]:text-[#f53f3f]',
+    warning: 'bg-[#fff7e8] border-[#ffe4ba] text-[#252522] [&>div>svg]:text-[#ff7d00]',
+    info: 'bg-[#e8f0eb] border-[#b7cec4] text-[#252522] [&>div>svg]:text-[#2f5b4e]'
   }
 
   return [base, variants[props.variant]].join(' ')

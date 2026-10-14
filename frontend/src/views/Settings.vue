@@ -139,7 +139,7 @@
             <div
               v-for="row in infoRows"
               :key="row.label"
-              class="border border-gray-200 rounded-lg p-4 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+              class="border border-gray-200 rounded-lg p-4 transition-colors duration-200 hover:-translate-y-0.5 hover:shadow-md"
             >
               <div class="text-xs text-gray-500">{{ row.label }}</div>
               <div class="font-mono text-sm text-gray-900 mt-1 break-all">{{ row.value }}</div>

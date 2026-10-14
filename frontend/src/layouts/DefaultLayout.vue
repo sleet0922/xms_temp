@@ -1,14 +1,7 @@
 <template>
-  <div class="min-h-screen flex flex-col">
+  <div class="min-h-[100dvh] flex flex-col">
     <header class="site-header">
       <div class="site-header-inner">
-        <RouterLink to="/" class="site-logo">
-          <span class="site-logo-mark">
-            <component :is="getIconComponent('mdi-library')" class="w-4 h-4" />
-          </span>
-          <span class="truncate max-w-[12rem]">{{ systemStore.libraryName }}</span>
-        </RouterLink>
-
         <nav class="site-nav hidden lg:flex" aria-label="主导航">
           <RouterLink
             v-for="item in primaryMenu"
@@ -22,14 +15,6 @@
         </nav>
 
         <div class="ml-auto flex items-center gap-2">
-          <RouterLink
-            v-if="userStore.isLibrarian"
-            to="/admin"
-            class="hidden sm:inline-flex items-center h-8 px-3 rounded text-sm text-gray-600 hover:text-primary-600 hover:bg-gray-100 transition-colors"
-          >
-            管理后台
-          </RouterLink>
-
           <RouterLink to="/notifications" aria-label="消息通知" title="消息通知" class="site-icon-btn">
             <component :is="getIconComponent('mdi-bell-outline')" class="w-5 h-5" />
             <span v-if="unreadCount > 0" class="site-dot">{{ unreadCount > 99 ? '99+' : unreadCount }}</span>
@@ -43,7 +28,6 @@
               aria-haspopup="menu"
               @click="userMenuOpen = !userMenuOpen"
             >
-              <span class="site-avatar">{{ userInitial }}</span>
               <span class="hidden sm:block text-sm text-gray-900 max-w-[8rem] truncate">{{ displayName }}</span>
               <component :is="getIconComponent('mdi-chevron-down')" class="hidden sm:block w-3.5 h-3.5 text-gray-500" />
             </button>
@@ -76,18 +60,20 @@
       </div>
     </header>
 
-    <nav v-if="mobileOpen" class="site-mobile-nav lg:hidden" aria-label="移动端导航">
-      <RouterLink
-        v-for="item in menuItems"
-        :key="item.path"
-        :to="item.path"
-        :class="{ 'is-active': isActive(item.path) }"
-        @click="mobileOpen = false"
-      >
-        <component :is="getIconComponent(item.icon)" class="w-4 h-4" />
-        {{ item.label }}
-      </RouterLink>
-    </nav>
+    <Transition name="mobile-nav">
+      <nav v-if="mobileOpen" class="site-mobile-nav lg:hidden" aria-label="移动端导航">
+        <RouterLink
+          v-for="item in menuItems"
+          :key="item.path"
+          :to="item.path"
+          :class="{ 'is-active': isActive(item.path) }"
+          @click="mobileOpen = false"
+        >
+          <component :is="getIconComponent(item.icon)" class="w-4 h-4" />
+          {{ item.label }}
+        </RouterLink>
+      </nav>
+    </Transition>
 
     <main class="flex-1">
       <RouterView v-slot="{ Component, route: renderedRoute }">
@@ -97,12 +83,6 @@
       </RouterView>
     </main>
 
-    <footer class="site-footer">
-      <div class="max-w-[1280px] mx-auto px-6 h-12 flex items-center justify-between gap-4">
-        <span>© {{ year }} {{ systemStore.libraryName }}</span>
-        <span class="hidden sm:inline">馆藏检索 · 借阅服务 · 读者中心</span>
-      </div>
-    </footer>
   </div>
 </template>
 
@@ -110,18 +90,15 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
-import { useSystemStore } from '@/stores/system'
 import { getIconComponent } from '@/utils/iconMap'
 import { notificationsApi } from '@/api'
 
 const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
-const systemStore = useSystemStore()
 const mobileOpen = ref(false)
 const userMenuOpen = ref(false)
 const menuRef = ref(null)
-const year = new Date().getFullYear()
 const unreadCount = ref(0)
 let timer = null
 
@@ -149,11 +126,6 @@ const roleLabel = computed(() => ({
   librarian: '馆员',
   reader: '读者'
 }[userStore.user?.role] || '用户'))
-
-const userInitial = computed(() => {
-  const name = userStore.user?.full_name || userStore.user?.username || '?'
-  return name.charAt(0).toUpperCase()
-})
 
 function isActive(path) {
   return path === '/' ? route.path === '/' : route.path.startsWith(path)

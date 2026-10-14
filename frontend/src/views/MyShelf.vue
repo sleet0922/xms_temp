@@ -42,28 +42,44 @@
     <Tabs v-model="activeTab" :tabs="tabs">
       <!-- 在借图书 -->
       <template #panel-0>
-        <div v-if="activeBorrows.length" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          <Card v-for="record in activeBorrows" :key="record.id" padding="none" hover class="overflow-hidden flex flex-col">
-            <BookCover :book="record.book || {}" ratio="3/4" />
-            <div class="p-6 flex flex-col flex-1">
-              <h3 class="font-semibold tracking-tight text-gray-900 truncate">{{ record.book?.title || '-' }}</h3>
-              <p class="text-sm text-gray-600 truncate mt-0.5">{{ record.book?.author || '-' }}</p>
-
-              <div class="text-sm text-gray-600 mt-3">应还日期：{{ formatDate(record.due_date) }}</div>
-              <div class="text-sm font-medium mt-1" :class="dueTextClass(record)">{{ dueText(record) }}</div>
-
-              <div class="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between gap-2">
-                <Button
-                  size="small"
-                  variant="outline"
-                  :loading="renewingId === record.id"
-                  :disabled="record.renew_count >= systemStore.maxRenewTimes"
-                  :title="record.renew_count >= systemStore.maxRenewTimes ? `已达最大续借次数（${systemStore.maxRenewTimes} 次）` : ''"
-                  @click="renew(record)"
-                >
-                  续借
-                </Button>
-                <span class="text-xs text-gray-500">已续借 {{ record.renew_count || 0 }} 次</span>
+        <div v-if="activeBorrows.length" class="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">
+          <Card v-for="record in activeBorrows" :key="record.id" padding="small" hover>
+            <div class="flex gap-4">
+              <button type="button" class="w-24 flex-shrink-0 focus:outline-none" @click="goBook(record.book?.id)">
+                <BookCover :book="record.book || {}" ratio="3/4" />
+              </button>
+              <div class="min-w-0 flex-1 flex flex-col">
+                <button type="button" class="text-left focus:outline-none" @click="goBook(record.book?.id)">
+                  <h3 class="text-sm font-medium text-gray-900 line-clamp-2 hover:text-[#2f5b4e]">{{ record.book?.title || '-' }}</h3>
+                </button>
+                <p class="text-xs text-gray-500 truncate mt-1">{{ record.book?.author || '-' }}</p>
+                <div class="mt-3 text-xs text-gray-500">应还 {{ formatDate(record.due_date) }}</div>
+                <div class="mt-0.5 text-sm font-medium" :class="dueTextClass(record)">{{ dueText(record) }}</div>
+                <div class="mt-auto pt-3 flex items-center justify-between gap-2">
+                  <span class="text-xs text-gray-400">已续借 {{ record.renew_count || 0 }} 次</span>
+                  <div class="flex items-center gap-2">
+                    <Button
+                      size="small"
+                      variant="outline"
+                      :loading="renewingId === record.id"
+                      :disabled="record.renew_count >= systemStore.maxRenewTimes"
+                      :title="record.renew_count >= systemStore.maxRenewTimes ? `已达最大续借次数（${systemStore.maxRenewTimes} 次）` : ''"
+                      @click="renew(record)"
+                    >
+                      续借
+                    </Button>
+                    <Button
+                      v-if="record.return_request_status !== 'pending'"
+                      size="small"
+                      variant="primary"
+                      :loading="returnRequestId === record.id"
+                      @click="requestReturn(record)"
+                    >
+                      提前还书
+                    </Button>
+                    <span v-else class="text-xs text-amber-700">待确认</span>
+                  </div>
+                </div>
               </div>
             </div>
           </Card>
@@ -71,7 +87,7 @@
         <EmptyState
           v-if="!loading && !activeBorrows.length"
           title="当前没有在借图书"
-          description="去书目大厅挑一本喜欢的书吧"
+          description="去馆藏检索挑一本喜欢的书吧"
           :icon="BookOpenIcon"
         />
       </template>
@@ -85,7 +101,7 @@
               <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
                 <button
                   type="button"
-                  class="text-left text-sm font-medium text-gray-900 hover:text-blue-700 rounded-lg transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                  class="text-left text-sm font-medium text-gray-900 hover:text-blue-700 rounded-lg transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                   @click="goBook(record.book?.id)"
                 >
                   {{ record.book?.title || '-' }}
@@ -126,7 +142,7 @@
                   <td class="px-4 py-3 text-sm">
                     <button
                       type="button"
-                      class="text-left font-medium text-gray-900 hover:text-blue-700 rounded-lg transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                      class="text-left font-medium text-gray-900 hover:text-blue-700 rounded-lg transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                       @click="goBook(reservation.book?.id)"
                     >
                       {{ reservation.book?.title || '-' }}
@@ -174,7 +190,7 @@
                 <div class="min-w-0">
                   <button
                     type="button"
-                    class="text-left text-sm font-medium text-gray-900 hover:text-blue-700 rounded-lg transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    class="text-left text-sm font-medium text-gray-900 hover:text-blue-700 rounded-lg transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                     @click="goBook(review.book?.id)"
                   >
                     {{ review.book?.title || '-' }}
@@ -242,6 +258,7 @@ const reservations = ref([])
 const reviews = ref([])
 const loading = ref(false)
 const renewingId = ref(null)
+const returnRequestId = ref(null)
 
 const activeBorrows = computed(() => borrows.value.filter(r => !r.return_date))
 // overview 的 total_reservations 是全馆口径，此处按列表（读者视角已按本人过滤）统计个人预约中数量
@@ -342,6 +359,20 @@ async function renew(record) {
     window.$toast?.error(err.response?.data?.detail || '续借失败')
   } finally {
     renewingId.value = null
+  }
+}
+
+async function requestReturn(record) {
+  if (!window.confirm(`确认申请提前归还《${record.book?.title || '这本书'}》吗？提交后请将图书交给管理员确认。`)) return
+  returnRequestId.value = record.id
+  try {
+    await borrowsApi.requestReturn(record.id)
+    window.$toast?.success('还书申请已提交，请将图书交给管理员确认')
+    await loadAll()
+  } catch (err) {
+    window.$toast?.error(err.response?.data?.detail || '提交还书申请失败')
+  } finally {
+    returnRequestId.value = null
   }
 }
 

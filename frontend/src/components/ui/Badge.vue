@@ -30,7 +30,7 @@ const badgeClasses = computed(() => {
 
   const variants = {
     default: 'bg-[#f2f3f5] text-[#4e5969]',
-    primary: 'bg-[#e8f3ff] text-[#165dff]',
+    primary: 'bg-[#e8f0eb] text-[#2f5b4e]',
     secondary: 'bg-[#f2f3f5] text-[#4e5969]',
     success: 'bg-[#e8ffea] text-[#00b42a]',
     danger: 'bg-[#ffece8] text-[#f53f3f]',

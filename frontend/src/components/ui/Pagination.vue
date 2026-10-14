@@ -16,7 +16,7 @@
         :class="[
           'min-w-[2rem] h-8 px-2 rounded text-sm transition-colors',
           p === page
-            ? 'bg-[#e8f3ff] text-[#165dff] font-medium'
+            ? 'bg-[#e8f0eb] text-[#2f5b4e] font-medium'
             : p === '...'
               ? 'text-gray-400 cursor-default'
               : 'text-gray-700 hover:bg-gray-100'

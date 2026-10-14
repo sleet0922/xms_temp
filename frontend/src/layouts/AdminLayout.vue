@@ -1,5 +1,5 @@
 <template>
-  <div class="admin-shell min-h-screen">
+  <div class="admin-shell min-h-[100dvh]">
     <div
       v-if="sidebarOpen"
       class="admin-backdrop fixed inset-0 z-30 lg:hidden"
@@ -13,13 +13,6 @@
       ]"
     >
       <div class="flex h-full flex-col">
-        <RouterLink to="/admin" class="admin-brand">
-          <span class="admin-brand-mark">
-            <component :is="getIconComponent('mdi-library')" class="h-4 w-4" />
-          </span>
-          <span class="truncate text-[15px] font-semibold">{{ systemStore.libraryName }}</span>
-        </RouterLink>
-
         <nav class="flex-1 overflow-y-auto scrollbar-thin pb-4" aria-label="后台导航">
           <template v-for="group in visibleGroups" :key="group.title">
             <div class="admin-nav-group">{{ group.title }}</div>
@@ -39,7 +32,7 @@
       </div>
     </aside>
 
-    <div class="min-h-screen lg:pl-[220px]">
+    <div class="min-h-[100dvh] lg:pl-[220px]">
       <header class="admin-header sticky top-0 z-20 flex items-center gap-3 px-4 sm:px-5">
         <button
           type="button"
@@ -61,7 +54,6 @@
           </RouterLink>
           <span class="mx-2 hidden h-4 w-px bg-gray-200 sm:block"></span>
           <RouterLink to="/profile" class="admin-header-btn">
-            <span class="site-avatar !h-6 !w-6 !text-xs">{{ userInitial }}</span>
             <span class="hidden max-w-32 truncate sm:inline">{{ userStore.user?.full_name || userStore.user?.username }}</span>
             <span class="hidden text-xs text-gray-500 md:inline">{{ roleLabel }}</span>
           </RouterLink>
@@ -86,13 +78,11 @@
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
-import { useSystemStore } from '@/stores/system'
 import { getIconComponent } from '@/utils/iconMap'
 
 const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
-const systemStore = useSystemStore()
 const sidebarOpen = ref(false)
 
 const menuGroups = [
@@ -118,8 +108,6 @@ const visibleGroups = computed(() => menuGroups
   .map(group => ({ ...group, items: group.items.filter(item => item.role !== 'admin' || userStore.isAdmin) }))
   .filter(group => group.items.length))
 const roleLabel = computed(() => ({ admin: '管理员', librarian: '馆员' }[userStore.user?.role] || '后台用户'))
-const userInitial = computed(() => (userStore.user?.full_name || userStore.user?.username || '?').charAt(0).toUpperCase())
-
 function isActive(path) {
   return path === '/admin' ? route.path === '/admin' : route.path.startsWith(path)
 }

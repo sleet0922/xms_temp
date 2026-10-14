@@ -98,6 +98,8 @@ export const circulationApi = {
   borrow: (data) => api.post('/circulation/borrow', data),
   // 还书：传 barcode（扫实体册）或 record_id（按借阅记录归还）
   return: (data) => api.post('/circulation/return', data),
+  approveReturnRequest: (id) => api.post(`/circulation/return-requests/${id}/approve`),
+  rejectReturnRequest: (id) => api.post(`/circulation/return-requests/${id}/reject`),
   renew: (recordId) => api.post(`/circulation/renew/${recordId}`)
 }
 
@@ -106,7 +108,8 @@ export const borrowsApi = {
   getList: (params) => api.get('/borrows', { params }),
   getMyBorrows: () => api.get('/borrows/my'),
   renewBorrow: (id) => api.post(`/circulation/renew/${id}`),
-  selfBorrow: (bookId) => api.post('/borrows/self', { book_id: bookId })
+  selfBorrow: (bookId) => api.post('/borrows/self', { book_id: bookId }),
+  requestReturn: (id) => api.post(`/borrows/${id}/return-request`)
 }
 
 // Readers API

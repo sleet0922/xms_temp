@@ -127,6 +127,8 @@ class BorrowRecord(Base):
     return_date = Column(DateTime, nullable=True)
     renew_count = Column(Integer, default=0, nullable=False)
     status = Column(String(20), default="borrowed", nullable=False, index=True) # borrowed, returned, overdue, lost
+    return_request_status = Column(String(20), default="none", nullable=False, index=True) # none, pending, approved, rejected
+    return_requested_at = Column(DateTime, nullable=True)
     librarian_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     notes = Column(String(255))
     created_at = Column(DateTime, default=datetime.now)

@@ -7,11 +7,11 @@
       :disabled="!editable"
       :aria-label="`${star} 星`"
       :title="editable ? `评分 ${star} 星` : `${star} 星`"
-      class="rounded-lg transition-all duration-150 ease-out focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
+      class="rounded-lg transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
       :class="editable ? 'hover:scale-110 active:scale-[0.98] cursor-pointer' : 'cursor-default'"
       @click="select(star)"
-      @mouseenter="hovered = star"
-      @mouseleave="hovered = 0"
+      @mouseenter="setHover(star)"
+      @mouseleave="clearHover"
     >
       <StarIcon
         :class="[
@@ -57,5 +57,13 @@ const starClass = computed(() => ({
 function select(star) {
   if (!props.editable) return
   emit('update:modelValue', star)
+}
+
+function setHover(star) {
+  if (props.editable) hovered.value = star
+}
+
+function clearHover() {
+  if (props.editable) hovered.value = 0
 }
 </script>

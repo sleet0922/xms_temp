@@ -49,13 +49,13 @@ const toasts = ref([])
 let nextId = 0
 
 const toastClasses = (type) => {
-  const base = 'bg-white border border-[#e5e6eb] rounded shadow-lg px-4 py-3 text-[#1d2129]'
+  const base = 'neo-toast-surface bg-white border rounded px-4 py-3 text-[#252522]'
 
   const types = {
     success: '[&_svg:first-child]:text-[#00b42a]',
     error: '[&_svg:first-child]:text-[#f53f3f]',
     warning: '[&_svg:first-child]:text-[#ff7d00]',
-    info: '[&_svg:first-child]:text-[#165dff]'
+    info: '[&_svg:first-child]:text-[#2f5b4e]'
   }
 
   return [base, types[type] || types.info].join(' ')

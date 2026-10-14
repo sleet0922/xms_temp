@@ -40,6 +40,26 @@
         </dl>
       </Card>
     </section>
+
+    <section class="mt-4">
+      <Card>
+        <div class="flex items-center justify-between">
+          <h2 class="text-base font-medium text-gray-900">热门图书</h2>
+          <RouterLink to="/admin/analytics" class="text-sm text-[#2f5b4e] hover:text-[#487a69]">完整报表</RouterLink>
+        </div>
+        <ol v-if="popular.length" class="mt-4 space-y-3">
+          <li v-for="(book, index) in popular" :key="book.id" class="flex items-center gap-3">
+            <span
+              class="inline-flex h-5 w-5 flex-shrink-0 items-center justify-center rounded text-xs font-semibold"
+              :class="index < 3 ? 'bg-[#2f5b4e] text-white' : 'bg-[#f2f3f5] text-gray-500'"
+            >{{ index + 1 }}</span>
+            <RouterLink :to="`/admin/books/${book.id}`" class="min-w-0 flex-1 truncate text-sm text-gray-900 hover:text-[#2f5b4e]">{{ book.title }}</RouterLink>
+            <span class="flex-shrink-0 text-xs tabular-nums text-gray-500">{{ book.borrow_count }} 次</span>
+          </li>
+        </ol>
+        <p v-else class="py-16 text-center text-sm text-gray-400">暂无借阅排行</p>
+      </Card>
+    </section>
   </div>
 </template>
 
@@ -54,6 +74,8 @@ import Button from '@/components/ui/Button.vue'
 
 const overview = ref({})
 const loading = ref(false)
+const popular = ref([])
+
 
 const stats = computed(() => [
   { label: '馆藏图书', value: overview.value.total_books ?? 0, hint: `${overview.value.total_copies ?? 0} 册含复本`, icon: BookOpenIcon, tone: 'primary' },
@@ -78,7 +100,16 @@ const statusRows = computed(() => [
 
 async function loadOverview() {
   loading.value = true
-  try { overview.value = (await statsApi.getOverview()).data || {} } finally { loading.value = false }
+  try {
+    const [overviewRes, popularRes] = await Promise.allSettled([
+      statsApi.getOverview(),
+      statsApi.getPopularBooks(6)
+    ])
+    if (overviewRes.status === 'fulfilled') overview.value = overviewRes.value.data || {}
+    if (popularRes.status === 'fulfilled') popular.value = popularRes.value.data || []
+  } finally {
+    loading.value = false
+  }
 }
 
 onMounted(loadOverview)

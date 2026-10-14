@@ -17,7 +17,7 @@
     </div>
 
     <!-- 检索区 -->
-    <Card class="mb-6">
+    <Card class="mb-6 overflow-visible">
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Input
           v-model="search"
@@ -47,8 +47,8 @@
           type="button"
           v-for="chip in formatChips"
           :key="`fmt-${chip.value}`"
-          class="px-3 py-1 rounded-lg text-xs font-medium transition-all duration-150 ease-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 active:scale-[0.98]"
-          :class="format === chip.value ? 'bg-[#e8f3ff] text-[#165dff]' : 'bg-[#f2f3f5] text-gray-600 hover:bg-[#e5e6eb]'"
+          class="px-3 py-1 rounded-lg text-xs font-medium transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 active:scale-[0.98]"
+          :class="format === chip.value ? 'bg-[#e8f0eb] text-[#2f5b4e]' : 'bg-[#f2f3f5] text-gray-600 hover:bg-[#e5e6eb]'"
           @click="format = format === chip.value ? null : chip.value"
         >
           {{ chip.value }} · {{ chip.count }}
@@ -57,8 +57,8 @@
           type="button"
           v-for="chip in languageChips"
           :key="`lang-${chip.value}`"
-          class="px-3 py-1 rounded-lg text-xs font-medium transition-all duration-150 ease-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 active:scale-[0.98]"
-          :class="language === chip.value ? 'bg-[#e8f3ff] text-[#165dff]' : 'bg-[#f2f3f5] text-gray-600 hover:bg-[#e5e6eb]'"
+          class="px-3 py-1 rounded-lg text-xs font-medium transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 active:scale-[0.98]"
+          :class="language === chip.value ? 'bg-[#e8f0eb] text-[#2f5b4e]' : 'bg-[#f2f3f5] text-gray-600 hover:bg-[#e5e6eb]'"
           @click="language = language === chip.value ? null : chip.value"
         >
           {{ chip.value }} · {{ chip.count }}
@@ -76,16 +76,16 @@
         <div class="flex rounded-lg border border-gray-300 overflow-hidden">
           <button
             type="button"
-            class="px-3 py-1.5 text-sm font-medium transition-all duration-150 ease-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 active:scale-[0.98]"
-            :class="viewMode === 'grid' ? 'bg-[#e8f3ff] text-[#165dff]' : 'bg-white text-gray-600 hover:bg-gray-50'"
+            class="px-3 py-1.5 text-sm font-medium transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 active:scale-[0.98]"
+            :class="viewMode === 'grid' ? 'bg-[#e8f0eb] text-[#2f5b4e]' : 'bg-white text-gray-600 hover:bg-gray-50'"
             @click="viewMode = 'grid'"
           >
             网格
           </button>
           <button
             type="button"
-            class="px-3 py-1.5 text-sm font-medium transition-all duration-150 ease-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 active:scale-[0.98]"
-            :class="viewMode === 'table' ? 'bg-[#e8f3ff] text-[#165dff]' : 'bg-white text-gray-600 hover:bg-gray-50'"
+            class="px-3 py-1.5 text-sm font-medium transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 active:scale-[0.98]"
+            :class="viewMode === 'table' ? 'bg-[#e8f0eb] text-[#2f5b4e]' : 'bg-white text-gray-600 hover:bg-gray-50'"
             @click="viewMode = 'table'"
           >
             表格
@@ -94,40 +94,34 @@
       </div>
     </div>
 
-    <!-- 网格视图 -->
-    <div v-if="viewMode === 'grid'" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-      <Card
-        v-for="book in books"
-        :key="book.id"
-        padding="none"
-        hover
-        clickable
-        class="overflow-hidden"
-        @click="goDetail(book)"
-      >
-        <div class="px-3 pt-3"><BookCover :book="book" ratio="3/4" /></div>
-        <div class="p-3">
-          <h3 class="text-sm font-medium text-gray-900 truncate">{{ book.title }}</h3>
+    <!-- 网格视图：书店式陈列，封面为主、信息为辅 -->
+    <Card v-if="viewMode === 'grid'">
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-x-5 gap-y-7">
+        <button
+          v-for="book in books"
+          :key="book.id"
+          type="button"
+          class="group text-left focus:outline-none"
+          @click="goDetail(book)"
+        >
+          <div class="relative transition-transform duration-200 group-hover:-translate-y-1">
+            <BookCover :book="book" ratio="3/4" />
+            <span
+              class="absolute left-2 top-2 rounded px-1.5 py-0.5 text-[11px] font-medium"
+              :class="book.available_copies > 0 ? 'bg-white/90 text-[#16a34a]' : 'bg-black/50 text-white'"
+            >
+              {{ book.available_copies > 0 ? `可借 ${book.available_copies}` : '已借完' }}
+            </span>
+          </div>
+          <h3 class="mt-3 text-sm font-medium text-gray-900 truncate group-hover:text-[#2f5b4e] transition-colors">{{ book.title }}</h3>
           <p class="text-xs text-gray-500 truncate mt-0.5">{{ book.author }}</p>
-
-          <div class="flex items-center gap-2 mt-3 flex-wrap">
-            <Badge v-if="book.format" variant="primary" size="small">{{ book.format }}</Badge>
-            <Badge v-if="book.language" variant="secondary" size="small">{{ book.language }}</Badge>
+          <div class="mt-2 flex items-center justify-between gap-2">
+            <RatingStars :model-value="Number(book.rating || 0)" size="small" />
+            <span v-if="book.format" class="text-[11px] text-gray-400">{{ book.format }}</span>
           </div>
-
-          <div class="mt-3">
-            <RatingStars :model-value="Number(book.rating || 0)" :count="book.rating_count || 0" size="small" />
-          </div>
-
-          <div class="flex items-center justify-between mt-3 pt-3 border-t border-gray-200">
-            <Badge :variant="book.available_copies > 0 ? 'success' : 'default'" size="small">
-              {{ book.available_copies > 0 ? `${book.available_copies}/${book.total_copies} 在架` : '暂无可借' }}
-            </Badge>
-            <span class="text-xs text-gray-500">借阅 {{ book.borrow_count }} 次</span>
-          </div>
-        </div>
-      </Card>
-    </div>
+        </button>
+      </div>
+    </Card>
 
     <!-- 表格视图 -->
     <Card v-else padding="none">

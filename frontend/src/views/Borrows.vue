@@ -1,6 +1,6 @@
 <template>
   <div class="neo-page">
-    <PageHeader :title="canManage ? '借阅记录' : '借阅中心'" :subtitle="canManage ? '全馆借阅、逾期与续借记录' : '查看我的在借、逾期与历史借阅记录'">
+    <PageHeader :title="canManage ? '借阅记录' : '借阅记录'" :subtitle="canManage ? '全馆借阅、逾期与续借记录' : '查看我的在借、逾期与历史借阅记录'">
       <template #actions>
         <Button variant="outline" :prepend-icon="ArrowPathIcon" :loading="loading" @click="loadBorrows">刷新</Button>
       </template>
@@ -63,7 +63,7 @@
               <td class="px-4 py-3 text-sm">
                 <button
                   type="button"
-                  class="text-left font-medium text-gray-900 hover:text-blue-700 rounded-lg transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                  class="text-left font-medium text-gray-900 hover:text-blue-700 rounded-lg transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                   @click="goBook(record.book?.id)"
                 >
                   {{ record.book?.title || '-' }}
@@ -81,6 +81,9 @@
               <td class="px-4 py-3 text-sm text-gray-600">{{ record.return_date ? formatDate(record.return_date) : '-' }}</td>
               <td class="px-4 py-3">
                 <Badge :variant="statusVariant(record)" size="small">{{ statusLabel(record) }}</Badge>
+                <div v-if="!record.return_date && record.return_request_status === 'pending'" class="mt-1 text-xs text-amber-700">
+                  等待管理员确认还书
+                </div>
                 <div v-if="overdueDays(record) > 0" class="text-xs text-red-600 mt-1">
                   逾期 {{ overdueDays(record) }} 天
                   <span v-if="Number(record.calculated_fine) > 0">· 罚金 ¥{{ money(record.calculated_fine) }}</span>
@@ -98,6 +101,19 @@
                 >
                   续借
                 </Button>
+                <Button
+                  v-if="!canManage && !record.return_date && record.return_request_status !== 'pending'"
+                  size="small"
+                  variant="primary"
+                  :loading="returnRequestId === record.id"
+                  class="ml-2"
+                  @click="requestReturn(record)"
+                >
+                  提前还书
+                </Button>
+                <span v-if="!canManage && !record.return_date && record.return_request_status === 'pending'" class="ml-2 text-xs text-amber-700">
+                  已申请
+                </span>
                 <span v-if="!record.return_date && record.renew_count > 0" class="text-xs text-gray-500 ml-2">已续借 {{ record.renew_count }} 次</span>
               </td>
             </tr>
@@ -157,6 +173,7 @@ const search = ref('')
 const readerId = ref(null)
 const loading = ref(false)
 const renewingId = ref(null)
+const returnRequestId = ref(null)
 
 const columnCount = computed(() => (canManage.value ? 7 : 6))
 
@@ -268,6 +285,20 @@ async function renew(record) {
     window.$toast?.error(err.response?.data?.detail || '续借失败')
   } finally {
     renewingId.value = null
+  }
+}
+
+async function requestReturn(record) {
+  if (!window.confirm(`确认申请提前归还《${record.book?.title || '这本书'}》吗？提交后请将图书交给管理员确认。`)) return
+  returnRequestId.value = record.id
+  try {
+    await borrowsApi.requestReturn(record.id)
+    window.$toast?.success('还书申请已提交，请将图书交给管理员确认')
+    await loadBorrows()
+  } catch (err) {
+    window.$toast?.error(err.response?.data?.detail || '提交还书申请失败')
+  } finally {
+    returnRequestId.value = null
   }
 }
 

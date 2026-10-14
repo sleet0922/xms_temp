@@ -31,7 +31,7 @@
         leave-from-class="opacity-100 scale-100 translate-y-0"
         leave-to-class="opacity-0 scale-[0.98] -translate-y-1"
       >
-        <HeadlessListboxOptions :class="optionsClasses">
+        <HeadlessListboxOptions :class="optionsClasses" @wheel.stop>
           <HeadlessListboxOption
             v-for="option in options"
             :key="getOptionValue(option)"
@@ -40,13 +40,13 @@
             as="template"
           >
             <li :class="[
-              active ? 'bg-[#f2f3f5] text-gray-900' : 'text-gray-900', isSelected ? '!text-[#165dff] !bg-[#e8f3ff]' : '',
+              active ? 'bg-[#f2f3f5] text-gray-900' : 'text-gray-900', isSelected ? '!text-[#2f5b4e] !bg-[#e8f0eb]' : '',
               'relative cursor-pointer select-none h-9 leading-9 pl-3 pr-8 text-sm transition-colors duration-150'
             ]">
               <span :class="[isSelected ? 'font-medium' : 'font-normal', 'block truncate']">
                 {{ getDisplayValue(option) }}
               </span>
-              <span v-if="isSelected" class="absolute inset-y-0 right-0 flex items-center pr-3 text-[#165dff]">
+              <span v-if="isSelected" class="absolute inset-y-0 right-0 flex items-center pr-3 text-[#2f5b4e]">
                 <CheckIcon class="h-4 w-4" aria-hidden="true" />
               </span>
             </li>
@@ -119,7 +119,7 @@ const buttonClasses = computed(() => {
   return [base, borderColor].join(' ')
 })
 
-const optionsClasses = 'absolute z-30 mt-1 max-h-60 w-full overflow-auto scrollbar-thin rounded bg-white py-1 shadow-md border border-gray-200 focus:outline-none'
+const optionsClasses = 'absolute z-30 mt-1 max-h-60 w-full overflow-y-auto overscroll-contain scrollbar-thin rounded-lg bg-white py-1 border border-gray-200 focus:outline-none'
 
 const getDisplayValue = (option) => {
   if (!option) return ''

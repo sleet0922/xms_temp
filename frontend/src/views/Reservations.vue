@@ -33,7 +33,7 @@
               <td class="px-4 py-3 text-sm">
                 <button
                   type="button"
-                  class="text-left font-medium text-gray-900 hover:text-blue-700 rounded-lg transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                  class="text-left font-medium text-gray-900 hover:text-blue-700 rounded-lg transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                   @click="goBook(reservation.book?.id)"
                 >
                   {{ reservation.book?.title || '-' }}

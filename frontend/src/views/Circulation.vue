@@ -1,6 +1,6 @@
 <template>
   <div class="neo-page">
-    <PageHeader title="借还工作台" subtitle="扫码办理借书、还书与续借">
+    <PageHeader title="借还工作台" subtitle="借还办理">
       <template #actions>
         <Button variant="outline" :prepend-icon="ArrowPathIcon" :loading="refreshing" @click="refreshAll">
           刷新数据
@@ -33,6 +33,26 @@
       />
     </div>
 
+    <Card v-if="pendingReturns.length" class="mb-6 border-amber-200 bg-amber-50/40">
+      <div class="flex items-center justify-between gap-3">
+        <div>
+          <h2 class="text-base font-medium text-gray-900">待确认的还书申请</h2>
+          <p class="mt-1 text-sm text-gray-600">读者已提交申请，请确认收到实体图书后完成归还。</p>
+        </div>
+        <Badge variant="warning" size="small">{{ pendingReturns.length }} 条待处理</Badge>
+      </div>
+      <div class="mt-4 space-y-2">
+        <div v-for="record in pendingReturns" :key="record.id" class="flex flex-wrap items-center gap-3 rounded-lg border border-amber-200 bg-white px-4 py-3">
+          <div class="min-w-0 flex-1">
+            <p class="truncate text-sm font-medium text-gray-900">《{{ record.book?.title || '-' }}》</p>
+            <p class="mt-1 text-xs text-gray-500">{{ record.user?.full_name || '-' }} · 申请于 {{ formatDateTime(record.return_requested_at) }}</p>
+          </div>
+          <Button size="small" variant="outline" :loading="processingReturnId === record.id" @click="rejectReturnRequest(record)">驳回</Button>
+          <Button size="small" variant="primary" :loading="processingReturnId === record.id" @click="approveReturnRequest(record)">确认已收书</Button>
+        </div>
+      </div>
+    </Card>
+
     <!-- 借书 / 还书操作台 -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
       <Card class="group" hover>
@@ -44,7 +64,7 @@
           </div>
           <div class="min-w-0">
             <h2 class="text-base font-medium text-gray-900">借书办理</h2>
-            <p class="text-sm text-gray-600 mt-1">选择读者与图书即可办理，也可直接扫码</p>
+            <p class="text-sm text-gray-600 mt-1">选择读者和图书</p>
           </div>
         </div>
 
@@ -57,7 +77,7 @@
 
             <div
               v-if="selectedReader"
-              class="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2"
+              class="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border border-[#b7cec4] bg-[#e8f0eb] px-3 py-2"
             >
               <span class="text-sm font-medium text-gray-900">{{ selectedReader.full_name }}</span>
               <span class="text-xs font-mono text-gray-600">{{ selectedReader.card_number }}</span>
@@ -93,7 +113,7 @@
                     v-for="item in readerOptions"
                     :key="item.id"
                     type="button"
-                    class="w-full flex items-center gap-3 px-4 py-2 text-left transition-colors duration-150 hover:bg-blue-50"
+                    class="w-full flex items-center gap-3 px-4 py-2 text-left transition-colors duration-150 hover:bg-[#e8f0eb]"
                     @click="selectReader(item)"
                   >
                     <span class="text-sm text-gray-900">{{ item.full_name }}</span>
@@ -109,7 +129,7 @@
           </div>
 
           <!-- 图书：从图书详情跳转则自动带入，否则扫码 -->
-          <div v-if="selectedBook" class="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2">
+          <div v-if="selectedBook" class="rounded-lg border border-[#b7cec4] bg-[#e8f0eb] px-3 py-2">
             <div class="flex items-start justify-between gap-3">
               <div class="min-w-0">
                 <p class="text-xs text-gray-500">本次办理</p>
@@ -134,7 +154,6 @@
             placeholder="扫描图书条形码"
             :prepend-icon="QrCodeIcon"
             required
-            hint="扫码枪回车即提交"
             @keyup.enter="handleBorrow"
           />
 
@@ -160,7 +179,7 @@
           </div>
           <div class="min-w-0">
             <h2 class="text-base font-medium text-gray-900">还书办理</h2>
-            <p class="text-sm text-gray-600 mt-1">选择在借图书即可归还，逾期将自动生成罚金单</p>
+            <p class="text-sm text-gray-600 mt-1">选择在借图书</p>
           </div>
         </div>
 
@@ -204,7 +223,6 @@
                 v-model="returnForm.barcode"
                 placeholder="扫描图书条形码"
                 :prepend-icon="QrCodeIcon"
-                hint="扫码枪回车即提交"
                 @keyup.enter="handleReturn"
               />
               <button
@@ -274,11 +292,6 @@
             确认归还
           </Button>
 
-          <div class="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
-            <p class="text-sm text-gray-600">
-              归还前请确认图书是否有破损；系统按应还日期实时核算逾期天数与罚金金额。
-            </p>
-          </div>
         </div>
       </Card>
     </div>
@@ -417,6 +430,7 @@ const router = useRouter()
 
 const overview = ref({})
 const records = ref([])
+const pendingReturns = ref([])
 const recordsLoading = ref(false)
 const refreshing = ref(false)
 
@@ -426,6 +440,7 @@ const returnForm = reactive({ barcode: '' })
 const borrowLoading = ref(false)
 const returnLoading = ref(false)
 const renewingId = ref(null)
+const processingReturnId = ref(null)
 
 // 读者选择：下拉列表 + 关键字搜索，馆员无需手打卡号
 const selectedReader = ref(null)
@@ -522,10 +537,47 @@ async function loadRecords() {
   }
 }
 
+async function loadPendingReturns() {
+  try {
+    const { data } = await borrowsApi.getList({ status_filter: 'return_requested', limit: 50 })
+    pendingReturns.value = data
+  } catch (err) {
+    pendingReturns.value = []
+  }
+}
+
 async function refreshAll() {
   refreshing.value = true
-  await Promise.all([loadOverview(), loadRecords()])
+  await Promise.all([loadOverview(), loadRecords(), loadPendingReturns()])
   refreshing.value = false
+}
+
+async function approveReturnRequest(record) {
+  if (!window.confirm(`确认已收到《${record.book?.title || '该图书'}》并完成归还吗？`)) return
+  processingReturnId.value = record.id
+  try {
+    await circulationApi.approveReturnRequest(record.id)
+    window.$toast?.success('已确认归还，库存已更新')
+    await refreshAll()
+  } catch (err) {
+    window.$toast?.error(err.response?.data?.detail || '确认还书失败')
+  } finally {
+    processingReturnId.value = null
+  }
+}
+
+async function rejectReturnRequest(record) {
+  if (!window.confirm(`确认驳回《${record.book?.title || '该图书'}》的还书申请吗？`)) return
+  processingReturnId.value = record.id
+  try {
+    await circulationApi.rejectReturnRequest(record.id)
+    window.$toast?.success('已驳回申请，读者会收到通知')
+    await Promise.all([loadPendingReturns(), loadRecords()])
+  } catch (err) {
+    window.$toast?.error(err.response?.data?.detail || '驳回申请失败')
+  } finally {
+    processingReturnId.value = null
+  }
 }
 
 // 读者下拉：聚焦即列出读者，输入则按姓名/卡号实时搜索

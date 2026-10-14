@@ -2,14 +2,14 @@
   <div class="neo-auth auth-layout">
     <aside class="auth-aside">
       <div class="flex items-center gap-2.5 text-[15px] font-semibold">
-        <span class="inline-flex h-7 w-7 items-center justify-center rounded bg-[#165dff]">
+        <span class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-white/20 ring-1 ring-white/30">
           <BuildingLibraryIcon class="h-4 w-4" aria-hidden="true" />
         </span>
         {{ systemStore.libraryName }}
       </div>
       <div class="max-w-md">
-        <h2 class="text-[32px] font-semibold leading-tight">申请你的电子借阅证</h2>
-        <p class="mt-4 text-[15px] leading-7 text-white/60">注册后即可在线借阅、预约排队，并接收到期与预约到书提醒。</p>
+        <h2 class="text-[36px] font-semibold leading-tight tracking-tight">申请你的电子借阅证</h2>
+        <p class="mt-4 text-[15px] leading-7 text-white/75">注册后即可在线借阅、预约排队，并接收到期与预约到书提醒。</p>
         <div class="mt-10 grid grid-cols-3 border-t border-white/15 pt-6">
           <div v-for="item in highlights" :key="item.label">
             <div class="text-xl font-semibold">{{ item.value }}</div>
@@ -17,11 +17,22 @@
           </div>
         </div>
       </div>
-      <div class="text-xs text-white/40">© {{ year }} {{ systemStore.libraryName }}</div>
+      <div class="auth-float hidden xl:block" aria-hidden="true">
+        <div class="flex items-center justify-between text-xs text-white/70">
+          <span>本周借阅</span><span class="rounded-full bg-white/20 px-2 py-0.5">+18%</span>
+        </div>
+        <div class="mt-3 flex h-16 items-end gap-1.5">
+          <span v-for="(h, i) in bars" :key="i" class="flex-1 rounded-t bg-white/70" :style="{ height: `${h}%` }"></span>
+        </div>
+        <div class="mt-3 flex items-center gap-2 border-t border-white/15 pt-3 text-xs text-white/80">
+          <span class="h-2 w-2 rounded-full bg-[#4ade80]"></span>《三体》已为你保留至本周五
+        </div>
+      </div>
+      <div class="text-xs text-white/50">© {{ year }} {{ systemStore.libraryName }}</div>
     </aside>
     <main class="auth-main">
       <div class="auth-form">
-        <h1 class="text-2xl font-semibold text-gray-900">读者注册</h1>
+        <h1 class="text-[26px] font-semibold tracking-tight text-gray-900">读者注册</h1>
         <p class="mt-2 mb-8 text-sm text-gray-500">填写以下信息，免费申请借阅证</p>
         <form @submit.prevent="handleRegister">
           <div class="space-y-4">
@@ -120,7 +131,7 @@
           已有账号？
           <RouterLink
             to="/login"
-            class="text-[#165dff] hover:text-[#4080ff]"
+            class="text-[#2f5b4e] hover:text-[#487a69]"
           >
             去登录
           </RouterLink>
@@ -152,6 +163,7 @@ import Alert from '@/components/ui/Alert.vue'
 
 const systemStore = useSystemStore()
 const year = new Date().getFullYear()
+const bars = [38, 55, 46, 72, 60, 88, 70]
 const highlights = [
   { value: '7×24', label: '在线检索' },
   { value: '一键', label: '续借预约' },

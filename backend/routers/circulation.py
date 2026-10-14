@@ -43,6 +43,55 @@ def quick_return(
     return record
 
 
+@router.post("/api/circulation/return-requests/{record_id}/approve", response_model=BorrowRecordResponse, summary="管理员确认读者还书申请")
+def approve_return_request(
+    record_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_librarian),
+    request: Request = None,
+):
+    record = db.query(BorrowRecord).filter(BorrowRecord.id == record_id).first()
+    if not record or record.return_date:
+        raise HTTPException(status_code=404, detail="未找到可确认的借阅记录")
+    if record.return_request_status != "pending":
+        raise HTTPException(status_code=400, detail="该还书申请不在待确认状态")
+    returned, _fine = return_by_barcode_or_record(db, None, record.id, current_user, request)
+    returned.return_request_status = "approved"
+    db.commit()
+    db.refresh(returned)
+    title = returned.book.title if returned.book else f"借阅记录 #{returned.id}"
+    notify.create_notification(
+        db, returned.user_id, "return_request_approved", "还书申请已确认",
+        f"《{title}》已由管理员确认归还。",
+        f"/borrows?record={returned.id}",
+    )
+    return returned
+
+
+@router.post("/api/circulation/return-requests/{record_id}/reject", response_model=BorrowRecordResponse, summary="管理员驳回读者还书申请")
+def reject_return_request(
+    record_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_librarian),
+    request: Request = None,
+):
+    record = db.query(BorrowRecord).filter(BorrowRecord.id == record_id).first()
+    if not record or record.return_date:
+        raise HTTPException(status_code=404, detail="未找到可处理的借阅记录")
+    if record.return_request_status != "pending":
+        raise HTTPException(status_code=400, detail="该还书申请不在待处理状态")
+    record.return_request_status = "rejected"
+    db.commit()
+    db.refresh(record)
+    title = record.book.title if record.book else f"借阅记录 #{record.id}"
+    notify.create_notification(
+        db, record.user_id, "return_request_rejected", "还书申请未通过",
+        f"《{title}》的还书申请已被驳回，请将图书交至服务台后重新申请。",
+        f"/borrows?record={record.id}",
+    )
+    return record
+
+
 @router.post(
     "/api/borrows/self",
     response_model=BorrowRecordResponse,
@@ -72,6 +121,39 @@ def renew_book(
     return renew_record(db, record, current_user, rules["max_renew_times"], rules["renew_days"], request)
 
 
+@router.post("/api/borrows/{record_id}/return-request", response_model=BorrowRecordResponse, summary="读者申请提前还书")
+def request_return(
+    record_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    request: Request = None,
+):
+    record = db.query(BorrowRecord).filter(BorrowRecord.id == record_id).first()
+    if not record:
+        raise HTTPException(status_code=404, detail="借阅记录不存在")
+    if current_user.role == "reader" and record.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="无权操作他人的借阅记录")
+    if record.return_date:
+        raise HTTPException(status_code=400, detail="该图书已经归还")
+    if record.return_request_status == "pending":
+        raise HTTPException(status_code=400, detail="还书申请已提交，请等待管理员确认")
+
+    record.return_request_status = "pending"
+    record.return_requested_at = datetime.now()
+    db.commit()
+    db.refresh(record)
+    book_title = record.book.title if record.book else f"借阅记录 #{record.id}"
+    for librarian in db.query(User).filter(User.role.in_(["librarian", "admin"])).all():
+        notify.create_notification(
+            db, librarian.id, "return_request", "收到提前还书申请",
+            f"{current_user.full_name} 申请归还《{book_title}》，请在借还工作台确认。",
+            "/admin/circulation",
+        )
+    record_audit(db, current_user, "RETURN_REQUEST", "BORROW", str(record.id),
+                 f"申请提前归还图书《{book_title}》", request)
+    return record
+
+
 @router.get("/api/borrows", response_model=List[BorrowRecordResponse], summary="借阅流水查询")
 def list_borrow_records(
     status_filter: Optional[str] = None,
@@ -96,6 +178,10 @@ def list_borrow_records(
     if status_filter == "unreturned":
         # 服务台还书下拉：所有尚未归还的记录（含已逾期）
         query = query.filter(BorrowRecord.return_date.is_(None))
+    elif status_filter == "return_requested":
+        if current_user.role == "reader":
+            query = query.filter(BorrowRecord.user_id == current_user.id)
+        query = query.filter(BorrowRecord.return_date.is_(None), BorrowRecord.return_request_status == "pending")
     elif status_filter == "borrowed":
         query = query.filter(BorrowRecord.return_date.is_(None), BorrowRecord.due_date >= now)
     elif status_filter == "overdue":

@@ -6,10 +6,10 @@ import AdminLayout from '@/layouts/AdminLayout.vue'
 
 const userRoutes = [
   { path: '', name: 'Dashboard', component: () => import('@/views/Dashboard.vue'), meta: { title: '我的图书馆' } },
-  { path: 'books', name: 'Books', component: () => import('@/views/Books.vue'), meta: { title: '书目大厅' } },
+  { path: 'books', name: 'Books', component: () => import('@/views/Books.vue'), meta: { title: '馆藏检索' } },
   { path: 'books/:id', name: 'BookDetail', component: () => import('@/views/BookDetail.vue'), meta: { title: '图书详情' } },
   { path: 'shelf', name: 'MyShelf', component: () => import('@/views/MyShelf.vue'), meta: { title: '我的书架' } },
-  { path: 'borrows', name: 'Borrows', component: () => import('@/views/Borrows.vue'), meta: { title: '借阅中心' } },
+  { path: 'borrows', name: 'Borrows', component: () => import('@/views/Borrows.vue'), meta: { title: '借阅记录' } },
   { path: 'reservations', name: 'Reservations', component: () => import('@/views/Reservations.vue'), meta: { title: '预约排队' } },
   { path: 'fines', name: 'Fines', component: () => import('@/views/Fines.vue'), meta: { title: '罚金中心' } },
   { path: 'notifications', name: 'Notifications', component: () => import('@/views/Notifications.vue'), meta: { title: '消息通知' } },

@@ -3,7 +3,7 @@
     v-model="enabled"
     :aria-label="label"
     :class="[
-      enabled ? 'bg-[#165dff]' : 'bg-[#c9cdd4]',
+      enabled ? 'bg-[#2f5b4e]' : 'bg-[#c8c1b7]',
       'relative inline-flex h-5 w-10 items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-200'
     ]"
   >

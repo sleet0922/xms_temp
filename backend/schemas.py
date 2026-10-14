@@ -219,6 +219,8 @@ class BorrowRecordResponse(BaseModel):
     return_date: Optional[datetime] = None
     renew_count: int
     status: str
+    return_request_status: str = "none"
+    return_requested_at: Optional[datetime] = None
     notes: Optional[str] = None
     created_at: Optional[datetime] = None
     user: Optional[UserResponse] = None

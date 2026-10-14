@@ -47,7 +47,7 @@
             <div v-for="item in summaryItems" :key="item.label" class="group flex items-center gap-3">
               <div
                 :class="[
-                  'w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 transition-all duration-200 ease-out group-hover:scale-110',
+                  'w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors duration-200 group-hover:scale-110',
                   item.bg,
                   item.hover
                 ]"
@@ -264,9 +264,9 @@ const summaryItems = computed(() => [
     label: '在借图书',
     value: `${overview.value.user_borrowed || 0} 本`,
     icon: BookOpenIcon,
-    bg: 'bg-[#e8f3ff]',
-    hover: 'group-hover:bg-[#e8f3ff]',
-    color: 'text-[#165dff]'
+    bg: 'bg-[#e8f0eb]',
+    hover: 'group-hover:bg-[#e8f0eb]',
+    color: 'text-[#2f5b4e]'
   },
   {
     label: '逾期未还',

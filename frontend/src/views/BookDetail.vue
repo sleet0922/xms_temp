@@ -3,7 +3,7 @@
     <div class="mb-6 flex items-center gap-3">
       <Button variant="ghost" size="small" :prepend-icon="ArrowLeftIcon" @click="router.back()">返回</Button>
       <nav class="text-sm text-gray-500">
-        <RouterLink :to="booksPath" class="hover:text-blue-600 transition-colors duration-150">{{ isAdminRoute ? '馆藏与书目' : '书目大厅' }}</RouterLink>
+        <RouterLink :to="booksPath" class="hover:text-blue-600 transition-colors duration-150">{{ isAdminRoute ? '馆藏与书目' : '馆藏检索' }}</RouterLink>
         <span class="mx-1.5">/</span>
         <span class="text-gray-900 font-medium truncate">{{ book?.title || '图书详情' }}</span>
       </nav>
@@ -20,12 +20,12 @@
       <template #action>
         <div class="flex flex-wrap items-center justify-center gap-3">
           <Button v-if="loadError.status !== 404" variant="outline" @click="loadBook">重试</Button>
-          <Button variant="primary" @click="router.push(booksPath)">返回{{ isAdminRoute ? '馆藏与书目' : '书目大厅' }}</Button>
+          <Button variant="primary" @click="router.push(booksPath)">返回{{ isAdminRoute ? '馆藏与书目' : '馆藏检索' }}</Button>
         </div>
       </template>
     </EmptyState>
 
-    <div v-else class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+    <div v-else class="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-4 items-start">
       <!-- 左栏：封面与馆藏信息 -->
       <div class="space-y-6">
         <Card padding="none" class="overflow-hidden">
@@ -82,7 +82,7 @@
                 :href="book.source_url"
                 target="_blank"
                 rel="noopener"
-                class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium text-sm bg-white border border-gray-300 text-gray-700 shadow-sm transition-all duration-200 hover:bg-gray-50 hover:-translate-y-0.5 hover:shadow focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 active:scale-[0.98] active:translate-y-0"
+                class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium text-sm bg-white border border-gray-300 text-gray-700 shadow-sm transition-colors duration-200 hover:bg-gray-50 hover:-translate-y-0.5 hover:shadow focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 active:scale-[0.98] active:translate-y-0"
               >
                 <component :is="LinkIcon" class="w-4 h-4" />
                 查看数据来源
@@ -103,7 +103,7 @@
       </div>
 
       <!-- 右栏：详情、目录、书评、推荐 -->
-      <div class="lg:col-span-2 space-y-6">
+      <div class="min-w-0 space-y-4">
         <Card>
           <h1 class="text-2xl font-semibold tracking-tight text-gray-900">{{ book.title }}</h1>
           <p class="text-sm text-gray-600 mt-1">{{ book.author }}</p>
@@ -225,26 +225,20 @@
         <!-- 相似推荐 -->
         <Card v-if="similar.length">
           <h2 class="text-base font-medium text-gray-900 mb-4">同类高分推荐</h2>
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <Card
+          <div class="grid grid-cols-3 sm:grid-cols-4 xl:grid-cols-6 lg:grid-cols-5 gap-4">
+            <button
               v-for="item in similar"
               :key="item.book.id"
-              padding="none"
-              hover
-              clickable
-              class="overflow-hidden"
+              type="button"
+              class="group text-left focus:outline-none"
               @click="router.push(`${booksPath}/${item.book.id}`)"
             >
-              <BookCover :book="item.book" ratio="3/4" />
-              <div class="p-4">
-                <div class="text-sm font-semibold tracking-tight text-gray-900 truncate">{{ item.book.title }}</div>
-                <div class="text-xs text-gray-500 truncate mt-0.5">{{ item.book.author }}</div>
-                <div class="mt-2">
-                  <RatingStars :model-value="Number(item.book.rating || 0)" size="small" />
-                </div>
-                <div class="text-xs text-blue-600 mt-2 truncate">{{ item.reason }}</div>
+              <div class="transition-transform duration-200 group-hover:-translate-y-1">
+                <BookCover :book="item.book" ratio="3/4" />
               </div>
-            </Card>
+              <div class="mt-2 text-sm font-medium text-gray-900 truncate group-hover:text-[#2f5b4e]">{{ item.book.title }}</div>
+              <div class="text-xs text-gray-500 truncate mt-0.5">{{ item.book.author }}</div>
+            </button>
           </div>
         </Card>
       </div>
@@ -386,7 +380,7 @@ async function loadBook() {
       status,
       message:
         status === 404
-          ? '图书可能已下架，返回书目大厅重新检索'
+          ? '图书可能已下架，返回馆藏检索重新检索'
           : err.response?.data?.detail || '服务暂时不可用，请稍后重试'
     }
     window.$toast?.error(status === 404 ? '未找到该图书' : `加载图书详情失败（HTTP ${status || '网络异常'}）`)

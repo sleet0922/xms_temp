@@ -165,7 +165,7 @@
               </div>
               <div class="mt-1.5 h-2 w-full rounded-full bg-gray-100">
                 <div
-                  class="h-2 rounded-full bg-blue-600 transition-all duration-200"
+                  class="h-2 rounded-full bg-blue-600 transition-colors duration-200"
                   :style="{ width: `${category.percent}%` }"
                 ></div>
               </div>
