@@ -26,6 +26,8 @@ Windows 构建机可直接运行：
 build-exe.cmd
 ```
 
+仓库中的 GitHub Actions 也支持手动触发 Windows 构建；完成后可在 Actions 的 Artifacts 下载 `library-manager-windows.zip`，解压后直接运行 `library-manager.exe`。
+
 打包后的 `dist-exe/library-manager/` 是自包含目录，目标 Windows 电脑不需要安装 Python、Node 或 npm，复制整个目录并双击 `library-manager.exe` 即可。程序默认把数据库写入 exe 同目录，封面写入同目录的 `library-data/covers`，不会修改项目源目录数据库。Windows `.exe` 必须在 Windows 构建机或 Windows CI 上生成，不能用 Linux PyInstaller 直接交叉编译。
 
 Windows：
