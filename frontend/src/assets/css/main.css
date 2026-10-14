@@ -69,6 +69,12 @@
   .neo-card.neo-card-hover:hover { transform: translateY(-4px) rotateX(0.4deg); border-color: #b7cec4; background: #fffdf9; }
   .neo-card.neo-card-hover:hover::before { opacity: 1; transform: translateX(110%); }
 }
+.notification-card { color: var(--c-text-1); }
+.notification-card-unread { background: #edf5f1 !important; border-color: #b7cec4; }
+.notification-title { color: #17372f !important; }
+.notification-content { color: #36564d !important; }
+.notification-time { color: #55756b !important; }
+.notification-link { color: #2f5b4e !important; }
 .neo-card h2 { color: var(--c-text-1) !important; letter-spacing: -0.02em; font-weight: 600 !important; }
 .neo-toast-surface { border-color: var(--c-border) !important; box-shadow: 0 14px 34px rgb(66 53 41 / 0.14); }
 .neo-dialog { border: 1px solid var(--c-border); box-shadow: 0 18px 48px rgb(66 53 41 / 0.18); }

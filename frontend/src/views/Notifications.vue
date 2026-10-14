@@ -37,8 +37,8 @@
         v-for="note in visibleNotifications"
         :key="note.id"
         :class="[
-          'cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 active:scale-[0.98]',
-          note.is_read ? '' : 'bg-blue-50'
+          'notification-card cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 active:scale-[0.98]',
+          note.is_read ? '' : 'notification-card-unread'
         ]"
         tabindex="0"
         role="button"
@@ -54,12 +54,12 @@
               <Badge :variant="categoryMeta(note.category).variant" size="small">
                 {{ categoryMeta(note.category).label }}
               </Badge>
-              <h3 class="text-base font-semibold tracking-tight text-gray-900 truncate">{{ note.title }}</h3>
+              <h3 class="notification-title text-base font-semibold tracking-tight truncate">{{ note.title }}</h3>
             </div>
-            <p v-if="note.content" class="text-sm text-gray-600 mt-2">{{ note.content }}</p>
+            <p v-if="note.content" class="notification-content text-sm mt-2">{{ note.content }}</p>
             <div class="flex items-center gap-3 mt-2">
-              <span class="text-xs text-gray-500">{{ formatTime(note.created_at) }}</span>
-              <span v-if="note.link" class="text-xs text-blue-600 font-medium">点击查看详情</span>
+              <span class="notification-time text-xs">{{ formatTime(note.created_at) }}</span>
+              <span v-if="note.link" class="notification-link text-xs font-medium">点击查看详情</span>
             </div>
           </div>
 
