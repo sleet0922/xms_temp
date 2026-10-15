@@ -24,6 +24,23 @@ def test_create_book_generates_copies_and_barcodes(client, db, librarian_headers
     no_isbn["title"] = "无 ISBN 电子书 B"
     assert client.post("/api/books", headers=librarian_headers, json=no_isbn).status_code == 201
 
+    # 前端表单 ISBN 留空时提交的是空串，连续两本也不能撞唯一索引
+    for title in ("空 ISBN 书 A", "空 ISBN 书 B"):
+        resp = client.post("/api/books", headers=librarian_headers, json={"title": title, "author": "佚名", "isbn": "  "})
+        assert resp.status_code == 201, resp.text
+        assert resp.json()["isbn"] is None
+
+    # 初始册数为 0 应被拒绝，而不是悄悄建 1 册
+    assert client.post("/api/books", headers=librarian_headers, params={"copies_count": 0},
+                       json={"title": "零册", "author": "佚名"}).status_code == 422
+
+
+def test_setting_error_uses_readable_label(client, admin_headers):
+    resp = client.put("/api/settings/renew_days", headers=admin_headers, json={"setting_value": "abc"})
+    assert resp.status_code == 400
+    assert "renew_days" not in resp.json()["detail"]
+    assert "续借天数" in resp.json()["detail"]
+
 
 def test_update_and_delete_book(client, db, librarian_headers, admin_headers):
     book = db.query(Book).filter(Book.available_copies > 0).first()

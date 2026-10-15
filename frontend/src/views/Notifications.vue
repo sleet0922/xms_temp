@@ -111,8 +111,10 @@ import Dialog from '@/components/ui/Dialog.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
 import { notificationsApi } from '@/api'
 import { notificationCategoryMeta } from '@/utils/labels'
+import { useNotificationStore } from '@/stores/notifications'
 
 const router = useRouter()
+const notificationStore = useNotificationStore()
 
 const allNotifications = ref([])
 const unreadNotifications = ref([])
@@ -161,6 +163,7 @@ const loadNotifications = async () => {
     ])
     allNotifications.value = all.data
     unreadNotifications.value = unread.data
+    notificationStore.setUnreadCount(unread.data.length)
   } catch (err) {
     window.$toast?.error('加载通知失败')
   } finally {

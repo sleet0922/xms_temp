@@ -32,7 +32,7 @@
                 <button
                   v-if="showClose"
                   type="button"
-                  @click="handleClose"
+                  @click="close"
                   aria-label="关闭对话框"
                   class="p-1 -mr-1 rounded text-gray-500 hover:bg-gray-100 hover:text-gray-900 transition-colors"
                 >
@@ -104,10 +104,13 @@ const contentClasses = computed(() => {
   return props.scrollable ? 'overflow-y-auto max-h-[60vh]' : ''
 })
 
+const close = () => {
+  emit('update:modelValue', false)
+  emit('close')
+}
+
+// persistent 只拦截点击遮罩 / Esc 这类「误触关闭」，右上角 × 是明确的关闭意图，始终生效
 const handleClose = () => {
-  if (!props.persistent) {
-    emit('update:modelValue', false)
-    emit('close')
-  }
+  if (!props.persistent) close()
 }
 </script>

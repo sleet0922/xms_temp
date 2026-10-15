@@ -60,10 +60,11 @@ const emit = defineEmits(['click'])
 const buttonClasses = computed(() => {
   const base = 'neo-button inline-flex items-center justify-center font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-200 disabled:cursor-not-allowed whitespace-nowrap'
 
+  // 高度由 main.css 的 .neo-button / -sm / -lg 统一控制（触屏设备自动放大到 44px）
   const sizes = {
-    small: 'px-3 text-sm !h-7',
+    small: 'neo-button-sm px-3 text-sm',
     medium: 'px-4 text-sm',
-    large: 'px-5 text-sm !h-9'
+    large: 'neo-button-lg px-5 text-sm'
   }
 
   const variants = {

@@ -253,6 +253,9 @@
         <Input
           v-model="copyForm.count"
           type="number"
+          :min="1"
+          :max="20"
+          step="1"
           label="新增册数"
           hint="系统按“起始条码 + 序号”自动生成，也可手工修改"
         />
@@ -431,7 +434,11 @@ function openAddCopyDialog() {
 }
 
 async function handleAddCopy() {
-  const count = Math.max(1, Math.min(20, Number(copyForm.count) || 1))
+  const count = Number(copyForm.count)
+  if (!Number.isInteger(count) || count < 1 || count > 20) {
+    window.$toast?.warning('新增册数需为 1–20 之间的整数')
+    return
+  }
   const base = copyForm.barcode.trim()
   if (!base) {
     window.$toast?.warning('请填写起始条码')

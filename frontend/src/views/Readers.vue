@@ -91,8 +91,10 @@
               </td>
               <td class="px-4 py-3 text-right whitespace-nowrap">
                 <Button size="small" variant="ghost" @click="openProfile(reader)">查看画像</Button>
-                <Button size="small" variant="ghost" @click="openEdit(reader)">编辑</Button>
-                <Button size="small" variant="ghost" @click="openResetPassword(reader)">重置密码</Button>
+                <template v-if="canManage(reader)">
+                  <Button size="small" variant="ghost" @click="openEdit(reader)">编辑</Button>
+                  <Button size="small" variant="ghost" @click="openResetPassword(reader)">重置密码</Button>
+                </template>
               </td>
             </tr>
           </tbody>
@@ -231,7 +233,13 @@
           <Input v-model="createForm.card_number" label="借书卡号" hint="留空由系统自动生成" />
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Select v-model="createForm.role" :options="roleOptions" label="角色" />
+          <Select
+            v-model="createForm.role"
+            :options="assignableRoleOptions"
+            label="角色"
+            :disabled="!userStore.isAdmin"
+            :hint="userStore.isAdmin ? '' : '馆员只能录入普通读者'"
+          />
           <Input v-model.number="createForm.max_borrow_limit" type="number" label="可借册数" :min="1" />
         </div>
       </div>
@@ -369,6 +377,12 @@ const roleOptions = [
 ]
 
 const ROLE_LABELS = { admin: '管理员', librarian: '馆员', reader: '读者' }
+
+// 与后端权限保持一致：馆员只能维护普通读者，也只能录入读者角色；管理员不受限
+const canManage = (reader) => userStore.isAdmin || reader.role === 'reader'
+const assignableRoleOptions = computed(() =>
+  userStore.isAdmin ? roleOptions : roleOptions.filter((option) => option.value === 'reader')
+)
 
 const statusLabel = (status) => STATUS_MAP[status]?.label || status || '-'
 const statusVariant = (status) => STATUS_MAP[status]?.variant || 'default'

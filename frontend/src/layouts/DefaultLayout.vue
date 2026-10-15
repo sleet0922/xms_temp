@@ -91,7 +91,7 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { getIconComponent } from '@/utils/iconMap'
-import { notificationsApi } from '@/api'
+import { useNotificationStore } from '@/stores/notifications'
 
 const route = useRoute()
 const router = useRouter()
@@ -99,7 +99,8 @@ const userStore = useUserStore()
 const mobileOpen = ref(false)
 const userMenuOpen = ref(false)
 const menuRef = ref(null)
-const unreadCount = ref(0)
+const notificationStore = useNotificationStore()
+const unreadCount = computed(() => notificationStore.unreadCount)
 let timer = null
 
 const menuItems = [
@@ -131,14 +132,7 @@ function isActive(path) {
   return path === '/' ? route.path === '/' : route.path.startsWith(path)
 }
 
-async function loadUnreadCount() {
-  try {
-    const { data } = await notificationsApi.getList({ unread_only: true, limit: 200 })
-    unreadCount.value = data.length
-  } catch (err) {
-    // 顶栏角标失败不打断主流程
-  }
-}
+const loadUnreadCount = () => notificationStore.refreshUnreadCount()
 
 function handleLogout() {
   userMenuOpen.value = false

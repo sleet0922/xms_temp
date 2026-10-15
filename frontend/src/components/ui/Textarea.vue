@@ -17,7 +17,7 @@
       @focus="$emit('focus', $event)"
     />
 
-    <p v-if="error" class="mt-1 text-xs text-[#f53f3f]">{{ error }}</p>
+    <p v-if="error" class="mt-1 text-xs text-[#b42318]">{{ error }}</p>
     <p v-else-if="hint" class="mt-1 text-xs text-gray-500">{{ hint }}</p>
   </div>
 </template>

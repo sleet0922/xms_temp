@@ -1,5 +1,10 @@
 <template>
-  <div v-if="toasts.length" class="fixed top-16 left-1/2 -translate-x-1/2 z-50 w-[min(24rem,calc(100vw-2rem))]" aria-live="polite" aria-atomic="false">
+  <!--
+    挂到 body 下、独立于 #app：弹窗打开时 Headless UI 会把 #app 设为 inert 并盖上遮罩，
+    留在 #app 内的提示会被压暗且无法点击关闭
+  -->
+  <Teleport to="body">
+  <div v-if="toasts.length" class="neo-toast-layer fixed top-16 left-1/2 -translate-x-1/2 w-[min(24rem,calc(100vw-2rem))]" aria-live="polite" aria-atomic="false">
     <TransitionGroup
       enter-active-class="neo-toast-enter"
       enter-from-class="opacity-0 -translate-y-2"
@@ -33,6 +38,7 @@
       </div>
     </TransitionGroup>
   </div>
+  </Teleport>
 </template>
 
 <script setup>
@@ -52,9 +58,9 @@ const toastClasses = (type) => {
   const base = 'neo-toast-surface bg-white border rounded px-4 py-3 text-[#252522]'
 
   const types = {
-    success: '[&_svg:first-child]:text-[#00b42a]',
-    error: '[&_svg:first-child]:text-[#f53f3f]',
-    warning: '[&_svg:first-child]:text-[#ff7d00]',
+    success: '[&_svg:first-child]:text-[#1e6b34]',
+    error: '[&_svg:first-child]:text-[#b42318]',
+    warning: '[&_svg:first-child]:text-[#8a4b00]',
     info: '[&_svg:first-child]:text-[#2f5b4e]'
   }
 

@@ -56,7 +56,7 @@
                 <div class="mt-3 text-xs text-gray-500">应还 {{ formatDate(record.due_date) }}</div>
                 <div class="mt-0.5 text-sm font-medium" :class="dueTextClass(record)">{{ dueText(record) }}</div>
                 <div class="mt-auto pt-3 flex items-center justify-between gap-2">
-                  <span class="text-xs text-gray-400">已续借 {{ record.renew_count || 0 }} 次</span>
+                  <span class="text-xs text-gray-500">已续借 {{ record.renew_count || 0 }} 次</span>
                   <div class="flex items-center gap-2">
                     <Button
                       size="small"
@@ -150,7 +150,7 @@
                     <div class="text-xs text-gray-500">{{ reservation.book?.author || '-' }}</div>
                   </td>
                   <td class="px-4 py-3 text-sm text-gray-600">{{ formatDate(reservation.reserve_date) }}</td>
-                  <td class="px-4 py-3 text-sm" :class="isExpiring(reservation) ? 'text-amber-600 font-medium' : 'text-gray-600'">
+                  <td class="px-4 py-3 text-sm" :class="isExpiring(reservation) ? 'text-amber-700 font-medium' : 'text-gray-600'">
                     {{ formatDate(reservation.expire_date) }}
                   </td>
                   <td class="px-4 py-3">
@@ -293,7 +293,7 @@ const dueTextClass = (record) => {
   const days = daysLeft(record.due_date)
   if (days === null) return 'text-gray-500'
   if (days < 0) return 'text-red-600'
-  if (days <= 3) return 'text-amber-600'
+  if (days <= 3) return 'text-amber-700'
   return 'text-gray-600'
 }
 

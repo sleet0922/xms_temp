@@ -55,7 +55,8 @@
 
     <!-- 借书 / 还书操作台 -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-      <Card class="group" hover>
+      <!-- 读者 / 在借图书下拉需要溢出卡片显示 -->
+      <Card class="group overflow-visible" hover>
         <div class="flex items-start gap-4 mb-5">
           <div
             class="neo-action-icon neo-action-icon-primary"
@@ -170,7 +171,8 @@
         </div>
       </Card>
 
-      <Card class="group" hover>
+      <!-- 读者 / 在借图书下拉需要溢出卡片显示 -->
+      <Card class="group overflow-visible" hover>
         <div class="flex items-start gap-4 mb-5">
           <div
             class="neo-action-icon neo-action-icon-success"
@@ -386,7 +388,7 @@
                 >
                   续借
                 </Button>
-                <span v-else class="text-xs text-gray-400">已归还</span>
+                <span v-else class="text-xs text-gray-500">已归还</span>
               </td>
             </tr>
           </tbody>
@@ -508,7 +510,7 @@ const resultFields = computed(() => {
       {
         label: '逾期罚金',
         value: result.fineAmount > 0 ? `¥${Number(result.fineAmount).toFixed(2)}` : '无罚金',
-        class: result.fineAmount > 0 ? 'text-red-600' : 'text-green-600'
+        class: result.fineAmount > 0 ? 'text-red-600' : 'text-green-700'
       }
     )
   }

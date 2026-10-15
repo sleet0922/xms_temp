@@ -52,10 +52,11 @@
             <component :is="getIconComponent('mdi-home-variant-outline')" class="h-4 w-4" />
             <span class="hidden sm:inline">读者端</span>
           </RouterLink>
-          <span class="mx-2 hidden h-4 w-px bg-gray-200 sm:block"></span>
-          <RouterLink to="/profile" class="admin-header-btn">
-            <span class="hidden max-w-32 truncate sm:inline">{{ userStore.user?.full_name || userStore.user?.username }}</span>
-            <span class="hidden text-xs text-gray-500 md:inline">{{ roleLabel }}</span>
+          <span class="mx-1.5 hidden h-5 w-px bg-gray-200 sm:block" aria-hidden="true"></span>
+          <RouterLink to="/profile" class="admin-header-btn" :title="`${displayName}（${roleLabel}）`">
+            <component :is="getIconComponent('mdi-account-outline')" class="h-4 w-4 sm:hidden" />
+            <span class="hidden max-w-32 truncate sm:inline">{{ displayName }}</span>
+            <span class="admin-user-role hidden md:inline-block">{{ roleLabel }}</span>
           </RouterLink>
           <button type="button" class="admin-header-btn" title="退出登录" aria-label="退出登录" @click="handleLogout">
             <component :is="getIconComponent('mdi-logout')" class="h-4 w-4" />
@@ -96,6 +97,7 @@ const menuGroups = [
   ] },
   { title: '业务记录', items: [
     { path: '/admin/borrows', label: '借阅记录', icon: 'mdi-book-clock-outline' },
+    { path: '/admin/reservations', label: '预约管理', icon: 'mdi-calendar-clock-outline' },
     { path: '/admin/fines', label: '罚金处理', icon: 'mdi-cash-multiple' },
     { path: '/admin/analytics', label: '统计报表', icon: 'mdi-chart-box-outline' }
   ] },
@@ -107,6 +109,7 @@ const menuGroups = [
 const visibleGroups = computed(() => menuGroups
   .map(group => ({ ...group, items: group.items.filter(item => item.role !== 'admin' || userStore.isAdmin) }))
   .filter(group => group.items.length))
+const displayName = computed(() => userStore.user?.full_name || userStore.user?.username || '')
 const roleLabel = computed(() => ({ admin: '管理员', librarian: '馆员' }[userStore.user?.role] || '后台用户'))
 function isActive(path) {
   return path === '/admin' ? route.path === '/admin' : route.path.startsWith(path)

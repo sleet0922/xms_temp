@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { useUserStore } from '@/stores/user'
+import { normalizeErrorDetail, shouldRedirectToLogin } from '@/api/axios'
 
 const api = axios.create({
   baseURL: '/api',
@@ -22,7 +23,8 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    normalizeErrorDetail(error)
+    if (shouldRedirectToLogin(error)) {
       const userStore = useUserStore()
       userStore.logout()
       window.location.href = '/login'
@@ -59,7 +61,7 @@ export const booksApi = {
   getFacets: () => api.get('/books/facets'),
   getById: (id) => api.get(`/books/${id}`),
   getSimilar: (id, limit = 6) => api.get(`/books/${id}/similar?limit=${limit}`),
-  create: (data, copiesCount) => api.post(`/books?copies_count=${copiesCount || 1}`, data),
+  create: (data, copiesCount = 1) => api.post('/books', data, { params: { copies_count: copiesCount } }),
   update: (id, data) => api.put(`/books/${id}`, data),
   delete: (id) => api.delete(`/books/${id}`),
   addCopy: (id, data) => api.post(`/books/${id}/copies`, data),

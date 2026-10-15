@@ -80,7 +80,7 @@
                 <span
                   v-for="tick in chart.yTicks"
                   :key="tick.value"
-                  class="absolute right-0 -translate-y-1/2 text-xs text-gray-400"
+                  class="absolute right-0 -translate-y-1/2 text-xs text-gray-500"
                   :style="{ top: tick.top }"
                 >
                   {{ tick.value }}
@@ -136,7 +136,7 @@
               </div>
               <div>
                 <div class="text-sm text-gray-500">总归还</div>
-                <div class="text-2xl font-semibold tracking-tight text-green-600 mt-1">{{ trendSummary.returns }}</div>
+                <div class="text-2xl font-semibold tracking-tight text-green-700 mt-1">{{ trendSummary.returns }}</div>
               </div>
               <div>
                 <div class="text-sm text-gray-500">日均借出</div>
@@ -198,7 +198,7 @@
                   :to="`/admin/books/${book.id}`"
                   class="flex items-center gap-3 px-2 py-2 rounded-lg transition-colors duration-150 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 active:scale-[0.98]"
                 >
-                  <span class="w-6 text-center text-sm font-semibold text-gray-400 flex-shrink-0">{{ index + 1 }}</span>
+                  <span class="w-6 text-center text-sm font-semibold text-gray-500 flex-shrink-0">{{ index + 1 }}</span>
                   <div class="w-10 flex-shrink-0 rounded-lg overflow-hidden">
                     <BookCover :book="book" ratio="3/4" />
                   </div>
@@ -221,7 +221,7 @@
                   :to="`/admin/books/${book.id}`"
                   class="flex items-center gap-3 px-2 py-2 rounded-lg transition-colors duration-150 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 active:scale-[0.98]"
                 >
-                  <span class="w-6 text-center text-sm font-semibold text-gray-400 flex-shrink-0">{{ index + 1 }}</span>
+                  <span class="w-6 text-center text-sm font-semibold text-gray-500 flex-shrink-0">{{ index + 1 }}</span>
                   <div class="w-10 flex-shrink-0 rounded-lg overflow-hidden">
                     <BookCover :book="book" ratio="3/4" />
                   </div>

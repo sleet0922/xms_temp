@@ -57,7 +57,7 @@
             <span class="flex-shrink-0 text-xs tabular-nums text-gray-500">{{ book.borrow_count }} 次</span>
           </li>
         </ol>
-        <p v-else class="py-16 text-center text-sm text-gray-400">暂无借阅排行</p>
+        <p v-else class="py-16 text-center text-sm text-gray-500">暂无借阅排行</p>
       </Card>
     </section>
   </div>
@@ -94,7 +94,7 @@ const actions = [
 const statusRows = computed(() => [
   { label: '馆藏复本', value: `${overview.value.total_copies ?? 0} 册`, tone: 'text-gray-900' },
   { label: '在借中', value: `${overview.value.active_borrows ?? 0} 条`, tone: 'text-gray-900' },
-  { label: '已逾期', value: `${overview.value.overdue_borrows ?? 0} 条`, tone: (overview.value.overdue_borrows ?? 0) > 0 ? 'text-[#f53f3f]' : 'text-gray-900' },
+  { label: '已逾期', value: `${overview.value.overdue_borrows ?? 0} 条`, tone: (overview.value.overdue_borrows ?? 0) > 0 ? 'text-[#b42318]' : 'text-gray-900' },
   { label: '未缴罚金', value: `¥${Number(overview.value.unpaid_fines ?? 0).toFixed(2)}`, tone: 'text-gray-900' }
 ])
 

@@ -274,7 +274,7 @@ const summaryItems = computed(() => [
     icon: ExclamationTriangleIcon,
     bg: 'bg-[#ffece8]',
     hover: 'group-hover:bg-[#ffece8]',
-    color: 'text-[#f53f3f]'
+    color: 'text-[#b42318]'
   },
   {
     label: '未缴罚金',
@@ -282,7 +282,7 @@ const summaryItems = computed(() => [
     icon: BanknotesIcon,
     bg: 'bg-[#fff7e8]',
     hover: 'group-hover:bg-[#fff7e8]',
-    color: 'text-[#ff7d00]'
+    color: 'text-[#8a4b00]'
   },
   {
     label: '预约中',
@@ -290,7 +290,7 @@ const summaryItems = computed(() => [
     icon: ClockIcon,
     bg: 'bg-[#e8ffea]',
     hover: 'group-hover:bg-[#e8ffea]',
-    color: 'text-[#00b42a]'
+    color: 'text-[#1e6b34]'
   }
 ])
 

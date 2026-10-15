@@ -1,7 +1,15 @@
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 from decimal import Decimal
+
+
+def _blank_isbn_to_none(value: Optional[str]) -> Optional[str]:
+    """ISBN 列有唯一约束：空串必须落库为 NULL，否则第二本无 ISBN 的书会撞唯一索引"""
+    if not isinstance(value, str):
+        return value
+    value = value.strip()
+    return value or None
 
 # --- 系统设置 ---
 class SettingUpdate(BaseModel):
@@ -134,6 +142,8 @@ class BookBase(BaseModel):
     author_bio: Optional[str] = None
     source_url: Optional[str] = None
 
+    _normalize_isbn = field_validator("isbn", mode="before")(_blank_isbn_to_none)
+
 class BookCreate(BookBase):
     pass
 
@@ -157,6 +167,8 @@ class BookUpdate(BaseModel):
     toc: Optional[str] = None
     author_bio: Optional[str] = None
     source_url: Optional[str] = None
+
+    _normalize_isbn = field_validator("isbn", mode="before")(_blank_isbn_to_none)
 
 class BookResponse(BookBase):
     id: int

@@ -6,7 +6,7 @@
         <span v-if="required" class="text-red-500">*</span>
       </HeadlessListboxLabel>
 
-      <HeadlessListboxButton :class="buttonClasses">
+      <HeadlessListboxButton ref="buttonRef" :class="buttonClasses">
         <span v-if="!selected" class="block truncate text-gray-400">{{ placeholder }}</span>
         <span v-else class="block truncate">{{ getDisplayValue(selected) }}</span>
         <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
@@ -23,6 +23,11 @@
         <XMarkIcon class="h-4 w-4" aria-hidden="true" />
       </button>
 
+      <!--
+        选项浮层挂到 body 并按按钮位置 fixed 定位：卡片 / 弹窗都是 overflow:hidden，
+        留在原位的绝对定位浮层会被裁剪
+      -->
+      <Teleport to="body">
       <transition
         enter-active-class="neo-select-options-motion"
         enter-from-class="opacity-0 scale-[0.98] -translate-y-1"
@@ -31,7 +36,13 @@
         leave-from-class="opacity-100 scale-100 translate-y-0"
         leave-to-class="opacity-0 scale-[0.98] -translate-y-1"
       >
-        <HeadlessListboxOptions :class="optionsClasses" @wheel.stop>
+        <HeadlessListboxOptions
+          :class="optionsClasses"
+          :style="floatingStyle"
+          @wheel.stop
+          @vue:mounted="startTracking"
+          @vue:before-unmount="stopTracking"
+        >
           <HeadlessListboxOption
             v-for="option in options"
             :key="getOptionValue(option)"
@@ -53,15 +64,16 @@
           </HeadlessListboxOption>
         </HeadlessListboxOptions>
       </transition>
+      </Teleport>
 
-      <p v-if="error" class="mt-1 text-xs text-[#f53f3f]">{{ error }}</p>
+      <p v-if="error" class="mt-1 text-xs text-[#b42318]">{{ error }}</p>
       <p v-else-if="hint" class="mt-1 text-xs text-gray-500">{{ hint }}</p>
     </div>
   </HeadlessListbox>
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, onBeforeUnmount, ref } from 'vue'
 import {
   Listbox as HeadlessListbox,
   ListboxButton as HeadlessListboxButton,
@@ -119,7 +131,55 @@ const buttonClasses = computed(() => {
   return [base, borderColor].join(' ')
 })
 
-const optionsClasses = 'absolute z-30 mt-1 max-h-60 w-full overflow-y-auto overscroll-contain scrollbar-thin rounded-lg bg-white py-1 border border-gray-200 focus:outline-none'
+const optionsClasses = 'neo-select-options fixed overflow-y-auto overscroll-contain scrollbar-thin rounded-lg bg-white py-1 border border-gray-200 focus:outline-none'
+
+// ---- 浮层定位：打开时根据按钮位置计算，滚动 / 缩放时跟随 ----
+const OPTIONS_MAX_HEIGHT = 240
+const GAP = 4
+const buttonRef = ref(null)
+const floatingStyle = ref({})
+
+const buttonEl = () => {
+  const target = buttonRef.value
+  return target?.$el ?? target?.el ?? target ?? null
+}
+
+function updatePosition() {
+  const el = buttonEl()
+  if (!el?.getBoundingClientRect) return
+  const rect = el.getBoundingClientRect()
+  const spaceBelow = window.innerHeight - rect.bottom - GAP * 2
+  const spaceAbove = rect.top - GAP * 2
+  // 下方放不下且上方空间更大时向上展开
+  const openUp = spaceBelow < Math.min(OPTIONS_MAX_HEIGHT, 160) && spaceAbove > spaceBelow
+  const maxHeight = Math.max(120, Math.min(OPTIONS_MAX_HEIGHT, openUp ? spaceAbove : spaceBelow))
+  floatingStyle.value = {
+    left: `${rect.left}px`,
+    width: `${rect.width}px`,
+    maxHeight: `${maxHeight}px`,
+    ...(openUp
+      ? { bottom: `${window.innerHeight - rect.top + GAP}px`, top: 'auto' }
+      : { top: `${rect.bottom + GAP}px`, bottom: 'auto' })
+  }
+}
+
+let tracking = false
+function startTracking() {
+  updatePosition()
+  if (tracking) return
+  tracking = true
+  window.addEventListener('scroll', updatePosition, true)
+  window.addEventListener('resize', updatePosition)
+}
+
+function stopTracking() {
+  if (!tracking) return
+  tracking = false
+  window.removeEventListener('scroll', updatePosition, true)
+  window.removeEventListener('resize', updatePosition)
+}
+
+onBeforeUnmount(stopTracking)
 
 const getDisplayValue = (option) => {
   if (!option) return ''

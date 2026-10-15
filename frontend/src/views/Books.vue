@@ -70,7 +70,7 @@
     <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
       <div class="text-sm text-gray-600">
         第 {{ page }} 页 · 本页 {{ books.length }} 本
-        <span v-if="loading" class="text-gray-400 ml-2">加载中…</span>
+        <span v-if="loading" class="text-gray-500 ml-2">加载中…</span>
       </div>
       <div class="flex items-center gap-2">
         <div class="flex rounded-lg border border-gray-300 overflow-hidden">
@@ -117,7 +117,7 @@
           <p class="text-xs text-gray-500 truncate mt-0.5">{{ book.author }}</p>
           <div class="mt-2 flex items-center justify-between gap-2">
             <RatingStars :model-value="Number(book.rating || 0)" size="small" />
-            <span v-if="book.format" class="text-[11px] text-gray-400">{{ book.format }}</span>
+            <span v-if="book.format" class="text-[11px] text-gray-500">{{ book.format }}</span>
           </div>
         </button>
       </div>
@@ -181,7 +181,7 @@
         <Input v-model="bookForm.isbn" label="ISBN" hint="电子资源可留空" />
         <div class="grid grid-cols-2 gap-4">
           <Select v-model="bookForm.category_id" :options="categoryOptions" label="分类" item-title="label" item-value="value" />
-          <Input v-model.number="bookForm.copies_count" type="number" label="初始册数" />
+          <Input v-model.number="bookForm.copies_count" type="number" label="初始册数" :min="1" :max="50" step="1" hint="1–50 册" />
         </div>
         <div class="grid grid-cols-2 gap-4">
           <Input v-model="bookForm.language" label="语种" placeholder="中文 / 英文" />
@@ -342,10 +342,15 @@ async function handleAddBook() {
     window.$toast?.warning('书名与作者为必填项')
     return
   }
+  const copiesCount = Number(bookForm.copies_count)
+  if (!Number.isInteger(copiesCount) || copiesCount < 1 || copiesCount > 50) {
+    window.$toast?.warning('初始册数需为 1–50 之间的整数')
+    return
+  }
   submitting.value = true
   try {
-    const { copies_count: copiesCount, ...payload } = bookForm
-    await booksApi.create(payload, copiesCount || 1)
+    const { copies_count: _copies, ...payload } = bookForm
+    await booksApi.create(payload, copiesCount)
     window.$toast?.success('图书已录入')
     showAddDialog.value = false
     Object.assign(bookForm, { title: '', author: '', isbn: '', category_id: null, language: '', format: '', description: '', copies_count: 3 })

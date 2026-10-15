@@ -1,5 +1,5 @@
 <template>
-  <div class="w-full">
+  <div :class="['w-full', $attrs.class]" :style="$attrs.style">
     <label v-if="label" :for="inputId" class="block text-sm text-gray-600 mb-1.5">
       {{ label }}
       <span v-if="required" class="text-red-500">*</span>
@@ -11,6 +11,7 @@
       </div>
 
       <input
+        v-bind="inputAttrs"
         :id="inputId"
         :type="type"
         :value="modelValue"
@@ -36,13 +37,21 @@
       </button>
     </div>
 
-    <p v-if="error" class="mt-1 text-xs text-[#f53f3f]">{{ error }}</p>
+    <p v-if="error" class="mt-1 text-xs text-[#b42318]">{{ error }}</p>
     <p v-else-if="hint" class="mt-1 text-xs text-gray-500">{{ hint }}</p>
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, useAttrs } from 'vue'
+
+// min / max / step / maxlength / 键盘事件等原生属性要落到真实 <input> 上，而不是外层容器
+defineOptions({ inheritAttrs: false })
+const attrs = useAttrs()
+const inputAttrs = computed(() => {
+  const { class: _class, style: _style, ...rest } = attrs
+  return rest
+})
 
 const props = defineProps({
   modelValue: [String, Number],

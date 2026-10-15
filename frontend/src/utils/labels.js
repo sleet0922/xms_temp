@@ -26,14 +26,18 @@ export const NOTIFICATION_CATEGORY_META = {
   reservation_ready: { label: '预约到书', variant: 'success' },
   reservation_fulfilled: { label: '预约已兑现', variant: 'success' },
   fine: { label: '罚金通知', variant: 'danger' },
+  return_request: { label: '还书申请', variant: 'warning' },
+  return_request_approved: { label: '还书已确认', variant: 'success' },
+  return_request_rejected: { label: '还书被驳回', variant: 'danger' },
   system: { label: '系统消息', variant: 'default' },
   // 兼容早期缩写键，保证历史数据也能正确显示
   due: { label: '到期提醒', variant: 'primary' },
   reservation: { label: '预约到书', variant: 'success' }
 }
 
+// 未登记的新分类统一显示「通知」，不把内部英文键直接展示给用户
 export const notificationCategoryMeta = (category) =>
-  NOTIFICATION_CATEGORY_META[category] || { label: category || '通知', variant: 'default' }
+  NOTIFICATION_CATEGORY_META[category] || { label: '通知', variant: 'default' }
 
 /** 预约状态 → 中文标签与语义色 */
 export const RESERVATION_STATUS_META = {

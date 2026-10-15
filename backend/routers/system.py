@@ -16,6 +16,18 @@ from services.audit import get_rules, get_setting_val, record_audit
 
 router = APIRouter(tags=["系统管理"])
 
+# 错误提示面向管理员，使用与设置页一致的中文名称，不暴露内部键名
+SETTING_LABELS = {
+    "library_name": "图书馆名称",
+    "default_borrow_days": "借期天数",
+    "max_renew_times": "最大续借次数",
+    "renew_days": "续借天数",
+    "daily_fine_rate": "日罚金",
+    "max_borrow_books": "借阅上限",
+    "reservation_expire_days": "预约保留天数",
+    "due_reminder_days": "到期提醒提前天数",
+}
+
 
 @router.get("/api/system/config", summary="公开系统配置（馆名与业务规则，无需登录）")
 def public_system_config(db: Session = Depends(get_db)):
@@ -58,14 +70,16 @@ def update_system_setting(
     }
     if setting_key in numeric_rules:
         converter, minimum = numeric_rules[setting_key]
+        label = SETTING_LABELS.get(setting_key, "该设置")
         try:
             parsed = converter(val_in.setting_value.strip())
         except (TypeError, ValueError, InvalidOperation):
-            raise HTTPException(status_code=400, detail=f"设置 {setting_key} 必须是有效数字")
+            hint = "整数" if converter is int else "数字"
+            raise HTTPException(status_code=400, detail=f"「{label}」必须是有效{hint}")
         if isinstance(parsed, Decimal) and not parsed.is_finite():
-            raise HTTPException(status_code=400, detail=f"设置 {setting_key} 必须是有限数字")
+            raise HTTPException(status_code=400, detail=f"「{label}」必须是有限数字")
         if parsed < minimum:
-            raise HTTPException(status_code=400, detail=f"设置 {setting_key} 不能小于 {minimum}")
+            raise HTTPException(status_code=400, detail=f"「{label}」不能小于 {minimum}")
 
     s = db.query(SystemSetting).filter(SystemSetting.setting_key == setting_key).first()
     if not s:

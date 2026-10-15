@@ -52,9 +52,9 @@ const alertClasses = computed(() => {
   const base = 'rounded-lg border px-4 py-3'
 
   const variants = {
-    success: 'bg-[#e8ffea] border-[#aff0b5] text-[#252522] [&>div>svg]:text-[#00b42a]',
-    error: 'bg-[#ffece8] border-[#fdcdc5] text-[#252522] [&>div>svg]:text-[#f53f3f]',
-    warning: 'bg-[#fff7e8] border-[#ffe4ba] text-[#252522] [&>div>svg]:text-[#ff7d00]',
+    success: 'bg-[#e8ffea] border-[#aff0b5] text-[#252522] [&>div>svg]:text-[#1e6b34]',
+    error: 'bg-[#ffece8] border-[#fdcdc5] text-[#252522] [&>div>svg]:text-[#b42318]',
+    warning: 'bg-[#fff7e8] border-[#ffe4ba] text-[#252522] [&>div>svg]:text-[#8a4b00]',
     info: 'bg-[#e8f0eb] border-[#b7cec4] text-[#252522] [&>div>svg]:text-[#2f5b4e]'
   }
 

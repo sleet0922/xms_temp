@@ -56,6 +56,13 @@
               </td>
               <td class="px-4 py-3 text-right">
                 <div class="flex items-center justify-end gap-2">
+                  <!-- 读者端：取书需在服务台由馆员办理，这里给出明确指引 -->
+                  <span
+                    v-if="!canManage && reservation.status === 'notified'"
+                    class="text-xs font-medium text-[#2f5b4e]"
+                  >
+                    请到服务台取书
+                  </span>
                   <Button
                     v-if="canFulfill(reservation)"
                     size="small"
@@ -74,7 +81,7 @@
                   >
                     取消
                   </Button>
-                  <span v-if="!canCancel(reservation) && !canFulfill(reservation)" class="text-xs text-gray-400">已结束</span>
+                  <span v-if="!canCancel(reservation) && !canFulfill(reservation)" class="text-xs text-gray-500">已结束</span>
                 </div>
               </td>
             </tr>
@@ -197,7 +204,7 @@ const expireClass = (reservation) => {
   const days = daysLeft(reservation.expire_date)
   if (days === null) return 'text-gray-600'
   if (days < 0) return 'text-red-600 font-medium'
-  if (days <= 3) return 'text-amber-600 font-medium'
+  if (days <= 3) return 'text-amber-700 font-medium'
   return 'text-gray-600'
 }
 

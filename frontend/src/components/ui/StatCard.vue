@@ -34,7 +34,7 @@ const tones = {
   primary: { bg: 'bg-[#e8f0eb]', icon: 'text-[#2f5b4e]' },
   success: { bg: 'bg-[#e6f8ee]', icon: 'text-[#16a34a]' },
   warning: { bg: 'bg-[#fff4e5]', icon: 'text-[#f08c00]' },
-  danger: { bg: 'bg-[#ffeeee]', icon: 'text-[#f53f3f]' },
+  danger: { bg: 'bg-[#ffeeee]', icon: 'text-[#b42318]' },
   neutral: { bg: 'bg-[#f2f3f5]', icon: 'text-[#4e5969]' }
 }
 

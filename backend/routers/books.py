@@ -214,19 +214,19 @@ def create_book(
         borrow_count=0,
     )
     db.add(new_book)
-    db.flush()
-
-    for i in range(1, copies_count + 1):
-        barcode = f"BK-{datetime.now().strftime('%Y%m')}-{new_book.id:04d}-{i:02d}"
-        db.add(BookCopy(
-            book_id=new_book.id,
-            barcode=barcode,
-            status="available",
-            condition_status="good",
-            location_note="新编目入库",
-        ))
-
     try:
+        db.flush()
+
+        for i in range(1, copies_count + 1):
+            barcode = f"BK-{datetime.now().strftime('%Y%m')}-{new_book.id:04d}-{i:02d}"
+            db.add(BookCopy(
+                book_id=new_book.id,
+                barcode=barcode,
+                status="available",
+                condition_status="good",
+                location_note="新编目入库",
+            ))
+
         db.commit()
     except IntegrityError:
         db.rollback()

@@ -23,6 +23,7 @@ const adminRoutes = [
   { path: 'readers', name: 'AdminReaders', component: () => import('@/views/Readers.vue'), meta: { title: '用户管理' } },
   { path: 'circulation', name: 'AdminCirculation', component: () => import('@/views/Circulation.vue'), meta: { title: '借还工作台' } },
   { path: 'borrows', name: 'AdminBorrows', component: () => import('@/views/Borrows.vue'), meta: { title: '借阅记录' } },
+  { path: 'reservations', name: 'AdminReservations', component: () => import('@/views/Reservations.vue'), meta: { title: '预约管理' } },
   { path: 'fines', name: 'AdminFines', component: () => import('@/views/Fines.vue'), meta: { title: '罚金处理' } },
   { path: 'analytics', name: 'AdminAnalytics', component: () => import('@/views/Analytics.vue'), meta: { title: '统计报表' } },
   { path: 'settings', name: 'AdminSettings', component: () => import('@/views/Settings.vue'), meta: { title: '系统设置', role: 'admin' } }
@@ -32,7 +33,8 @@ const routes = [
   { path: '/login', name: 'Login', component: () => import('@/views/Login.vue'), meta: { requiresAuth: false, title: '登录' } },
   { path: '/register', name: 'Register', component: () => import('@/views/Register.vue'), meta: { requiresAuth: false, title: '读者注册' } },
   { path: '/', component: DefaultLayout, meta: { requiresAuth: true, audience: 'user' }, children: userRoutes },
-  { path: '/admin', component: AdminLayout, meta: { requiresAuth: true, audience: 'admin', role: 'librarian' }, children: adminRoutes }
+  { path: '/admin', component: AdminLayout, meta: { requiresAuth: true, audience: 'admin', role: 'librarian' }, children: adminRoutes },
+  { path: '/:pathMatch(.*)*', name: 'NotFound', component: () => import('@/views/NotFound.vue'), meta: { requiresAuth: false, title: '页面不存在' } }
 ]
 
 const router = createRouter({ history: createWebHistory(), routes })
