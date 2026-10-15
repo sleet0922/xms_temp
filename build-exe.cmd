@@ -17,6 +17,13 @@ python -m venv "%ROOT%.venv"
 if errorlevel 1 exit /b 1
 
 :python_ready
+"%PY%" -c "import fastapi, uvicorn, sqlalchemy, pydantic" >nul 2>nul
+if errorlevel 1 (
+  echo 安装后端 Python 依赖…
+  "%PY%" -m pip install -r "%ROOT%backend\requirements.txt"
+  if errorlevel 1 exit /b 1
+)
+
 if exist "%ROOT%frontend\node_modules" goto npm_ready
 echo 安装 Vue 依赖…
 pushd "%ROOT%frontend"

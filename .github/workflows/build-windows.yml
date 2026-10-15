@@ -2,24 +2,37 @@ name: Build Windows application
 
 on:
   workflow_dispatch:
+    inputs:
+      runner:
+        description: '构建运行环境 (Runner)'
+        required: true
+        default: 'windows-latest'
+        type: choice
+        options:
+          - 'windows-latest'
+          - 'self-hosted'
   push:
+    branches:
+      - main
     tags:
       - 'v*'
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: ${{ github.event.inputs.runner || 'windows-latest' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v5
+        continue-on-error: true
         with:
           python-version: '3.12'
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
+        continue-on-error: true
         with:
           node-version: '20'
           cache: npm
@@ -30,8 +43,8 @@ jobs:
         run: build-exe.cmd
 
       - name: Zip application
-        shell: pwsh
-        run: Compress-Archive -Path dist-exe/library-manager -DestinationPath dist-exe/library-manager-windows.zip
+        shell: powershell
+        run: Compress-Archive -Force -Path dist-exe/library-manager -DestinationPath dist-exe/library-manager-windows.zip
 
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
